@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Data files don't belong in git — keep the folders, ignore their contents.
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Local fastembed model cache, if pointed here
+.cache/
+
+.ipynb_checkpoints/

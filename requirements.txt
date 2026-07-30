@@ -1,0 +1,17 @@
+# Core data handling
+pandas>=2.2.0
+pyarrow>=16.0.0        # parquet read/write for pandas
+numpy>=2.0.0
+
+# Modelling
+scikit-learn>=1.4.0
+
+# Visualisation (latent-space comparison plots)
+matplotlib>=3.8.0
+
+# Local sentence embeddings (ONNX runtime, no GPU/PyTorch/API key needed) —
+# same library the academic_research_agent uses, so vectors/behaviour are comparable.
+fastembed>=0.8.0
+
+# Notebooks (optional, week 1 EDA)
+jupyter>=1.0.0
