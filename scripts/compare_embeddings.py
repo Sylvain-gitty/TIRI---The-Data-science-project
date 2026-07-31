@@ -73,30 +73,94 @@ full objective/key-terms JSON the agent itself embeds for ranking. That name is 
 default. If you have the fuller wording (objective + must-include terms), pass it with
 --use-case-text for a closer match to what the agent actually ranks against.
 
-MODEL TYPES YOU CAN COMPARE
--------------------------------
-- "tfidf" — a classic lexical baseline: TF-IDF followed by TruncatedSVD (dense, so PCA/
-  cosine still apply). No neural network at all — the useful contrast case for "is my
-  baseline embedding model's latent space actually earning its keep over plain word
-  statistics?"
-- any fastembed model name (see --list-models) — local ONNX sentence embedders, e.g.
-  "BAAI/bge-small-en-v1.5" or the multilingual model academic_research_agent uses.
+THE 4 MODELS SHORTLISTED FOR THIS ROUND (see reports/model_shortlist.md for the full
+reasoning behind each pick) — this is what DEFAULT_MODELS below actually is:
+    1. sentence-transformers/allenai-specter   — domain-specific: trained on academic
+       paper citation pairs, the closest match to this exact task of anything available.
+    2. BAAI/bge-small-en-v1.5                  — re-run WITH its required query prefix
+       this time (see PREFIXES below) — last round's run of this model, unprefixed,
+       looked collapsed; this isolates whether the prefix was the actual problem.
+    3. sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 — the CONTROL: this is
+       academic_research_agent's current default model, unchanged, so every other row has
+       something fixed to compare against.
+    4. sentence-transformers/all-MiniLM-L6-v2  — the tiny/fast floor: is anything above
+       actually earning the extra size over the smallest reasonable model?
+
+(nomic-ai/nomic-embed-text-v1.5 was in this shortlist and has been REMOVED after testing:
+on a 100-paper corpus it took ~795s to embed vs. 4-85s for every other model here — on
+CPU, fastembed's ONNX graph for this model is dramatically slower than the rest, which
+outweighs what it offered (Matryoshka dims) for a script meant to be re-run often while
+iterating. Still registered in MODEL_CONFIGS if you want to bring it back via --models.)
+
+PREFIXES — WHY SOME TEXT GETS A PREFIX BEFORE EMBEDDING
+------------------------------------------------------------
+bge and nomic are *asymmetric* models: they were trained expecting the query and the
+documents to be marked differently in the input text (e.g. bge wants
+"Represent this sentence for searching relevant passages: " glued in front of a QUERY,
+never a document). MODEL_CONFIGS below is the one place that records, per model, which
+prefix (if any) goes on the use-case text ("query_prefix") vs. every paper's
+title+abstract ("passage_prefix"). Symmetric models (specter, the multilingual control,
+all-MiniLM-L6-v2) get empty strings for both — they were trained to treat query and
+document text identically, so adding a prefix would only introduce noise they weren't
+trained to ignore.
+
+CORRECTION FROM THE PREVIOUS ROUND, TESTED: bge's own convention prefixes ONLY the
+query, never the passages — so re-running BAAI/bge-small-en-v1.5 with the query prefix
+added did NOT change its corpus-wide dispersion at all (avg pairwise cosine: 0.7692
+before, 0.7692 after — identical, because every PAPER embedding was already unprefixed
+both times). The earlier hypothesis ("the collapse was probably a missing-prefix
+artifact") is therefore NOT confirmed for the corpus itself: bge-small's document
+embeddings really do look collapsed on this corpus, prefix or no prefix. What the prefix
+DID change was the use-case vector specifically (use_case_to_centroid_sim: 0.85 -> 0.83,
+percentile: 22nd -> 7th) — worth knowing, but a different, smaller effect than originally
+guessed. Report what you actually see per run rather than assuming this pattern repeats
+on a different corpus or a different asymmetric model.
+
+TITLE_ABSTRACT_SEP — the same "wrong input shape" problem, for text formatting
+------------------------------------------------------------------------------------
+Specter's own model card documents joining title and abstract with the tokenizer's
+[SEP] token, not free-form prose ("title[SEP]abstract", not "title. abstract"). The
+first live run of this script fed Specter "title. abstract" like every other model —
+and Specter came back with the densest corpus of all (avg pairwise cosine 0.80) and a
+ROC-AUC of 0.49 (no better than chance), despite being the one model actually trained
+for this domain. That looked like an input-shape artifact worth fixing, so
+MODEL_CONFIGS' title_abstract_sep now gives Specter its documented "[SEP]" join.
+
+TESTED, RESULT: fixing the separator barely moved either number (avg pairwise cosine
+0.80 -> 0.81, ROC-AUC 0.4947 -> 0.4996) — on the climate/agriculture test corpus,
+Specter's collapsed, chance-level result was NOT a formatting artifact. Whether that
+holds on a different corpus (a better domain match, or a bigger one) is untested —
+don't assume the verdict on Specter transfers; re-run per corpus.
+
+MODEL BACKENDS — fastembed vs. sentence-transformers
+---------------------------------------------------------
+4 of these 5 are in fastembed's own catalogue (local, ONNX, no PyTorch). Specter is not
+(fastembed simply doesn't ship it), so it runs through the `sentence-transformers`
+package instead — still fully local/offline, just a heavier dependency (pulls in
+PyTorch). MODEL_CONFIGS' "backend" field is what routes each model name to the right
+loader; unregistered model names default to fastembed with a plain ". " join (so you can
+still try any fastembed model ad hoc via --models without editing this file), and the
+"tfidf" special case runs neither.
 
 HOW TO RUN IT
 --------------
     python scripts/compare_embeddings.py --data data/raw/your-export.parquet
 
+That one command runs all 4 shortlisted models above — no extra flags needed.
+
 Useful flags:
-    --models "tfidf,BAAI/bge-small-en-v1.5"     which models/types to compare
+    --models "tfidf,BAAI/bge-small-en-v1.5"     run a different set instead of the 4 above
     --label-col review_label                    use the review-stage label instead
     --use-case-text "..."                       override the export's short use_case name
     --projection tsne                           use t-SNE instead of PCA for the 2D map
     --list-models                               print fastembed's full model catalogue
+                                                 (+ this script's own MODEL_CONFIGS)
+    --out / --out-plot                          override the default output paths below
 
-OUTPUTS
---------
-    reports/latent_space_comparison.png   the multi-model visual comparison (main output)
-    reports/embedding_comparison.csv      the scalar metrics table behind the plot
+OUTPUTS (one pair of files per export, so different datasets never overwrite each other)
+------------------------------------------------------------------------------------------
+    reports/<data filename>_latent_space_comparison.png   the visual comparison (main output)
+    reports/<data filename>_embedding_comparison.csv      the scalar metrics behind the plot
 
 A LIMITATION TO KNOW ABOUT
 -----------------------------
@@ -109,7 +173,6 @@ precise measurements.
 from __future__ import annotations
 
 import argparse
-import time
 from pathlib import Path
 
 import matplotlib
@@ -117,27 +180,30 @@ matplotlib.use("Agg")  # write PNGs without needing a display — this is a batc
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.decomposition import PCA, TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import StratifiedKFold
 
-# A deliberately mixed default set: a classic lexical baseline (no neural network at
-# all), a small English neural model, and the multilingual model academic_research_agent
-# itself uses by default — enough spread to see whether "neural" and "bigger/multilingual"
-# actually buy anything on YOUR corpus, not just in general.
+from embedding_utils import (
+    MODEL_CONFIGS,
+    NEGATIVE_VALUES,
+    POSITIVE_VALUES,
+    cross_validated_roc_auc,
+    drop_empty_rows,
+    embed_corpus_and_use_case,
+    get_title_abstract,
+    get_use_case_text,
+    load_export,
+)
+
+# Run these 4 shortlisted models by a single bare command; --models overrides this.
+# (nomic-ai/nomic-embed-text-v1.5 is registered in embedding_utils.MODEL_CONFIGS but not
+# listed here — see that module's comment for why: ~795s to embed vs. 4-85s for these 4.)
 DEFAULT_MODELS = [
-    "tfidf",
+    "sentence-transformers/allenai-specter",
     "BAAI/bge-small-en-v1.5",
     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "sentence-transformers/all-MiniLM-L6-v2",
 ]
-
-# Triage/review label values the agent's exports use.
-POSITIVE_VALUES = {"positive"}
-NEGATIVE_VALUES = {"negative"}
-MAX_CV_FOLDS = 5
 
 LABEL_COLORS = {
     "positive": "#2ca02c",
@@ -145,69 +211,6 @@ LABEL_COLORS = {
     "pass": "#9467bd",
 }
 UNLABELLED_COLOR = "#c7c7c7"
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Data loading
-# ─────────────────────────────────────────────────────────────────────────────
-
-def load_export(path: Path) -> pd.DataFrame:
-    """Load an academic_research_agent export (.parquet or .csv), no filtering — every
-    row is kept, since the latent-space diagnostics want the WHOLE corpus, not just the
-    labelled subset (labels are only needed later, for colouring the plot and for the
-    secondary ROC-AUC check)."""
-    if path.suffix == ".parquet":
-        return pd.read_parquet(path)
-    if path.suffix == ".csv":
-        return pd.read_csv(path)
-    raise ValueError(f"Unsupported file type: {path.suffix} (expected .parquet or .csv)")
-
-
-def build_text(df: pd.DataFrame) -> list[str]:
-    """Build the "title. abstract" string embedded for each paper — the same shape of
-    text academic_research_agent embeds (embeddings.paper_embedding_text)."""
-    titles = df.get("title", pd.Series([""] * len(df))).fillna("")
-    abstracts = df.get("abstract", pd.Series([""] * len(df))).fillna("")
-    return [f"{t}. {a}".strip(". ").strip() for t, a in zip(titles, abstracts)]
-
-
-def get_use_case_text(df: pd.DataFrame, use_case_col: str, override: str | None) -> str:
-    """Return the text to embed as "the use case". An explicit --use-case-text always
-    wins; otherwise fall back to the export's use_case column (see the module docstring
-    for why that's a short name, not the full objective)."""
-    if override:
-        return override
-    if use_case_col in df.columns:
-        values = df[use_case_col].dropna().unique()
-        if len(values) > 0:
-            return str(values[0])
-    raise ValueError(
-        f"No use case text found: column '{use_case_col}' is missing/empty and "
-        "--use-case-text was not given."
-    )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Embedding backends — fastembed neural models, or a classic TF-IDF+SVD baseline
-# ─────────────────────────────────────────────────────────────────────────────
-
-def embed_with_model(model_name: str, texts: list[str]) -> tuple[np.ndarray, float]:
-    """Embed `texts` (+ implicitly, the use-case text is embedded via the SAME call by
-    the caller appending it to `texts`) with either fastembed or the "tfidf" baseline.
-    Returns (vectors, seconds_elapsed). Imports are local so --list-models stays cheap.
-    """
-    start = time.monotonic()
-    if model_name == "tfidf":
-        vectorizer = TfidfVectorizer(max_features=20_000, stop_words="english")
-        sparse = vectorizer.fit_transform(texts)
-        n_components = max(2, min(100, sparse.shape[0] - 1, sparse.shape[1] - 1))
-        vectors = TruncatedSVD(n_components=n_components, random_state=42).fit_transform(sparse)
-    else:
-        from fastembed import TextEmbedding
-        model = TextEmbedding(model_name=model_name)
-        vectors = np.array([v for v in model.embed(texts)])
-    elapsed = time.monotonic() - start
-    return vectors, elapsed
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -281,31 +284,6 @@ def centroid_analysis(V: np.ndarray, use_case_vec: np.ndarray) -> dict:
         "use_case_to_centroid_sim": use_case_to_centroid,
         "use_case_centroid_percentile": percentile,
     }
-
-
-def cross_validated_roc_auc(X: np.ndarray, y: np.ndarray) -> dict:
-    """Mean cross-validated ROC-AUC for a fresh LogisticRegression, mirroring
-    academic_research_agent's model.py:_cross_validated_roc_auc exactly."""
-    n_pos, n_neg = int(y.sum()), int((1 - y).sum())
-    k = min(MAX_CV_FOLDS, n_pos, n_neg)
-    if k < 2:
-        return {"roc_auc": None, "n_folds": 0}
-
-    folds = StratifiedKFold(n_splits=k, shuffle=False)
-    aucs = []
-    for train_idx, test_idx in folds.split(X, y):
-        y_test = y[test_idx]
-        if len(set(y_test.tolist())) < 2:
-            continue
-        clf = LogisticRegression(class_weight="balanced", max_iter=1000)
-        clf.fit(X[train_idx], y[train_idx])
-        pos_col = list(clf.classes_).index(1)
-        y_score = clf.predict_proba(X[test_idx])[:, pos_col]
-        aucs.append(roc_auc_score(y_test, y_score))
-
-    if not aucs:
-        return {"roc_auc": None, "n_folds": 0}
-    return {"roc_auc": float(np.mean(aucs)), "n_folds": len(aucs)}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -395,32 +373,41 @@ def main() -> None:
     parser.add_argument("--label-col", default="triage_label", help="Column with positive/negative/pass labels (default: triage_label)")
     parser.add_argument("--use-case-col", default="use_case", help="Column holding the use case text (default: use_case)")
     parser.add_argument("--use-case-text", default=None, help="Override the use case text instead of reading --use-case-col")
-    parser.add_argument("--models", default=None, help="Comma-separated model names/types (default: tfidf + two fastembed models)")
+    parser.add_argument("--models", default=None, help="Comma-separated model names/types (default: the 4 shortlisted models, see --list-models)")
     parser.add_argument("--projection", choices=["pca", "tsne"], default="pca", help="2D projection method for the corpus map (default: pca)")
-    parser.add_argument("--out", type=Path, default=Path("reports/embedding_comparison.csv"), help="Where to save the scalar metrics table")
-    parser.add_argument("--out-plot", type=Path, default=Path("reports/latent_space_comparison.png"), help="Where to save the comparison figure")
+    parser.add_argument("--out", type=Path, default=None, help="Where to save the scalar metrics table (default: reports/<data filename>_embedding_comparison.csv)")
+    parser.add_argument("--out-plot", type=Path, default=None, help="Where to save the comparison figure (default: reports/<data filename>_latent_space_comparison.png)")
     parser.add_argument("--list-models", action="store_true", help="Print every model fastembed supports, then exit")
     args = parser.parse_args()
 
     if args.list_models:
+        print("Models registered in THIS script (MODEL_CONFIGS) - the shortlist:")
+        for name, cfg in MODEL_CONFIGS.items():
+            marker = " <- default set" if name in DEFAULT_MODELS else ""
+            print(f"  {name}  [{cfg['backend']}]{marker}")
+        print("\nEvery model fastembed itself supports (any of these also work via --models,")
+        print("unprefixed, unless you add it to MODEL_CONFIGS first):")
         from fastembed import TextEmbedding
         for m in TextEmbedding.list_supported_models():
-            print(f"{m['model']}  (dim={m['dim']})")
+            print(f"  {m['model']}  (dim={m['dim']})")
         return
 
     if args.data is None:
         parser.error("--data is required unless --list-models is passed")
 
+    # Default output paths are derived from the input filename so results from different
+    # exports land in different files instead of silently overwriting each other.
+    if args.out is None:
+        args.out = Path("reports") / f"{args.data.stem}_embedding_comparison.csv"
+    if args.out_plot is None:
+        args.out_plot = Path("reports") / f"{args.data.stem}_latent_space_comparison.png"
+
     model_names = [m.strip() for m in args.models.split(",")] if args.models else DEFAULT_MODELS
 
     print(f"Loading {args.data} ...")
     df = load_export(args.data)
-    texts = build_text(df)
-    non_empty = [i for i, t in enumerate(texts) if t]
-    if len(non_empty) < len(texts):
-        print(f"  Dropping {len(texts) - len(non_empty)} rows with no title/abstract text.")
-        df = df.iloc[non_empty].reset_index(drop=True)
-        texts = [texts[i] for i in non_empty]
+    titles, abstracts = get_title_abstract(df)
+    df, titles, abstracts = drop_empty_rows(df, titles, abstracts)
 
     use_case_text = get_use_case_text(df, args.use_case_col, args.use_case_text)
     print(f"  {len(df)} papers. Use case text: \"{use_case_text}\"")
@@ -442,7 +429,7 @@ def main() -> None:
     for row_idx, model_name in enumerate(model_names):
         print(f"\nEmbedding with {model_name} ...")
         try:
-            vectors, elapsed = embed_with_model(model_name, texts + [use_case_text])
+            paper_vectors, use_case_vec, elapsed = embed_corpus_and_use_case(model_name, titles, abstracts, use_case_text)
         except Exception as exc:
             print(f"  FAILED: {exc}")
             rows.append({"model": model_name, "dim": None, "embed_seconds": None,
@@ -453,8 +440,6 @@ def main() -> None:
             for ax in axes[row_idx]:
                 ax.set_title(f"{model_name}\nFAILED: {exc}", fontsize=8, color="red")
             continue
-
-        paper_vectors, use_case_vec = vectors[:-1], vectors[-1]
 
         disp = dispersion_metrics(paper_vectors)
         cent = centroid_analysis(paper_vectors, use_case_vec)

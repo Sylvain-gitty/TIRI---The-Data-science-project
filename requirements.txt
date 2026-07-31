@@ -13,5 +13,9 @@ matplotlib>=3.8.0
 # same library the academic_research_agent uses, so vectors/behaviour are comparable.
 fastembed>=0.8.0
 
+# Local sentence embeddings for models fastembed doesn't carry (e.g. Specter, the
+# domain-specific academic-paper model) — still fully local/offline, just PyTorch-backed.
+sentence-transformers>=3.0.0
+
 # Notebooks (optional, week 1 EDA)
 jupyter>=1.0.0

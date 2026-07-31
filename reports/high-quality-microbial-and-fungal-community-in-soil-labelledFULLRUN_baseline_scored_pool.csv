@@ -1,0 +1,603 @@
+id,title,actual_label,predicted_probability,predicted_label
+559,Building Resilience: Engineering the Plant Microbiome for Biotic Stress Management,pass,0.978148375482266,positive
+732,Editorial: Enhancing plant resilience to abiotic stress through biochar application.,pass,0.9673735675376433,positive
+360,"Microbial innovations for climate-resilient agriculture: mechanisms, applications, and emerging technologies.",positive,0.964910101930797,positive
+328,Plant Microbiome Engineering: Expected Benefits for Improved Crop Growth and Resilience,positive,0.9644573753618247,positive
+684,Microbial management of crop abiotic stress: Current trends and prospects,pass,0.9622428253396338,positive
+475,Enhancing crop productivity under stress through plant growth-promoting bacterial consortia: Relevance to sustainable development goals.,pass,0.960399601654532,positive
+602,Too Hot to Handle? Unlocking novel plant-microbe interactions under heat stress,pass,0.9597336552262393,positive
+278,Seed Biopriming with Potential Microbial Inoculants as Sustainable Options for Stress Management in Crops,positive,0.9584716319542145,positive
+345,Soil Microbiome Engineering in Sustainable Agriculture: A Comprehensive Review,positive,0.9571075233315461,positive
+327,Microbiome Engineering: Synthetic Biology of Plant-Associated Microbiomes in Sustainable Agriculture,positive,0.9504205016213384,positive
+715,Nanobiotechnology-based strategies for enhanced crop stress resilience,positive,0.9456252883048596,positive
+466,Synthetic microbiomes in bioengineered rhizospheres: new frontiers for climate-resilient agriculture.,positive,0.9451974903891334,positive
+260,Crop Microbiome Engineering and Relevance in Abiotic Stress Tolerance,positive,0.9441965684966325,positive
+520,Microbial inoculants: applications as biofertilizer for soil enrichment and crop productivity,pass,0.9402601416362326,positive
+337,Artificial intelligence in soil microbiome-driven agriculture: from practical limits to a translational roadmap.,pass,0.93939797971872,positive
+678,Plant Growth-Promoting Bacteria (PGPB) with Biofilm-Forming Ability: A Multifaceted Agent for Sustainable Agriculture,positive,0.9380527937519612,positive
+340,Organic Fertilizer for Engineering the Soil Microbiome,pass,0.9354558510799661,positive
+583,Plant Growth-Promoting Bacteria: Biological Tools for the Mitigation of Salinity Stress in Plants,positive,0.9291671420936005,positive
+333,Mitigating abiotic stress: microbiome engineering for improving agricultural production and environmental sustainability,positive,0.9287214935890099,positive
+488,Application of Beneficial Bacteria to Enhance Plant Drought Resilience.,positive,0.9279503122991537,positive
+525,Bacterial Inoculants: How Can These Microbes Sustain Soil Health and Crop Productivity?,pass,0.9271176738210467,positive
+361,Microbial strategies for drought stress mitigation- a sustainable frontier in plant resilience.,positive,0.9238200644829349,positive
+501,ACC deaminase in plant growth-promoting bacteria (PGPB): An efficient mechanism to counter salt stress in crops,pass,0.9229543855570533,positive
+355,Phytomicrobiome-based approaches for sustainable crop performance and environmental resilience.,positive,0.9215335360277942,positive
+294,Microbial inoculants: potential tool for sustainability of agricultural production systems,pass,0.9211966814326744,positive
+463,Application of Beneficial Bacteria to Enhance Plant Drought Resilience,pass,0.9191936476314183,positive
+358,Plant microbiome engineering: from inoculation to genome editing.,positive,0.9184304498182723,positive
+471,Identification of Plant Growth Promoting Rhizobacteria as Biofertilizer for Salt Stress Environment,pass,0.9181822858559312,positive
+699,Plant-microbe synergy: employing coastal plant bacteria for wheat prosperity under combined saline and heat stress.,positive,0.9126605928630915,positive
+484,A 'Genome-First' Framework for Next-Generation Bioinputs: From Functional Mining to Rational Synthetic Microbial Communities.,positive,0.9086004262988839,positive
+214,Emerging crops and plant growth-promoting bacteria (PGPB): a synergistic approach to climate-resilient agriculture,positive,0.9063287661199185,positive
+245,Synthetic bacterial community derived from a desert rhizosphere confers salt stress resilience to tomato in the presence of a soil microbiome,positive,0.9049948731680274,positive
+298,Application of microbial inoculants significantly enhances crop productivity: A meta‐analysis of studies from 2010 to 2020,positive,0.9034405199816938,positive
+331,Towards sustainable agriculture: rhizosphere microbiome engineering,pass,0.9025556552755999,positive
+599,Plant-Microbe Interaction and Their Role in Mitigation of Heat Stress,pass,0.9017743074210453,positive
+283,Microbial Mutualisms for Sustainable Agriculture: Harnessing Plant Growth-Promoting Bacteria and Microalgae to Enhance Crop Productivity Under Abiotic Stress,positive,0.8988397989656526,positive
+562,Soil Salinity and Climate Change: Microbiome-Based Strategies for Mitigation of Salt Stress to Sustainable Agriculture,pass,0.8957535320770496,positive
+677,"Comprehensive Review of Microbial Inoculants: Agricultural Applications, Technology Trends in Patents, and Regulatory Frameworks",positive,0.8935647201420833,positive
+282,Plant Associated Soil Microbial Communities in Abiotic Stress Resilience: Understanding the Response Mechanism for Sustainable Agriculture,positive,0.8932935312091239,positive
+545,Plant Microbiomes Alleviate Abiotic Stress-Associated Damage in Crops and Enhance Climate-Resilient Agriculture,positive,0.8923402882653129,positive
+750,Successful Plant Growth-Promoting Microbes: Inoculation Methods and Abiotic Factors,positive,0.892339466671466,positive
+191,Editorial: Microbial stress mitigation and crop improvement using multiomics holistic approach.,pass,0.8854086254889726,positive
+242,Soil microbiome engineering for sustainability in a changing environment,positive,0.8842596985239293,positive
+351,Phyto-Engineering and Microbial-Engineering for Soil Remediation,pass,0.8840782485353279,positive
+293,Rhizosphere Microbiome Engineering for Climate-Smart Agriculture: From Synthetic Consortia to Precision Decision Support.,positive,0.8800962883038141,positive
+675,Plant Biostimulants to Enhance Abiotic Stress Resilience in Crops,negative,0.8793549280182167,positive
+476,Synthetic microbial communities for engineering climate-smart biofertilizers.,positive,0.8701170324459581,positive
+497,Mining Halophytes for Plant Growth-Promoting Halotolerant Bacteria to Enhance the Salinity Tolerance of Non-halophytic Crops,positive,0.8666624484954172,positive
+299,"Bioencapsulation of Microbial Inoculants: Mechanisms, Formulation Types and Application Techniques",positive,0.8637789553925829,positive
+478,Multi-omics and synthetic microbial ecology for engineering climate-resilient phytobiomes in cold-arid agroecosystems: current advances and future perspectives.,pass,0.8624808869442283,positive
+615,Nanobiotechnology to advance stress resilience in plants: Current opportunities and challenges.,negative,0.8608561630932101,positive
+296,"Microbial Inoculants in Sustainable Agriculture: Advancements, Challenges, and Future Directions",positive,0.8606680517169262,positive
+339,Rhizospheric Microbiome Engineering as a Sustainable Tool in Agriculture: Approaches and Challenges,pass,0.8586009149464389,positive
+212,Teamwork to Survive in Hostile Soils: Use of Plant Growth-Promoting Bacteria to Ameliorate Soil Salinity Stress in Crops,positive,0.8562735136348331,positive
+370,"Microbiome Engineering for Sustainable Rice Production: Strategies for Biofertilization, Stress Tolerance, and Climate Resilience",positive,0.8541561579104295,positive
+564,Changes in Plant Microbiome in Response to Abiotic Stress,pass,0.8516339100343291,positive
+155,Microbial Augmentation for Soil Restoration and Improved Soil Health,pass,0.8513616807676712,positive
+758,"ACC Deaminase Producing Plant Growth Promoting Bacteria: Mechanisms, Stress Mitigation and Prospects for Sustainable Agriculture.",pass,0.8458204793427202,positive
+775,Bacterial cell-free supernatants as metabolite-based biostimulants for alleviating salinity stress in plants.,positive,0.844113645818773,positive
+259,Role of Plant Microbiome Under Stress Environment to Enhance Crop Productivity,negative,0.840947502921021,positive
+505,Revolutionizing Soil Bioremediation: Nanobubble-Driven Enhancement of Microbial Dynamics and Rhizosphere Resilience.,pass,0.8394309463060813,positive
+502,Mechanistic Insights of Plant Growth Promoting Bacteria Mediated Drought and Salt Stress Tolerance in Plants for Sustainable Agriculture,positive,0.8390010626086092,positive
+768,Amelioration of Soil Salinity Through Plant Growth-Promoting Bacteria: A Sustainable Solution,pass,0.8380857306781638,positive
+707,Microbial Resilience in Arid Soils: Ecological Responses to Drought and Salinity Stress.,pass,0.8348584449174176,positive
+736,ACC-deaminase producing microbial biostimulants for agriculture and climate resilience: barriers and the way forward.,pass,0.8345559607473991,positive
+353,Microbial interventions in rice rhizosphere engineering: from soil microbiome manipulation to yield stability,positive,0.8337078355322117,positive
+708,Advancing Climate-Resilient Sorghum: the Synergistic Role of Plant Biotechnology and Microbial Interactions.,pass,0.8332434517269665,positive
+695,Whole-genome characterization of halotolerant Enterobacter roggenkampii OSNO4 and its potential for climate-resilient agriculture.,positive,0.8281629475065495,positive
+279,Microbe-Mediated Biotic and Abiotic Stress Tolerance in Crop Plants,positive,0.8257673418514188,positive
+492,"PGPR-mediated enhancement of soil nutrients, rhizosphere microbial ecology, and plant growth: a review.",positive,0.8218285504216032,positive
+451,Plant growth-promoting bacteria for drought tolerance in crops,pass,0.8199299624495415,positive
+280,Microbial Interventions in Agriculture and Environment,pass,0.8169069392565543,positive
+383,Soil Microbiome Bioengineering for Improvement of Soil Health and Fertility,pass,0.813682384133339,positive
+344,Microbial Farming: Harnessing Soil Microbiomes for Sustainable Agriculture,pass,0.8078366774392727,positive
+494,The Role of Synthetic Microbial Communities (SynCom) in Sustainable Agriculture,positive,0.8017960680269433,positive
+482,Harnessing Plant–Microorganism Interactions to Mitigate Biotic and Abiotic Stresses for Sustainable Crops,pass,0.7995711622431854,positive
+381,"Soil Microbiome: Characteristics, Impact of Climate Change and Resilience",pass,0.7963275108942072,positive
+673,Phyto-microbiome to mitigate abiotic stress in crop plants,positive,0.7948572962863528,positive
+560,Harnessing the Plant Microbiome for Improved Abiotic Stress Tolerance,pass,0.7906082440555413,positive
+378,Adaptations and mitigation of soil microbiome for climate resilience,pass,0.7897641317503808,positive
+304,Home‐based microbial solution to boost crop growth in low‐fertility soil,positive,0.7828060238801223,positive
+586,Plant-microbe interactions: PGPM as microbial inoculants/biofertilizers for sustaining crop productivity and soil fertility,positive,0.7816338800944012,positive
+556,Harnessing the functional mechanism of plant–microbiome interaction for abiotic stress management,pass,0.7812265130013638,positive
+518,"Microbial inocula enhance effects of biochar amendments on crop productivity, soil health, and microbial communities: A meta‐analysis",negative,0.7764676526729223,positive
+516,Wheat (Triticum aestivum) Establishment Methods and Microbial Inoculation for Improving Soil Microbial Properties and Crop Productivity,pass,0.7749755559365082,positive
+390,"Review for ""Arrive and wait: Inactive bacterial taxa contribute to perceived soil microbiome resilience after a multidecadal press disturbance""",pass,0.7743369226269342,positive
+388,Harnessing Soil Microbiome Diversity for Crop Resilience to Climate Change: A 2-Year Snapshot Study (2024–2026),positive,0.7741448820974304,positive
+592,Nanomaterials–plants–microbes interaction: plant growth promotion and stress mitigation,positive,0.772930554992199,positive
+493,"Plant Growth Promoting Rhizobacteria (PGPR) as Green Bioinoculants: Recent Developments, Constraints, and Prospects",negative,0.7723160488051152,positive
+503,Seed Coating: A Tool for Delivering Beneficial Microbes to Agricultural Crops,positive,0.7719898911097756,positive
+688,Use of PGPR to Optimize Soil and Crop Productivity Under Abiotic Stress,pass,0.7695724649458333,positive
+263,Plant Growth-Promoting Rhizobacteria and Biochar as Drought Defense Tools: A Comprehensive Review of Mechanisms and Future Directions.,positive,0.7688337513604763,positive
+473,Role of Plant Growth-Promoting Rhizobacteria (PGPR) for Crop Stress Management,pass,0.7684360627499116,positive
+215,Rhizospheric bacteria as soil health engineer promoting plant growth,pass,0.7671304814861095,positive
+334,Harnessing microbial multitrophic interactions for rhizosphere microbiome engineering,pass,0.764798013440746,positive
+666,Role of microbial inoculants as bio fertilizers for improving crop productivity: A review,positive,0.7592479971685564,positive
+566,Rhizosphere Microbiome–Biofertilizer Nexus: Integrating Biological Inputs and Abiotic Stress Tolerance Mechanisms in Horticultural Crops,positive,0.7580920884355316,positive
+573,Harnessing Beneficial Microbes and Sensor Technologies for Sustainable Smart Agriculture.,positive,0.755270971826867,positive
+257,Biostimulants in mitigation of drought stress in crop plants,pass,0.7543249996850596,positive
+590,Exploring plant-microbe interactions in adapting to abiotic stress under climate change: a review,negative,0.7510756351435571,positive
+769,Perspectives of using plant growth-promoting rhizobacteria under salinity stress for sustainable crop production,pass,0.7491157827645024,positive
+686,Microbial consortia and bioinoculant strategies for enhancing crop salt tolerance and restoring fertility in salt-degraded soils,positive,0.7473163882153305,positive
+462,Microorganism-Based Biological Products for Agriculture: From Strain Selection to Production Organization.,negative,0.7463091190145528,positive
+332,Microbiome engineering and plant biostimulants for sustainable crop improvement and mitigation of biotic and abiotic stresses,positive,0.7448375991384495,positive
+616,The Microbial Connection to Sustainable Agriculture.,negative,0.7435911002671134,positive
+565,Decoding Plant–Environment–Microbiome Interactions in Stress-Resilient Agriculture,pass,0.7423385128306536,positive
+680,Integrative Exploration of Paenibacillus sp. JSM-10 as a Potential Multi-Stress-Tolerant Microbial Inoculant for Sustainable Agriculture.,positive,0.7403973650869233,positive
+158,Soil microbiome for enhanced crop productivity,pass,0.7388981582918417,positive
+349,Soil amendments for sustainable agriculture: Microbial organic fertilizers,positive,0.7381260668245522,positive
+760,Are Autochthonous Bacteria of Desert Root Environments Capable of Increasing Crop Tolerance to Saline Stress?,pass,0.7324111753410026,positive
+521,Microbial Strategies for Improving Food Crop Productivity under Salinity and Drought,pass,0.7275923053835763,positive
+496,Insight Into the Role of PGPR in Sustainable Agriculture and Environment,positive,0.7251110048896418,positive
+495,Use of plant growth promoting rhizobacteria (PGPRs) with multiple plant growth promoting traits in stress agriculture: Action mechanisms and future prospects,pass,0.7193842649066915,positive
+209,From salty to thriving: plant growth promoting bacteria as nature’s allies in overcoming salinity stress in plants,negative,0.7127701129601819,positive
+229,Harnessing plant-microbe interactions: strategies for enhancing resilience and nutrient acquisition for sustainable agriculture.,negative,0.7124298580932263,positive
+224,Microbial biocontrol agents and the rhizosphere microbiome: integrating ecological function and climate resilience in sustainable agriculture.,negative,0.7075831521427183,positive
+763,Halotolerant Plant Growth-Promoting Fungi and Bacteria as an Alternative Strategy for Improving Nutrient Availability to Salinity-Stressed Crop Plants,pass,0.7028868048082335,positive
+372,New approaches to improve crop tolerance to biotic and abiotic stresses,negative,0.6992187756850797,positive
+801,Biochar amendment controlled bacterial wilt through changing soil chemical properties and microbial community,pass,0.6978657545947333,positive
+252,"Impact of Fire and Heat Stress on Soil Microorganisms: A Review of Community Changes, Molecular Responses and Plant-Beneficial Roles.",positive,0.6947910618544176,positive
+735,Biostimulants and their role in increasing cereal crops' resistance to drought stress.,positive,0.6925382635229379,positive
+489,Harnessing biochar and plant growth-promoting bacteria for sustainable crop production under reclaimed water irrigation: A review.,positive,0.6897835061125012,positive
+356,Harnessing plant-exuded prebiotics as a next-generation strategy for sustainable agriculture.,positive,0.6886949084531179,positive
+323,Soil microbial resources: Unlocking sustainable strategies for crop productivity and soil health.,positive,0.6885833786917589,positive
+151,Friends in low places: Soil derived microbial inoculants for biostimulation and biocontrol in crop production,pass,0.6824493473659023,positive
+455,Modification of Rhizosphere Microbial Communities: A Possible Mechanism of Plant Growth Promoting Rhizobacteria Enhancing Plant Growth and Fitness,negative,0.6786210293938546,positive
+164,Advances in microbial based bio-inoculum for amelioration of soil health and sustainable crop production.,negative,0.6782508091053532,positive
+363,Rhizosphere microbes are partners in plant stress adaptation.,pass,0.6776034007618035,positive
+289,Recent advances of plant growth-promoting rhizobacteria (PGPR)-mediated drought and waterlogging stress tolerance in plants for sustainable agriculture,pass,0.6775420177261456,positive
+479,Harnessing biostimulants to alleviate potentially toxic element stress in vegetable crops.,pass,0.6758349898447346,positive
+485,Rhizosphere microbiome dynamics and plant adaptation to abiotic stress in major oilseed crops: a review.,positive,0.6747382135547892,positive
+711,Arbuscular Mycorrhizal Fungi and Associated Microbiota as Plant Biostimulants: Research Strategies for the Selection of the Best Performing Inocula,positive,0.6742470208202721,positive
+149,Microbial Interventions in Soil and Plant Health for Improving Crop Efficiency,positive,0.6736380011469436,positive
+546,Management of abiotic stresses by microbiome-based engineering of the rhizosphere,positive,0.6707085126127205,positive
+213,Halo-tolerant plant growth-promoting bacteria-mediated plant salt resistance and microbiome-based solutions for sustainable agriculture in saline soils,positive,0.6625865156727373,positive
+578,Translational microbiomes in agriculture: microbial communities as tools to effect host and system health for improved crop production.,positive,0.6611083170827443,positive
+740,Microbe-Induced Abiotic Stress Alleviation in Plants: From Hidden Partners to Central Drivers of Resilience.,negative,0.6560272549387762,positive
+698,The role of Bacillus megaterium PEF-1 in stimulating the growth of organic cotton under environmental stress conditions.,positive,0.6534402862004286,positive
+217,Biodiversity and Plant Growth Promoting Potential of Bacteria from Soybean Rhizosphere of Saline Soil,pass,0.6466654434590636,positive
+238,"The Impact of Drought Stress on Soil Microbial Community, Enzyme Activities and Plants",positive,0.6395138038696705,positive
+557,"Salt stress–soil microbiome interactions: structure, diversity, and physiological functions",pass,0.6381833597518178,positive
+752,Phages as Metabolic Switches in Plant-Associated Microbiomes: Implications for Climate-Smart Agriculture.,pass,0.6363092715045758,positive
+439,Editorial: Unveiling microbiome interactions and functions in soil hotspots.,pass,0.6362624829615112,positive
+281,"The impact of drought stress on soil microbial community, enzyme activities, and microbial diversity",positive,0.6354439694842514,positive
+792,"Organic fertilizer improves soil fertility and restores the bacterial community after 1,3-dichloropropene fumigation.",pass,0.6335150332440824,positive
+206,Plant Growth-Promoting Bacteria of Soil: Designing of Consortia Beneficial for Crop Production,negative,0.6305253934424708,positive
+670,Bacterial Exopolysaccharides: Insight into Their Role in Plant Abiotic Stress Tolerance,negative,0.6298082462819097,positive
+376,Climate Change with Its Impacts on Soil and Soil Microbiome Regulating Biogeochemical Nutrient Transformations,pass,0.6279575325226636,positive
+486,Microbial co-inoculation and extracellular vesicles: new frontiers for soybean productivity.,positive,0.6272549614976729,positive
+499,Plant Growth-Promoting Rhizobacteria for Sustainable Agricultural Production,negative,0.6223428748549004,positive
+335,Engineering Host Microbiome for Crop Improvement and Sustainable Agriculture,negative,0.6205544526804772,positive
+765,The Role of Plant Growth Promoting Rhizosphere Microbiome as Alternative Biofertilizer in Boosting Solanum melongena L. Adaptation to Salinity Stress,positive,0.6189530632743784,positive
+264,Arbuscular Mycorrhizal Fungi Inoculation Mediated Changes in Phytohormones Under Drought Stress.,negative,0.6182267160930802,positive
+248,Role of Microbes in Alleviating Crop Drought Stress: A Review,negative,0.6170661126312849,positive
+394,Editorial: Microorganisms in agricultural soil: advances and challenges of biological health.,pass,0.6158104344085117,positive
+598,Plant–Microbe Interaction: Stress Management for Sustainable Agriculture,pass,0.6150322221910055,positive
+220,Isolation and characterization of salt-stress-tolerant rhizosphere soil bacteria and their effects on plant growth-promoting properties,pass,0.608413017255137,positive
+517,Microbial Transformations Implicit With Soil and Crop Productivity in Rice System,pass,0.606493930486133,positive
+630,Continuous cropping drives assembly process of soil microbial community to alter keystone taxa causing challenges.,pass,0.6057735120081287,positive
+309,Microbial inoculants - fostering sustainability in groundnut production.,pass,0.6053101121095208,positive
+218,Detection of Plant Growth Promoting Bacteria from Soil,pass,0.5965803911304925,positive
+609,Editorial: Plants surviving in extreme environment: harnessing soil-plant-microbial relationship to enhance crop health and productivity.,pass,0.593412394789523,positive
+791,Preparation of a new biochar-based microbial fertilizer: Nutrient release patterns and synergistic mechanisms to improve soil fertility.,pass,0.592514949948611,positive
+285,Soil Salinity as a Challenge for Sustainable Agriculture and Bacterial-Mediated Alleviation of Salinity Stress in Crop Plants,negative,0.5917408649133546,positive
+761,A comparative study of plant growth promoting rhizobacteria (PGPR) and sowing methods on nutrient availability in wheat and rhizosphere soil under salinity stress,pass,0.5915963284103365,positive
+154,Microbes and Soil Health for Sustainable Crop Production,pass,0.5909202634230709,positive
+272,Plant Growth Promoting Rhizobacterial Mitigation of Drought Stress in Crop Plants: Implications for Sustainable Agriculture,negative,0.5904050566145015,positive
+239,Harnessing rhizosphere microbiomes for drought-resilient crop production,negative,0.5872986298081128,positive
+223,Plant Growth-Promoting Microorganisms Mediate Plant Metabolic Reprogramming to Manage the Rhizospheric Microbiome.,positive,0.5837761199574448,positive
+610,"Rhizobacteria Exopolysaccharide: A Boon in Reclaiming Soil Fertility, Augmenting Plant Growth and Plant Stress Resilience.",negative,0.582680033655431,positive
+574,The root's hidden ally: How the rhizosheath microbiome fortifies crops against drought.,positive,0.581635505530974,positive
+608,The optimization of crop response to climatic stress through modulation of plant stress response mechanisms. Opportunities for biostimulants and plant hormones to meet climate challenges.,negative,0.5781151395818278,positive
+804,Tracking of soil microbial inoculates for sustainable agriculture,pass,0.5763335580646415,positive
+753,Integrating epigenetic memory and plant growth-promoting rhizobacteria-mediated signaling for climate-resilient agriculture.,pass,0.5737006384626219,positive
+449,The role of plant growth promoting rhizobacteria in plant drought stress responses,negative,0.565934061887941,positive
+165,"""Harnessing the power of soil microbes: Their dual impact in integrated nutrient management and mediating climate stress for sustainable rice crop production"" A systematic review.",negative,0.5631687595805428,positive
+623,Microbial organic fertilizer improves soil microbial community and promotes tobacco growth.,pass,0.5604346663125155,positive
+597,Plant–Microbe Interaction: Enhancing Stress Tolerance and Crop Production,pass,0.5597602553900404,positive
+772,Soil microbial processes shaping seed performance: linking soil microbiomes to sustainable agriculture.,negative,0.5502064958387433,positive
+247,"The Role of Plant-Associated Bacteria, Fungi, and Viruses in Drought Stress Mitigation",negative,0.5466328245190929,positive
+258,Drought stress effects on soil microbial diversity and function: an integrative review,negative,0.5455734477292029,positive
+672,Mechanisms and Strategies of Plant Microbiome Interactions to Mitigate Abiotic Stresses,negative,0.5423667326366837,positive
+233,Soil microbiomes and climate change,pass,0.5418077509962073,positive
+417,Revitalizing contaminated soils: The combined power of modified biochar and intrinsic bacteria for heavy metal and petroleum hydrocarbon removal and plants performance.,negative,0.5397121341369301,positive
+600,An Outline of Plant–Microbe Interactions for Stress Management,pass,0.5381262233372724,positive
+689,Perspective Chapter: Unlocking Root Architecture Plasticity – Enhancing Crop Productivity and Resilience to Abiotic Stresses,negative,0.5356252937450534,positive
+240,Plant Growth-Promoting Rhizobacteria Eliminate the Effect of Drought Stress in Plants: A Review,positive,0.5342162624092781,positive
+454,The influence of plant growth-promoting rhizobacteria in plant tolerance to abiotic stress: a survival strategy,negative,0.5341113274089826,positive
+308,Title: Enhancing Soil Health and Corn Productivity with a Co-Fermented Microbial Inoculant (CFMI-8): A Field-Based Evaluation,negative,0.5327149653536521,positive
+561,Crop microbiome dynamics in stress management and green agriculture,pass,0.5308029703099298,positive
+301,"Enhancing Soil Health and Plant Growth through Microbial Fertilizers: Mechanisms, Benefits, and Sustainable Agricultural Practices",positive,0.5307883683707981,positive
+274,Beneficial and pathogenic plant‐microbe interactions during flooding stress,negative,0.5304968256965545,positive
+167,Microbial Inoculants Alleviate Continuous Cropping Obstacles in Eggplant Through Soil Properties and Rhizosphere Microbiota.,negative,0.5300521612549797,positive
+131,Soil microbial and plant responses to increasing antibiotic concentration: a case study of five antibiotics.,negative,0.5299543527921496,positive
+456,Halo-tolerant plant growth promoting rhizobacteria for improving productivity and remediation of saline soils,negative,0.5278828601439309,positive
+606,Nanoparticles and plant–microbe interactions in the rhizosphere during abiotic stress,pass,0.5275419386753193,positive
+614,Bioinoculants as mitigators of multiple stresses: A ray of hope for agriculture in the darkness of climate change.,negative,0.525162192781126,positive
+228,Soil microbial load modulation improves plant-microbe interactions and bioinoculant efficacy in pathogen-stressed soils.,positive,0.5249414356295792,positive
+558,Heavy Metal Contamination in Soil: Implications for Crop Resilience and Abiotic Stress Management,positive,0.5157795501247266,positive
+563,Siderophilic microbes and their role in abatement of abiotic stress in plants,pass,0.5142781240710078,positive
+194,Battle of Arbuscular Mycorrhizal Fungi Against Drought Stress: A Gateway to Sustainable Agriculture.,negative,0.5123960819325002,positive
+357,Supporting crop yields under climate change by engineering innate soil microbiomes.,positive,0.5116513395940809,positive
+288,Endophytic microbes: Allies for stress adaptation in crop roots,pass,0.511558259721861,positive
+458,Rhizosphere Engineering With Plant Growth-Promoting Microorganisms for Agriculture and Ecological Sustainability,negative,0.5111459336634996,positive
+181,"The Application of Arbuscular Mycorrhizal Fungi as Microbial Biostimulant, Sustainable Approaches in Modern Agriculture",negative,0.5109060839515013,positive
+710,Mechanistic Insights into Arbuscular Mycorrhizal Fungi-Mediated Drought Stress Tolerance in Plants,negative,0.5107405006331059,positive
+696,Editorial: Climate is changing: harnessing plant-microbe interactions for sustainable agriculture in arid areas.,pass,0.5081378217818785,positive
+685,Rhizospheric Soil–Plant-Microbial Interactions for Abiotic Stress Mitigation and Enhancing Crop Performance,pass,0.505785324678563,positive
+530,"Biochar applications influence soil physical and chemical properties, microbial diversity, and crop productivity: a meta-analysis",positive,0.5026145279180609,positive
+693,Roles of endophytic fungi in plant resilience under abiotic stress: A mechanistic review with implications for climate-smart agriculture.,positive,0.5009480408480185,positive
+778,Importance of Soil Amendments: Survival of Bacterial Pathogens in Manure and Compost Used as Organic Fertilizers,positive,0.5009212770483791,positive
+415,"Integrated Microbial Bioaugmentation for Remediation of Industrially Contaminated Soil: Impacts on Heavy Metal Reduction, Gas Mitigation, and Geotechnical Sustainability",negative,0.4994244199179369,negative
+537,Rhizosphere engineering for soil carbon sequestration,positive,0.49927030514133897,negative
+703,Mycorrhizal fungi volatiles: determining the fate of plants against stress?,pass,0.498931214407636,negative
+483,From Rhizosphere to Endosphere: Conserved and Specialised Mechanisms of Plant Growth-Promoting Bacteria in Mediating Salt Tolerance.,negative,0.4968441263435919,negative
+799,Integrated Fertilizer Management Modifying Microbial Community and Paddy Soil Enzyme Functions,pass,0.49528154653358347,negative
+178,"Microbes as Biofertilizers, a Potential Approach for Sustainable Crop Production",negative,0.49488028299450953,negative
+716,Roles of Arbuscular mycorrhizal Fungi as a Biocontrol Agent in the Control of Plant Diseases,negative,0.49222122423172243,negative
+457,Plant Growth-Promoting Rhizobacteria as a Green Alternative for Sustainable Agriculture,negative,0.49214614639233767,negative
+491,Temporal dynamics of the tomato rhizosphere microbiome in response to synthetic communities of plant growth-promoting rhizobacteria.,positive,0.483178615099675,negative
+552,Encapsulated plant growth regulators and associative microorganisms: Nature-based solutions to mitigate the effects of climate change on plants,pass,0.4829428996241631,negative
+249,Grapevine rootstock and soil microbiome interactions: Keys for a resilient viticulture,negative,0.48186860909259777,negative
+397,Editorial: The role of the microbiome in plant and soil health in a changing climate.,pass,0.48106033387473696,negative
+147,Evolutions and Managements of Soil Microbial Community Structure Drove by Continuous Cropping,positive,0.479958127907201,negative
+312,Microbial inoculant carriers: Soil health improvement and moisture retention in sustainable agriculture,pass,0.4785480080457789,negative
+539,Editorial: Microbial community dynamics in agroecosystems: from disease suppression to soil health.,pass,0.47706678408489434,negative
+262,"Plant-soil-microbiome interactions: mechanisms, advances, and challenges in sustainable agriculture and healthy agroecosystems.",pass,0.4764269713936511,negative
+618,Bacterial Community Expansion and Nutrient Activation Underlie Yield Improvement Following Diazotrophic Inoculant Application in Paddy Soil.,pass,0.47550496521097085,negative
+776,Physiological Mechanisms of Plant Growth-Promoting Rhizobacteria in Enhancing Abiotic Stress Tolerance of Vegetable Crops: A Review,pass,0.47445935325822025,negative
+276,Soil microbiome analysis reveals effects of periodic waterlogging stress on sugarcane growth.,pass,0.4741100626833365,negative
+346,Selenium in the Environment and Soil Microbiome: Crop Resilience to Abiotic Stressors,negative,0.47300518209050385,negative
+470,Synergistic role of plant growth-promoting rhizobacteria and fungi in biofertilizer development for chilli (Capsicum annuum L.): mechanistic and functional insights,negative,0.47267692442377135,negative
+759,Plant growth promotion and biocontrol by novel thermotolerant fungal strains isolated from an active volcano crater.,pass,0.4694575465365118,negative
+667,Biofertilizers: An ecofriendly technology for nutrient recycling and environmental sustainability,negative,0.4693451826236285,negative
+697,Principles of nutrition-dependent root-microbiome engineering for regulating crop yield via live microbial inoculants,negative,0.4678996305788042,negative
+668,The Potential Use of Actinomycetes as Microbial Inoculants and Biopesticides in Agriculture,negative,0.46650169656430346,negative
+589,"Plant Growth-Promoting Microbe Mediated Uptake of Essential Nutrients (Fe, P, K) for Crop Stress Management: Microbe–Soil–Plant Continuum",pass,0.46629929389997743,negative
+570,"Plant health in the era of global changes, holobiont biology, and microbiome-based solutions.",positive,0.4634418752864512,negative
+798,1104 - Soil Microbial Community Response to 2 years biochar amendment revealed by metagenomics,pass,0.45867836839426146,negative
+669,Bioinoculants—Natural Biological Resources for Sustainable Plant Production,positive,0.455256760719596,negative
+197,Holistic Approaches to Plant Stress Alleviation: A Comprehensive Review of the Role of Organic Compounds and Beneficial Bacteria in Promoting Growth and Health,negative,0.4528787489117464,negative
+587,A Review of Plant–Microbe Interactions in the Rhizosphere and the Role of Root Exudates in Microbiome Engineering,positive,0.45229798169161844,negative
+790,Progress in Microbial Fertilizer Regulation of Crop Growth and Soil Remediation Research.,pass,0.44495854517325434,negative
+343,Favorable Soil Microbes for Sustainable Agriculture,negative,0.4443991890750213,negative
+582,Overview of biofertilizers in crop production and stress management for sustainable agriculture,negative,0.44414454458184116,negative
+386,Soil Microbiome Influences Human Health In the Context of Climate Change,pass,0.43976545702894143,negative
+519,SEWAGE SLUDGE BIOCHAR ENHANCES SOIL HEALTH AND CROP PRODUCTIVITY IN STRONGLY ACIDIC SOIL,negative,0.43935900109336556,negative
+284,Microbial activity responses to water stress in agricultural soils from simple and complex crop rotations,negative,0.43762131830200823,negative
+771,Plant Growth-Promoting Endophytic Bacteria and Their Potential to Improve Agricultural Crop Yields,pass,0.43742224069116137,negative
+720,The Role of Arbuscular Mycorrhizal Fungi in Enhancing Crop Resilience and Soil Health: A Review,positive,0.4347162711900869,negative
+490,Integrating plant growth-promoting rhizobacteria and machine learning for drought tolerance assessment in green bean (Phaseolus vulgaris L.).,positive,0.43273569203171314,negative
+447,Drought and Salinity Stress Responses and Microbe-Induced Tolerance in Plants,negative,0.43228334235758636,negative
+612,Plant genomic and microbial interplay in the rhizosphere under salt stress: a review.,negative,0.431145572189463,negative
+533,"Biochar Production and Characteristics, Its Impacts on Soil Health, Crop Production, and Yield Enhancement: A Review",positive,0.4266454290158659,negative
+391,Climate Changes in Soil Microorganism–Plant Interactions,pass,0.4265380828151151,negative
+348,Microbial Communities in Rhizosphere Microbiome for Sustainable Soil Health and Productivity,pass,0.4249031400671753,negative
+253,Deciphering Conserved Rhizosphere Metabolite–Microbiome Interactions for Crop Drought Resistance,negative,0.4232498176064749,negative
+142,"Plant Growth-Promoting Rhizobacteria: Context, Mechanisms of Action, and Roadmap to Commercialization of Biostimulants for Sustainable Agriculture",pass,0.42159959601856156,negative
+362,Metabolic reprogramming disrupts the resistome-mobilome nexus and enhances bio-sanitization in synthetic microbial community-mediated composting.,negative,0.4195973387773683,negative
+324,Key Challenges in Plant Microbiome Research in the Next Decade.,negative,0.4153921613510742,negative
+577,Plant microbiome responses to bioinoculants and volatiles.,positive,0.413601203528768,negative
+526,Systematic Review on the Role of Microbial Activities on Nutrient Cycling and Transformation Implication for Soil Fertility and Crop Productivity,negative,0.40679939962874795,negative
+192,Soil Microbiome for Climate Smart Agriculture in Legumes: A Review.,negative,0.4067421812087377,negative
+256,Interactions between soil compositions and the wheat root microbiome under drought stress: From an in silico to in planta perspective.,pass,0.4062572503990992,negative
+738,Plant-Associated Microbiomes: Crosstalk and Engineering to Improve Nutrient Use Efficiency (NUE) in Crops of Global Importance.,negative,0.40549209455664753,negative
+547,Toward understanding the genetic bases underlying plant‐mediated “cry for help” to the microbiota,negative,0.4011095666552821,negative
+601,Omics Perspective on Plant-Microbe Interaction for Improving Crop Species' Resilience to Changing Climate,pass,0.40015788027213134,negative
+625,Microalgal fertilizers as sustainable alternatives to chemical fertilizers: Enhancing pepper yield and soil health through reduced synthetic input strategies.,pass,0.39833389132122293,negative
+681,Microbacterium azadirachtae CNUC13 Enhances Salt Tolerance in Maize by Modulating Osmotic and Oxidative Stress.,pass,0.39391865819762745,negative
+500,Plant-soil-microbes: A tripartite interaction for nutrient acquisition and better plant growth for sustainable agricultural practices,pass,0.39338076440938957,negative
+148,Role of Soil Microorganisms in Sustainable Crop Production,pass,0.39210857158196083,negative
+460,"Rhizosphere Bacteria in Plant Growth Promotion, Biocontrol, and Bioremediation of Contaminated Sites: A Comprehensive Review of Effects and Mechanisms",negative,0.39060947867089,negative
+207,"Plant Growth-Promoting Soil Bacteria: Nitrogen Fixation, Phosphate Solubilization, Siderophore Production, and Other Biological Activities",positive,0.39034908240734917,negative
+321,"Optimizing Resource Management with Organic Fertilizer and Microbial Inoculants to Enhance Soil Quality, Microbial Diversity, and Crop Productivity in Newly Cultivated Land.",negative,0.38808873425920787,negative
+604,Role of soil metagenomics in plant–microbe interaction,pass,0.38690577227923867,negative
+297,"Actinobacteria-enhanced plant growth, nutrient acquisition, and crop protection: Advances in soil, plant, and microbial multifactorial interactions",pass,0.38608051103784596,negative
+617,The phytomicrobiome: solving plant stress tolerance under climate change.,negative,0.3850351116034642,negative
+286,Biochar to Mitigate Crop Exposure to Soil Compaction Stress,pass,0.3847826390441517,negative
+705,"Phosphorus-solubilizing microorganisms: Advances in nutrient uptake mechanisms, plant growth promotion, and sustainable agriculture.",pass,0.3845481583581169,negative
+190,"Editorial for special issue ""Microorganisms and food security under climate change scenarios: From taxonomy to host-microbe interactions"".",negative,0.3839676443624511,negative
+255,Interpretable machine learning decodes soil microbiome's response to drought stress.,pass,0.38206853645609373,negative
+325,Harnessing Nitrogen-Fixing and Phosphate-Mobilizing Bacteria for Sustainable Agriculture.,negative,0.3802415768772859,negative
+385,Soil microbiome to maximize the benefits to crop plants—a special reference to rhizosphere microbiome,pass,0.377464954925861,negative
+538,Applications and mechanisms of biochar-mycorrhizal synergies in agriculture based on systematic review.,negative,0.37718313658918134,negative
+380,Dormancy dynamics and dispersal contribute to soil microbiome resilience,negative,0.37267381276319833,negative
+793,Traits-Based Integration of Multi-Species Inoculants Facilitates Shifts of Indigenous Soil Bacterial Community.,pass,0.3723565159385963,negative
+794,Soil-plant-microbial interactions for soil fertility management and sustainable agriculture,pass,0.36109364971651153,negative
+234,Drought Stress and Root-Associated Bacterial Communities,negative,0.36005632336854654,negative
+779,Treatment with organic manure inoculated with a biocontrol agent induces soil bacterial communities to inhibit tomato Fusarium wilt disease,negative,0.35845296231131724,negative
+268,"Advances in the Plant Microbiome: Rhizosphere, Endosphere, and Phyllosphere.",negative,0.3571340709423014,negative
+729,Arbuscular Mycorrhizal Fungi: An Eco-Friendly Technology for Alleviation of Salinity Stress and Nutrient Acquisition in Sustainable Agriculture,pass,0.3551913906943803,negative
+177,"Role of Arbuscular Mycorrhizal Fungi in Regulating Growth, Enhancing Productivity, and Potentially Influencing Ecosystems under Abiotic and Biotic Stresses",negative,0.35428577566180963,negative
+679,Isolation and Characterization of Halotolerant Plant Growth-Promoting Rhizobacteria for Sustainable Agriculture in Saline Soils.,pass,0.3531411992413132,negative
+671,"Insights into the Interactions among Roots, Rhizosphere, and Rhizobacteria for Improving Plant Growth and Tolerance to Abiotic Stresses: A Review",negative,0.3522828342328404,negative
+721,Plant-Arbuscular Mycorrhizal Fungi Association Under Drought Stress,pass,0.3486095478225227,negative
+287,Omics Data Integration in Microbial Research for Agricultural and Environmental Applications,pass,0.34678961717297524,negative
+659,The Effect of Indigenous Cultivable Microorganism Inoculation on Soil Microecology During Restoration of Obstructed Soils.,negative,0.34535462181879145,negative
+575,"Editorial: Plant microbiome: interactions, mechanisms of action, and applications, volume III.",pass,0.3448886371608989,negative
+254,Impact of Drought on Soil Microbial Communities.,negative,0.3438211233093532,negative
+755,Qualitative and quantitative evaluation of phosphate-solubilizing ability of Lysinibacillus macroides: a climate-resilient biofertilizer candidate for sustainable crop nutrition.,pass,0.34238530720282123,negative
+371,The role of biochar in enhancing soil health & interactions with rhizosphere properties and enzyme activities in organic fertilizer substitution,negative,0.3423771384571588,negative
+453,"A review on the plant microbiome: Ecology, functions, and emerging trends in microbial application",negative,0.34219611211663065,negative
+767,Rhizosphere Engineering of Rice with Plant Growth Promoting Rhizobacteria (PGPR) Elicits Crop Growth and Soil Microcosm in Blue-R Dye Contaminated Soil,pass,0.34169542685944226,negative
+607,Uncovering the effect of waterlogging stress on plant microbiome and disease development: current knowledge and future perspectives.,negative,0.33491118713863877,negative
+364,Navigating Climate Change: Exploring the Dynamics Between Plant–Soil Microbiomes and Their Impact on Plant Growth and Productivity,negative,0.3334934485428512,negative
+787,Biochar-based microbial fertilizer improves soil fertility and rice productivity by regulating soil nutrient-microbe-metabolite interactions.,pass,0.3333705342823756,negative
+163,Soil exposure and human health: A One Health framework for managing microbial and chemical hazards,pass,0.3286645255064793,negative
+186,Mycorrhizal Fungi in Sustainable Agriculture: Enhancing Crop Yields and Soil Health,negative,0.32851727760243143,negative
+205,Rhizosphere Microbiome Modulators: Contributions of Nitrogen Fixing Bacteria towards Sustainable Agriculture,negative,0.327537595778251,negative
+379,Exploring the role of soil microbiome in global climatic changes,pass,0.3245954625948184,negative
+595,PHYLLOSPHERE MICROBES – NEW AVENUES OF PLANT-MICROBE INTERACTION TOWARDS PLANT HEALTH AND CROP PRODUCTIVITY: A REVIEW,pass,0.321976507228015,negative
+529,"Bacillus subtilisimpact on plant growth, soil health and environment: Dr. Jekyll and Mr. Hyde",negative,0.3216630681568152,negative
+611,Effect of PGPB-enriched organic fertilizer ORGAON®PK on the rhizospheric microbiota and biomass of Lupinus albus (L.): a sustainable alternative to chemical fertilizer.,negative,0.32118918107861877,negative
+571,Role of the Plant-Microbiome Partnership in Environmentally Harmonious 21st Century Agriculture.,negative,0.3195413944962133,negative
+800,Effects of salinity on the soil microbial community and soil fertility,pass,0.3168675957498315,negative
+150,"Comparative Study of Traditional and Novel Sanitizer Chemistries for Pathogen Reduction on Irrigation Water, Crop and Soil Health and Soil Microbial Community Dynamics",pass,0.316481807646039,negative
+613,Sustainable Tea Cultivation with a Rhizobacterial Consortium: A Microbiome-Driven Alternative to Chemical Fertilizers.,negative,0.3158864670893263,negative
+477,Synergistic effects of rhizobacteria and silicon nanoparticles in alleviating drought-induced stress via improved antioxidant and defense responses in plants.,pass,0.3156992133344548,negative
+317,"Biocha Soil Amendment: Effect on Soil, Crop Performance, and Diseases Resistance",negative,0.3115708251121136,negative
+160,Soil Microbial Community Dynamics and Plant Proliferation,pass,0.31056038207600883,negative
+174,Role of Arbuscular Mycorrhizal Fungi in Plant Growth Regulation: Implications in Abiotic Stress Tolerance,negative,0.3092024125178681,negative
+553,Potential and challenges for application of microbiomes in agriculture,negative,0.3080775424561138,negative
+375,Impact of Plant Microbiome Research on Sustainable Crop Yields,negative,0.30546731951286576,negative
+513,Biochar mitigates Fusarium wilt by regulating the rhizosphere microbial community structure.,pass,0.3028919598996431,negative
+770,Development of Salt Tolerance in Crops Employing Halotolerant Plant Growth–Promoting Rhizobacteria Associated with Halophytic Rhizosphere Soils,pass,0.3010708434136794,negative
+411,Bacterial extracellular polymeric substances: Impact on soil microbial community composition and their potential role in heavy metal-contaminated soil.,negative,0.3009030335757609,negative
+261,Molecular mechanisms and nutrient regulation of crop root responses to drought stress: interactions with rhizosphere microorganisms,pass,0.30060466655981244,negative
+498,Climate Change and Salinity Effects on Crops and Chemical Communication Between Plants and Plant Growth-Promoting Microorganisms Under Stress,negative,0.2997303576724432,negative
+219,"Effect of plant growth-promoting bacteria Bacillus amylliquefaciens Y1 on soil properties, pepper seedling growth, rhizosphere bacterial flora and soil enzymes",pass,0.2955093171758667,negative
+307,"Microbial enriched vermicompost efficiently substitutes soil nutrients, microbial populations and enzymatic activity for the growth and yield of tuberose (Agave amica Medik.) cv. Single.",pass,0.2953120758432002,negative
+135,"Combination of Aspergillus niger MJ1 with Pseudomonas stutzeri DSM4166 or mutant Pseudomonas fluorescens CHA0-nif improved crop quality, soil properties, and microbial communities in barrier soil.",negative,0.294296432566193,negative
+543,Halotolerant Rhizobacteria from Phragmites Communis: A Controlled Proof-of-Concept for Crop Improvement in Degraded Sandy Soils.,negative,0.2927210045573553,negative
+436,Rhizosphere as Hotspot for Plant-Soil-Microbe Interaction,pass,0.2889102964401129,negative
+749,Root Exudates: Mechanistic Insight of Plant Growth Promoting Rhizobacteria for Sustainable Crop Production,negative,0.2880740630900787,negative
+481,Microbiome-Wide Association Studies of Host Beneficial Microbes and Their Functional Mechanisms and Promising Applications in Sustainable Crops.,pass,0.2866343182025748,negative
+656,Effects of continuous cropping on growth and rhizosphere soil microbial community structure of Salvia miltiorrhiza Bge,negative,0.28430147835228786,negative
+342,Soil Microbiome for Plant Growth and Bioremediation,negative,0.28225713016046455,negative
+156,Soil Microbiome as a Key Factor in Soil Health,pass,0.2817379250537282,negative
+588,Benefits to Plant Health and Productivity From Enhancing Plant Microbial Symbionts,negative,0.2779242685223437,negative
+202,Advances in Soil Engineering: Sustainable Strategies for Rhizosphere and Bulk Soil Microbiome Enrichment.,negative,0.27588829290544453,negative
+193,Role of rhizosphere specific microbiome in enhancing soybean productivity across contrasting soil and crop management systems.,negative,0.2709527308122486,negative
+407,Evidence that beneficial microbial inoculation enhances heavy metal-contaminated soil remediation: Variations in plant endophyte communities.,negative,0.27075451025652864,negative
+713,Arbuscular Mycorrhizal Fungi Symbiosis to Enhance Plant–Soil Interaction,positive,0.2705229343858678,negative
+338,Microbial mechanisms enhancing soil phosphorus bioavailability through vermicompost application for sustainable agriculture,pass,0.2695585256592043,negative
+182,Interaction between arbuscular mycorrhizal fungi and Bacillus spp. in soil enhancing growth of crop plants,negative,0.2695052557426716,negative
+655,Effect of microbial fertilizers on soil microbial community structure in rotating and continuous cropping Glycyrrhiza uralensis,negative,0.26849791333580036,negative
+803,"Compound microbial agents improve the soil properties, fertilizer utilization and bacterial community structure in a continuous cropping soil",negative,0.2672974207882875,negative
+273,Interactions between plants and soil shaping the root microbiome under abiotic stress,positive,0.2650899240906824,negative
+305,Effects of rice and corn straw biochar combined with microbial inoculant on soil health in protected vegetable production.,negative,0.2639774203396697,negative
+576,Microbial agents enhance the yield and quality of pears by regulating the composition and networks of microbial communities in the phyllosphere and rhizosphere.,negative,0.2639604623276619,negative
+241,"Crop Root Responses to Drought Stress: Molecular Mechanisms, Nutrient Regulations, and Interactions with Microorganisms in the Rhizosphere",pass,0.2633410358297799,negative
+802,Soil Microbial Community Response to Enterobacter Cloacae Rs-2 Microbial Fertilizer Supplementing Chemical Fertilizer in Field Maize,pass,0.26269528601495246,negative
+244,Current Studies of the Effects of Drought Stress on Root Exudates and Rhizosphere Microbiomes of Crop Plant Species,negative,0.2626944059591949,negative
+795,Microbial Alleviation: Harnessing Microorganism for Sustainable Heavy Metal Bioremediation in Agriculture Soil,negative,0.26011693930126994,negative
+366,Extreme summers impact cropland and grassland soil microbiomes,negative,0.2599415051717824,negative
+730,"Role of Endophytes, Plant Growth Promoting Rhizobacteria, and Arbuscular Mycorrhizal Fungi in Stress Tolerance",pass,0.2594614993903215,negative
+200,Rhizosphere microbiome and plant probiotics,negative,0.2588343032017918,negative
+806,Soil microbial community structure affected by biochar and fertilizer sources,pass,0.2576031993696182,negative
+783,EXPLORATION AND MORPHOLOGICAL CHARACTERIZATION OF PHOSPHATE-SOLUBILIZING AND NITROGEN-FIXING BACTERIA IN SALINE SOIL,negative,0.25342232030143214,negative
+524,Crop residue and weed biomass incorporation with microbial inoculation improve the crop and soil productivity in the rice (Oryza sativa L.) -toria (Brassica rapa L.) cropping system,pass,0.2522059175402294,negative
+195,Exploration of the rhizosphere microbiome of native plant Ceanothus velutinus – an excellent resource of plant growth-promoting bacteria,negative,0.25121457261226054,negative
+743,Co-application of arbuscular mycorrhizal fungi and putrescine improves essential oil production and drought tolerance in Cuminum cyminum L.,negative,0.24776045914068887,negative
+762,Rhizosphere microbiome and plant growth-promoting bacteria isolates enhance salinity tolerance in Brassicaceae species,pass,0.24685657181018936,negative
+718,Role of arbuscular mycorrhizal fungi as an underground saviuor for protecting plants from abiotic stresses,pass,0.24371740406976314,negative
+341,Microbial Products and Their Role in Soil Health and Sustainable Agriculture,negative,0.2410137918031492,negative
+540,"Synergistic effects of vermicompost and phosphate-solubilizing bacteria on wheat growth, phosphorus bioavailability, and soil microbial dynamics in calcareous soils",negative,0.2398213408138026,negative
+459,Soil Microbial Resources for Improving Fertilizers Efficiency in an Integrated Plant Nutrient Management System,negative,0.2377792748774739,negative
+236,Effects of Abiotic Stress on Soil Microbiome,negative,0.23551215939149406,negative
+523,Plants surviving in extreme environment: Harnessing Soil-Plant–Microbial relationship to enhance crop health and productivity,pass,0.23246530098691223,negative
+585,Multi-Omics Approaches in Plant–Microbe Interactions Hold Enormous Promise for Sustainable Agriculture,negative,0.22865882163732357,negative
+183,Introductory Chapter: Mycorrhizal Fungi – A Current Overview on Agricultural Productivity and Soil Health,pass,0.2280283184883087,negative
+441,Soil Nutrient Availability By Beneficial Bacteria of Forest Trees: From Mechanisms To Applications.,negative,0.22721983176592694,negative
+645,Importance of diverse soil microbial community in crop rotation for sustainable agriculture,pass,0.2271192526436712,negative
+185,Arbuscular mycorrhizal fungi inoculation enhances 15N uptake by rice via modifying rhizosphere and hyphosphere soil bacterial and fungal community and soil enzyme activity,pass,0.22693612041082106,negative
+726,Alleviation of Soil Acidity Stress In Robusta Coffee By Arbuscular Mycorrhizal Fungi-Containing Biofertilizers,negative,0.2261770858214574,negative
+514,Contrasting responses of soil-microbial-plant systems to co-application of biochar and microplastics with/without additives in acidic versus slightly alkaline heavy metal-affected soils.,pass,0.2252213586349119,negative
+584,A review on effective soil health bio-indicators for ecosystem restoration and sustainability,negative,0.22231790310540708,negative
+210,Plant Growth Stimulation by Microbial Consortia,negative,0.22216812632935448,negative
+544,Multiple plant growth-promoting bacteria enhance rice growth in non-grain-converted lands.,negative,0.2220401866479247,negative
+548,Cropping practices manipulate abundance patterns of root and soil microbiome members paving the way to smart farming,negative,0.21912825091870022,negative
+347,Microbial community in soil-plant systems: Role in heavy metal(loid) detoxification and sustainable agriculture,pass,0.21825821885752245,negative
+189,Exogenous arbuscular mycorrhizal fungi increase soil organic carbon and change microbial community in poplar rhizosphere,pass,0.21582901239081007,negative
+797,Chemical fertilizer reduction with organic fertilizer effectively improve soil fertility and microbial community from newly cultivated land in the Loess Plateau of China,pass,0.21481421608841397,negative
+567,Plant endophytic microbiome: importance in crop production,negative,0.21388662042846704,negative
+176,Roles of Arbuscular Mycorrhizal Fungi on Plant Growth and Performance: Importance in Biotic and Abiotic Stressed Regulation,negative,0.21004386642337244,negative
+555,Seasonal activities of the phyllosphere microbiome of perennial crops,negative,0.2082963590154223,negative
+359,"Next-generation soil monitoring: linking metagenomics, biosensors, and ecological modeling for sustainable agriculture.",negative,0.20497251482807505,negative
+199,"Harnessing the Rhizosphere Microbiome for Selenium Biofortification in Plants: Mechanisms, Applications and Future Perspectives",negative,0.20485239072153957,negative
+424,Mechanisms and implications of bacterial–fungal competition for soil resources,negative,0.20374318835818603,negative
+208,Plant health: feedback effect of root exudates-rhizobiome interactions,negative,0.20270211277831232,negative
+137,"Partial Substation of Organic Fertilizer With Chemical Fertilizer Improves Soil Biochemical Attributes, Rice Yields, and Restores Bacterial Community Diversity in a Paddy Field.",pass,0.20240535287436273,negative
+204,Role of Microbiome in Plant Health and Disease Suppressions: A Review,negative,0.2015203905249834,negative
+640,Diversifying crop rotation increased metabolic soil diversity and activity of the microbial community,pass,0.2007330293248036,negative
+292,"Micro-nano aeration oxygenation and column P gradient variations enhance the soil microbial environment, thereby increasing corn yield.",negative,0.20011938652507566,negative
+168,Microbial communities and their association with soil health indicators under row cash crop and cover crop diversification: a case study.,negative,0.19978140820061643,negative
+594,Drought and Waterlogging Stress Responses in Crops,pass,0.1987363459909095,negative
+581,Beneficial fungal communities from different habitats and their roles in plant growth promotion and soil health,pass,0.19839637818766342,negative
+387,1008 - Resistance and resilience of the soil microbiome to mechanical compaction under different agricultural management regimes,pass,0.19829016643207553,negative
+706,Unravelling the Mechanistic Role of Soil Microbial Interactions in the Suppression of Phytopathogens in Vegetable Agroecosystems of Pakistan.,pass,0.19756491427980896,negative
+431,"Association of biochar properties with changes in soil bacterial, fungal and fauna communities and nutrient cycling processes",negative,0.19650581510895587,negative
+406,"Clean water irrigation promotes microbial community recovery in acid mine drainage-contaminated paddy soil: a spatiotemporal analysis based on simulated soil column experiments from Dabaoshan mine, China.",negative,0.19571804864590062,negative
+528,Agroforestry for soil health,pass,0.19510188271941936,negative
+789,Microbial fertilizers improve soil quality and crop yield in coastal saline soils by regulating soil bacterial and fungal community structure.,pass,0.19422243492767793,negative
+303,Soil Microorganisms: Their Role in Enhancing Crop Nutrition and Health,negative,0.19317269194888875,negative
+226,"Synergistic application of biochar and lime modulates rhizosphere microbiome, suppresses pathogens, and enhances disease resistance in sugarcane.",negative,0.19293855851559802,negative
+269,Effects of past and current drought on the composition and diversity of soil microbial communities,pass,0.19211066636000587,negative
+605,Soil Salinity and Sodicity as Particular Plant/Crop Stress Factors,pass,0.19117785740261248,negative
+532,Soil microbial biodiversity promotes crop productivity and agro-ecosystem functioning in experimental microcosms,negative,0.18781891083261873,negative
+384,Role of Rhizospheric Microbiome in Enhancing Plant Attributes and Soil Health for Sustainable Agriculture,pass,0.187675965592645,negative
+222,Epigenetic Regulation of Root-Associated Microbiota: Mechanisms and Horticultural Applications.,negative,0.186932274820139,negative
+554,Root phenotypes as modulators of microbial microhabitats,negative,0.18155417716481045,negative
+782,Microbial community assembly during aging of food waste-derived hydrochar: key bacterial guilds mediate nutrient dynamics,negative,0.18005571826616457,negative
+336,Fungicide and warming interact to reduce soil ecosystem functioning.,pass,0.17894943281325656,negative
+603,Plant-Microbe Interaction to Improve Soil Health,pass,0.1785959475628395,negative
+724,AM Fungi Role in Soil Health Management,pass,0.17558774664949184,negative
+714,Significance of Plant Growth Promoting Rhizobacteria in Grain Legumes: Growth Promotion and Crop Production,negative,0.17472145084483606,negative
+203,"Soil Microbiome: Diversity, Benefits and Interactions with Plants",negative,0.17408501681061903,negative
+638,Diversity of Phosphate Chemical Forms in Soils and Their Contributions on Soil Microbial Community Structure Changes,negative,0.17381326930682445,negative
+444,Ecological composite fertilizer application enhances wheat yield and optimizes rhizosphere microbial community under reduced fertilization.,negative,0.1736112672184971,negative
+487,"Abiotic Stress Reshapes Rhizosphere Community Assembly and Tea Quality: Root Exudates, Plant-Soil Interactions and Microbial Management.",negative,0.17129119634111994,negative
+401,Systems Biology of Plant-Microbiome Interactions,negative,0.1700036139326098,negative
+198,Role of Soil Microbiome and Enzyme Activities in Plant Growth Nutrition and Ecological Restoration of Soil Health,pass,0.16918367695309225,negative
+246,More Than the Sum of Its Parts: Microbiome Biodiversity as a Driver of Plant Growth and Soil Health,negative,0.1653787069200178,negative
+723,Enhancing sulfur absorption in soybean rhizosphere through arbuscular mycorrhizal fungi inoculation: Implications for soil health and crop growth,pass,0.16506599794686838,negative
+508,Assessing the efficacy and ecological impact of a plastic-dissolving agent on microplastic removal and soil microbial communities.,pass,0.1647648909935116,negative
+549,Missing symbionts – emerging pathogens? Microbiome management for sustainable agriculture,negative,0.16446033024871853,negative
+596,The Application of Artificial Neural Network in Plant-Microbe Interaction and Future Crop Health Surveillance,negative,0.16414692571605305,negative
+201,"Stimulation Effect of Rhizospheric Microbes’ Plant Growth Promoting Rhizobacteria, Glycoprotein Producing AM Fungi and Synthetic Fertilizers Application on Growth, Yield, Nutrient’s acquisition and Alliin Content of Garlic Cultivation Under Field Conditions in Southeast Region of Rajasthan, India",negative,0.163825601069235,negative
+542,"Microbial allies: shaping growth, physiology, and rhizosphere dynamics of onion (Allium cepa L.).",negative,0.1635504827955609,negative
+534,Role of Soil Microbiota Enzymes in Soil Health and Activity Changes Depending on Climate Change and the Type of Soil Ecosystem,negative,0.16348212241916432,negative
+405,"Editorial: Microbial-fungal symbioses: ecological implications, environmental impact, and biotechnological applications in natural and agricultural systems.",pass,0.16291467393669945,negative
+399,Ecology and Evolution of Plant Microbiomes,negative,0.16236612214557564,negative
+728,Arbuscular Mycorrhizal Fungi and Their Role in Biocontrol of Soil-Borne Plant Pathogens,pass,0.15950396011844245,negative
+152,Long-term mineral combined with organic fertilizer supports crop production by increasing microbial community complexity,pass,0.15941384782338242,negative
+719,Salt Stress Tolerance Enhanced by Symbiotic Mycorrhizal Fungi in Two Mungbean Landraces,pass,0.15930329474508323,negative
+639,Soil acidification in continuously cropped tobacco alters bacterial community structure and diversity via the accumulation of phenolic acids,negative,0.15853070506893635,negative
+400,Co-occurrence networks reveal more complexity than community composition in resistance and resilience of microbial communities,negative,0.15627772469879042,negative
+368,Sustainable Practices for Enhancing Soil Health and Crop Quality in Modern Agriculture: A Review,negative,0.15564261999222972,negative
+480,Characterization of plant growth-promoting bacteria from Vicia faba root nodules grown on oasis soils and their potential to enhance soil fertility and crop growth attributes in arid regions.,pass,0.1551240718199404,negative
+511,"16S rRNA-based metagenomics insights into the microbial diversity and functional attributes of soils from the rhizosphere of selected C4 crops of farms in Mpumalanga and Limpopo provinces, South Africa.",pass,0.15308929881974967,negative
+632,From predation to function: how myxobacteria drive soil microbial community dynamics and ecological functions.,pass,0.15159536897095774,negative
+634,Fertilization regime has a greater effect on soil microbial community structure than crop rotation and growth stage in an agroecosystem,pass,0.14858178305131567,negative
+230,"Composition, Diversity, and Functional Roles of the Rhizosphere Microbiome in Panax ginseng.",negative,0.1454251158624607,negative
+395,Profiling Soil-Plant-Microbial Communities: DNA and Multi-Omics Techniques.,negative,0.14458529238206133,negative
+409,Variations in microbial community structure and extracellular enzyme stoichiometry in heavy metal-contaminated soil under different fertilization regimes,pass,0.1445622324372529,negative
+550,Nitrogen Management in Crop–Soil–Environment Systems: Pathways Toward Sustainable and Climate-Resilient Agriculture,negative,0.14443426167501483,negative
+173,Sustainable improvement of soil health utilizing biochar and arbuscular mycorrhizal fungi: A review.,pass,0.14093054050778714,negative
+628,Distinct temporal succession patterns of soil microbial communities under multi-source compost and chemical fertilizer application.,pass,0.1394312337171477,negative
+216,Soil–plant–microbiome interactions in drylands: soil bacteria isolated from the rhizosphere of a xerophytic plant gather multiple plant growth promoting properties,pass,0.138064193174235,negative
+412,Simple measures to capture the robustness and the plasticity of soil microbial communities,negative,0.13668473557257432,negative
+788,The combined application of chemical and microbial fertilizers enhanced microbial diversity and improved soil fertility in the peanut rhizosphere within a sugarcane-peanut intercropping system.,pass,0.13623149432821888,negative
+660,Crop rotation increases Salvia miltiorrhiza growth by affecting soil microbial properties and nitrogen cycling,negative,0.13396386800356272,negative
+157,Diversified Crop Rotations Drive Changes in Soil Multifunctionality by Altering Soil Microbial Community and Soil Biochemical Properties,pass,0.13294752165912152,negative
+162,Sterile sentinels and MinION sequencing capture active soil microbial communities that differentiate crop rotations,negative,0.1324868884862138,negative
+662,Effects of Rotary Tillage and Fertilization on Chemical Properties and Microbial Communities of Soil Under Continuous Morchella Mushroom Cultivation.,negative,0.13197627007565968,negative
+580,"Plant–Microbe Interaction: Aboveground to Belowground, from the Good to the Bad",negative,0.1312407266293302,negative
+450,Unlocking Grass Stress Resistance: Fungal Endophyte-Mediated Pathogen Recognition and RNA Regulation.,negative,0.13053242077306257,negative
+569,What do we know about the seed microbiome?,negative,0.12985699887590976,negative
+506,Microbiome restructuring by integrated ryegrass and earthworms accelerates 4-nitrophenol bioremediation in soil.,pass,0.12868592106715682,negative
+352,Predicting Soil Microbial Biomass Carbon Using Stacking Machine Learning Techniques to Enhance Soil Health,pass,0.12789554834146896,negative
+227,"Unveiling the rhizosphere microbiome of Dendrobium: mechanisms, microbial interactions, and implications for sustainable agriculture.",negative,0.12775976611917886,negative
+727,"Peer Review #2 of ""The mycorrhizal fungi of Cymbidium promote the growth of Dendrobiumofficinale by increasing environmental stress tolerance (v0.2)""",pass,0.12507997159568945,negative
+966,Effects of Microbial Agent and Microbial Fertilizer Input on Soil Microbial Community Structure and Diversity in a Peanut Continuous Cropping System,pass,0.12155667286231736,negative
+211,Back to our roots: exploring the role of root morphology as a mediator of beneficial plant–microbe interactions,negative,0.12052446122158485,negative
+1136,Heavy Metal Dynamics in Rice Soil An Alleviation through Microbial Intervention Approach,pass,0.12000317800820527,negative
+572,Interaction ecology and functional stability: a mechanistic framework for managing plant microbiomes in drylands.,negative,0.11968071038878501,negative
+766,Rhizosphere microbial population and their plant growth-promoting functionality are influenced by soil sodicity and crop diversity,pass,0.11795342228433695,negative
+691,Harnessing the Sorghum Microbiome for Enhancing Crop Productivity and Food Security Towards Sustainable Agriculture in Smallholder Farming.,negative,0.11771373320676184,negative
+188,Effects of soil properties on mycorrhizal fungi responses: A Meta-Analysis,negative,0.11760784081760461,negative
+522,Sustainable Soil and Crop Management Practices to Boost the Crop Productivity and Soil Properties,negative,0.11567906725472198,negative
+413,Modelling Soil as a Living System: Feedback between Microbial Activity and Spatial Structure,negative,0.11465446173971566,negative
+225,Impact of microbial consortia and fertilization regimes on the soil microbiome in maize field trials.,negative,0.11464122855723054,negative
+373,Effects of microbial agent and microbial fertilizer input on soil microbial community structure and diversity in a peanut continuous cropping system,negative,0.11399475230819847,negative
+551,Cover crop root exudates impact soil microbiome functional trajectories in agricultural soils,negative,0.11301696982034805,negative
+408,Joint effects of bacterium and biochar in remediation of antibiotic-heavy metal contaminated soil and responses of resistance gene and microbial community.,negative,0.11252984559666696,negative
+170,Native mixed microbe inoculants (M1H) optimize soil health to promote Cajanus cajan growth: the soil fungi are more sensitive than bacteria.,pass,0.11065290201390603,negative
+237,Soil Microbiomes Under Climate Change and Implications for Carbon Cycling,negative,0.11006995223490422,negative
+784,Role of soil amendments in enhancing crop yields: A review of global practices,negative,0.10976923148271793,negative
+426,"Increased microbial growth, biomass, and turnover drive soil organic carbon accumulation at higher plant diversity",negative,0.10782618374110539,negative
+641,Rare microbial taxa as the major drivers of ecosystem multifunctionality in long-term fertilized soils,pass,0.10770670069748114,negative
+777,Effects of Organic Fertilizers on the Soil Microorganisms Responsible for N2O Emissions: A Review,negative,0.10725747296088264,negative
+663,Soybean-Bupleurum Rotation System Can Optimize Rhizosphere Soil Microbial Community via Impacting Soil Properties and Enzyme Activities During Bupleurum Seedling Stage.,negative,0.10664332585442146,negative
+635,Crop rotational diversity increases disease suppressive capacity of soil microbiomes,negative,0.10165709037279301,negative
+146,Cover cropping enhances soil microbial biomass and affects microbial community structure: A meta-analysis,pass,0.09829009243643388,negative
+134,Vermicompost Supply Enhances Fragrant-Rice Yield by Improving Soil Fertility and Eukaryotic Microbial Community Composition under Environmental Stress Conditions.,pass,0.09694541505589639,negative
+319,Field scale responses of soil enzymatic activities and microbial indicators to combined bioinoculant-fertilizer management in mustard (Brassica juncea L.).,negative,0.09694477831736975,negative
+626,Sustainable alternative to biochar: Effects of oxychar on soil carbon sequestration pathway and microbial communities.,pass,0.09676499591196608,negative
+631,Soil pH and nitrate shape deterministic assembly of microbial communities in agricultural soils via Nitrososphaeria.,pass,0.09587664967459257,negative
+169,"﻿Symbiotic synergy: How Arbuscular Mycorrhizal Fungi enhance nutrient uptake, stress tolerance, and soil health through molecular mechanisms and hormonal regulation.",pass,0.0958434605096869,negative
+469,Rhizosphere Microbiome as an Underexplored Resource for Agroecosystem Sustainability: Insights From the Carrot Root Zone.,negative,0.09470961869690624,negative
+232,"Evaluación del potencial de bacterias promotoras de crecimiento vegetal (PGPB) en Stevia rebaudiana bajo condiciones semicontroladas en Montería, Córdoba",negative,0.09386421617236955,negative
+270,Periodic waterlogging consistently shapes agricultural soil microbiomes by promoting specific taxa,negative,0.0935633414906803,negative
+410,Bioorganic fertilizers improve the adaptability and remediation efficiency of Puccinellia distans in multiple heavy metals-contaminated saline soil by regulating the soil microbial community.,negative,0.09353744895572451,negative
+414,Responses of soil microbes to antimony stress and coupled nutrient cycling in karst mining areas of Southwest China.,pass,0.09166619734095918,negative
+161,"Dynamic relationships between microbial community, enzyme activity, and soil properties across global ecosystems",pass,0.09154671709512706,negative
+510,Ecological Roles of Biodegradable Mulch Film on Soil Nutrients and Microbes.,pass,0.09030946729229457,negative
+643,The diversity of soil microbial communities matters when legumes face drought,negative,0.08775619408553624,negative
+474,Strain-Specific Fungal-Bacterial Co-Inoculation Regulates Rhizosphere Microecology and Plant-Soil-Microbiome Responses in Conifer Seedlings.,pass,0.08714176223650553,negative
+396,Plant Disease Suppressiveness Enhancement via Soil Health Management.,negative,0.0869140132113511,negative
+649,Effects of Garlic Rotation and Organic Fertilizer Application on Bacterial Community Structure in Rhizosphere Soil of Continuous Cropping Tomato,negative,0.08586771697394491,negative
+350,Soil Biology Management for Sustainable Soil Health,negative,0.08426235687152807,negative
+196,Mining the Microbiome of Key Species from African Savanna Woodlands: Potential for Soil Health Improvement and Plant Growth Promotion,negative,0.08426171417732993,negative
+235,Legacy of land use history determines reprogramming of plant physiology by soil microbiome,negative,0.08266640170506988,negative
+786,Synergistic effects of biochar and Bacillus subtilis on soil fertility and tobacco leaf quality in acidified soil: microbial mechanisms and multi-model evaluation.,pass,0.0825758586296825,negative
+657,Short-term calcium peroxide application promotes soil microbial interactions to improve peanut yield in acidic soils.,negative,0.07965898802441843,negative
+184,Soil Properties and Not Crop Rotation With Non‐Mycorrhizal Canola Influence the Abundance of Arbuscular Mycorrhizal Fungi in Wheat Soils,negative,0.07883176539293976,negative
+290,"Effects of waterlogging on microbial activity, soil nutrient availability, nutrient uptake, and yield of tolerant and sensitive onion genotypes.",negative,0.07776002937442668,negative
+764,Soil Salinity and Its Alleviation Using Plant Growth–Promoting Fungi,pass,0.07522775396962961,negative
+464,Calcium phosphate-solubilizing bacteria promote growth and alleviate phosphorus deficiency in French marigold with minimal impact on the rhizosphere microbiome.,negative,0.07501460094017069,negative
+139,Fertilization and Soil Microbial Community: A Review,negative,0.07320984424641158,negative
+437,Soil fertilization affects the abundance and distribution of carbon and nitrogen cycling genes in the maize rhizosphere,negative,0.07191877588503849,negative
+739,From microbiome collapse to recovery: a roadmap for microbiome-informed grassland restoration under global change.,negative,0.07168056469096701,negative
+652,"Crop Rotation Enhances Crop Richness and Restructures Soil Microbial Community Structure in Subtropical Red Latosol, South Brazil",pass,0.07092552858596149,negative
+785,What affects the survival of E. coli in midwest agricultural soils?,negative,0.07075376809197667,negative
+271,Optimizing sustainable agriculture: A comprehensive review of agronomic practices and their impacts on soil attributes,negative,0.06867489986823992,negative
+166,"Soil nutrient management influences diversity, community association and functional structure of rhizosphere bacteriome under vegetable crop production.",negative,0.06773631404393705,negative
+179,"Roles of Arbuscular Mycorrhizal Fungi on Soil Fertility: Contribution in the Improvement of Physical, Chemical, and Biological Properties of the Soil",negative,0.0672907657087683,negative
+509,Global long-term agricultural experiments reveal consequences of mineral fertilization for soil microbiomes.,pass,0.06711552152728754,negative
+468,Potassium-solubilizing bacteria from tropical forest soils enhance potassium and phosphorus uptake in maize.,negative,0.06665323093920286,negative
+731,Arbuscular Mycorrhizal Fungi: The Potential Soil Health Indicators,pass,0.06502632426925738,negative
+512,Alfalfa Rotation Enhances Soil Microbial Diversity and Reduces Tilletia foetida DNA Abundance in Common Bunt-Infected Wheat Fields.,pass,0.06474591443855554,negative
+704,Belowground-Aboveground climate allies: arbuscular mycorrhizal fungi as ecosystem bridges for greenhouse gas mitigation.,pass,0.0639801584360891,negative
+653,Changes in Microbial Community and Activities in Continuous Pepper Cropping Soil After a Trichoderma Hamatum MHT1134 Application,negative,0.06198992240563153,negative
+141,Fungal Biodiversity and Their Role in Soil Health,negative,0.06181490149517523,negative
+275,Soil bacteria and fungi diversity analysis reveals effects of sesame (Sesamum indicum L.) under waterlogging stress.,pass,0.061316726576139007,negative
+145,Land use conversion increases network complexity and stability of soil microbial communities in a temperate grassland,negative,0.061123113244719404,negative
+369,"Integrated Management Practices Foster Soil Health, Productivity, and Agroecosystem Resilience",negative,0.06098118627162745,negative
+306,Arbuscular Mycorrhizal and Trichoderma longibrachiatum Enhance Soil Quality and Improve Microbial Community Structure in Albic Soil Under Straw Return.,pass,0.06086546499749785,negative
+416,Effects of Remediation Agents on Microbial Community Structure and Function in Soil Aggregates Contaminated with Heavy Metals,pass,0.05912640290040421,negative
+654,"Ridge–mulch tillage and rotation with broad bean affect soil microbial community, diversity and crop yield in a long‐term potato continuous cropping field",negative,0.05610965817880412,negative
+805,The green shield: Trichoderma's role in sustainable agriculture against soil-borne fungal threats,pass,0.05588515650297186,negative
+644,Effects of mushroom-tobacco rotation on microbial community structure in continuous cropping tobacco soil,negative,0.05579805492310284,negative
+267,Drought response of the maize plant-soil-microbiome system is influenced by plant size and presence of root hairs.,negative,0.05542183881020792,negative
+291,The impact of fertilization on the health of paddy soil: pathways and prospects for fertility regulation based on microbial communities.,negative,0.05336768927262686,negative
+651,Continuous cropping effects on microbial community structure in Erigeron breviscapus rhizosphere soil,negative,0.05171682284101044,negative
+807,Microbial-Induced Carbonate Precipitation Did Not Change the Ecological Function of Soil Microbial Community after Bioremediation of Heavy Metal Pollution,pass,0.05128701827286824,negative
+527,Soil Health and Sustainable Agriculture,negative,0.051272735675783984,negative
+661,Microbial community restructuring under crop rotation: A sustainable strategy to counteract potato monoculture-induced soil degradation in arid ecosystems,negative,0.05068956836799523,negative
+143,Organic management and cover crop species steer soil microbial community structure and functionality along with soil organic matter properties,negative,0.04931011077503753,negative
+136,Altering microbial community for improving soil properties and agricultural sustainability during a 10-year maize-green manure intercropping in Northwest China.,pass,0.04901896430307213,negative
+515,Short-term crop rotation interactive effects on soil microbial communities and potato yield under field conditions.,pass,0.049008192875940486,negative
+250,Breeding effects on the root-associated microbiome of Zea mays L. are linked to plant-induced variation in soil water potentials.,pass,0.04878938650441581,negative
+433,A Stronger Rhizosphere Impact on the Fungal Communities Compared to the Bacterial Communities in Pecan Plantations.,pass,0.04750930398558092,negative
+428,Changes in rhizosphere bacterial and fungal community composition with vegetation restoration in planted forests,negative,0.046704240997249534,negative
+419,Soil bacterial networks are less stable under drought than fungal networks,negative,0.04649794086764233,negative
+627,Crop rotation-driven changes in secondary metabolites of potato rhizosphere soil exert stronger regulation on soil microbial community.,pass,0.04633224655702189,negative
+420,Land use driven change in soil pH affects microbial carbon cycling processes,negative,0.04541383122767108,negative
+664,Preceding crops may reduce denitrification potential and enhance ammonium assimilation pathways.,negative,0.04511141919370745,negative
+646,Effect of different continuous cropping years on the rhizosphere soil microbial community structure of Tussilago farfara L.,negative,0.04504507423235443,negative
+265,Effects of legume-based rotation on subsequent sorghum rhizosphere microbial communities and their drought tolerance-related genes.,negative,0.04491988437097073,negative
+231,Characterization of plant growth promoting activity in bacteria isolated from the compost bin of the Universidad Libre Seccional Pereira,negative,0.04476138460914343,negative
+326,Synergistic effects of beneficial microbial inoculants and SMS-amendments on improving soil properties and Pinus seedling growth in degraded soils.,negative,0.044294941437015456,negative
+507,Soil Microbial Diversity and Network Organization Respond to Land Use and Agricultural Inputs Worldwide.,pass,0.044096783379051055,negative
+796,Dairy effluent applications to a pasture enhance soil fertility and microbial activity without impacting soil bacterial and fungal community composition,pass,0.04373476456654,negative
+637,Effects of Continuous Cropping of Sweet Potato on the Fungal Community Structure in Rhizospheric Soil,negative,0.04239093123671521,negative
+435,"Peer Review #2 of ""The influence of rhizosphere soil fungal diversity and complex community structure on wheat root rot disease (v0.1)""",pass,0.042277998302504755,negative
+132,Rotation-driven changes in physicochemical properties modulate soil microbial diversity and community complexity in tobacco-woad soils.,pass,0.041944051806573034,negative
+445,Rhizosphere microbial functions drive ecological stoichiometry in soils across an elevational gradient of a temperate mountain ecosystem.,negative,0.03749234411451085,negative
+535,The Role of Cover Crops towards Sustainable Soil Health and Agriculture—A Review Paper,negative,0.03747903564093079,negative
+315,Soil Biological Health: Influence of Crop Rotational Diversity and Tillage on Soil Microbial Properties,negative,0.03709071596948524,negative
+153,"Microbiome-mediated nitrogen cycling in soil: Impact on nitrogen use efficiency, crop production and environmental sustainability",pass,0.036821105876960095,negative
+650,Cover crop biomass and species composition affect soil microbial community structure and enzyme activities in semiarid cropping systems,pass,0.03610699225766461,negative
+440,Conservation Tillage-Mediated Rhizosphere Microbial Community Remodeling Drives Soil Organic Carbon Accumulation and Nitrogen and Phosphorus Transformation in Farmland.,negative,0.03557024674415087,negative
+541,Combined effects of earthworms and Bacillus spp. enhance soil ecosystem multifunctionality and reshape microbial communities.,negative,0.034580384788298515,negative
+138,Methods for Management of Soilborne Diseases in Crop Production,negative,0.03448973023104689,negative
+717,An ecological future for weed science to sustain crop production and the environment. A review,negative,0.034400779531442625,negative
+159,Do diverse mixtures of cover crop residues alter the soil microbial community and increase soil function?,negative,0.03429319458119388,negative
+647,Soil Microbial Community Changes under Continuous Cucumber Cropping in Greenhouse Systems,pass,0.03371490738180343,negative
+442,Bacterial and Fungal Communities Associated with the Ectomycorrhizospheric Soil and Stem Endosphere of the Mycoheterotrophic Plant Monotropa uniflora.,negative,0.032131773935911295,negative
+140,Long-term use of cover crops and no-till shift soil microbial community life strategies in agricultural soil,negative,0.03205826547085462,negative
+725,Synergistic Effects of Arbuscular Mycorrhizal Fungi and Compost On Drought Tolerance in Quinoa Varieties Under Field Conditions,pass,0.03161213136120326,negative
+423,Soil microbiomes with distinct assemblies through vertical soil profiles drive the cycling of multiple nutrients in reforested ecosystems,negative,0.031413706804920206,negative
+722,Soil physicochemical property and arbuscular mycorrhizal fungi resilience to degradation and deforestation of a dry evergreen Afromontane forest in central Ethiopia,negative,0.03055005175698149,negative
+144,Soil and Crop Management Strategies to Ensure Higher Crop Productivity within Sustainable Environments,negative,0.029931276506201008,negative
+636,Diversity and Co-occurrence Patterns of Soil Bacterial and Fungal Communities in Seven Intercropping Systems,negative,0.029326236439046777,negative
+642,Crop rotational diversity enhances soil microbiome network complexity and multifunctionality,negative,0.02915373278615216,negative
+620,"Crop rotation patterns affect the growth, soil properties, and rhizosphere microbiome of cut chrysanthemums.",pass,0.028796941171118907,negative
+658,Effects of different rotation crops on soil physicochemical properties and microbial community structure in continuous cotton fields.,negative,0.02873317122330483,negative
+536,The use of soil microbial potassium solubilizers in potassium nutrient availability in soil and its dynamics,negative,0.028106490105467983,negative
+619,"Replacing nitrogen fertilizer with organic alternatives changes the soil microbial community diversity in Northwest China's arid farmland, leading to increased potato yields.",pass,0.027846298794042577,negative
+648,Effect of long-term continuous cropping of strawberry on soil bacterial community structure and diversity,pass,0.026966599660486392,negative
+429,The global soil community and its influence on biogeochemistry,negative,0.026908371276770118,negative
+443,"Responses of Soil Fungal Community Structure, Co-Occurrence Networks, and Functions to Different Oak-Dominated Mixed Plantations.",negative,0.026222352939262936,negative
+172,Combined Application of Manure and Chemical Fertilizers Alters Soil Environmental Variables and Improves Soil Fungal Community Composition and Rice Grain Yield.,pass,0.026188654449079644,negative
+781,A longitudinal study to examine the influence of farming practices and environmental factors on pathogen prevalence using structural equation modeling,negative,0.02305133177492557,negative
+504,Treated wastewater and mulch shape soil microbial activity in cactus-sorghum intercrops of the Brazilian semiarid.,pass,0.022974945735281884,negative
+692,Influence of Cowpea Plants on Soil Bacterial Community and Soil Quality: Effects of the Rhizosphere.,negative,0.022490153043749215,negative
+133,Analysis of the Differences in Rhizosphere Microbial Communities and Pathogen Adaptability in Chili Root Rot Disease Between Continuous Cropping and Rotation Cropping Systems.,pass,0.021502202998551604,negative
+438,Rhizosphere Microbial Effects on Soil Quality of Pinus massoniana and Schima superba Mixed Plantations.,negative,0.021361431356697373,negative
+622,Effects of Different Cropping Patterns on Soil Microbial Community and Function in Ningxia Irrigation-Silted Soil.,pass,0.02083037373177672,negative
+187,Diverse compost products influence soil bacterial and fungal community diversity in a potato crop production system,pass,0.018748866266121524,negative
+311,"Cascading effects of composts and cover crops on soil chemistry, bacterial communities and the survival of foodborne pathogens.",pass,0.01658671990599444,negative
+418,Fungal-bacterial diversity and microbiome complexity predict ecosystem functioning,negative,0.016448910689540644,negative
+629,Rice-eel system combined with exogenous organic waste improves soil quality under nitrogen deficiency by regulating soil microbial community.,pass,0.014405536526190208,negative
+531,Cropping systems in agriculture and their impact on soil health-A review,negative,0.011829300711632167,negative
+432,Distribution and Environmental Drivers of Fungal Denitrifiers in Global Soils.,pass,0.01140098091554801,negative
+780,Role of soil in the regulation of human and plant pathogens: soils' contributions to people,negative,0.011358804159803332,negative
+434,Influence of Season and Soil Properties on Fungal Communities of Neighboring Climax Forests (Carpinus cordata and Fraxinus rhynchophylla).,pass,0.006828009249210666,negative
+425,"Erosion reduces soil microbial diversity, network complexity and multifunctionality",negative,0.0054216022921954096,negative
+621,Effects of root extracts from different vegetables on rhizosphere soil properties and microbial communities of continuously cropped celery.,pass,0.0052357471599723,negative
+404,"Review for ""Soil fungal communities contribute to the positive diversity–productivity relationship of tree communities under contrasting water availability""",pass,0.004614875131312903,negative
+314,Cropping Systems Effect on Soil Biological Health and Sustainability,pass,0.002608706097060588,negative

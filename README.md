@@ -37,11 +37,11 @@ space of each candidate model, and pick one). Metadata features: citation counts
 venue/source one-hots, recency.
 
 **Week 3 — Modelling**
-Baselines first (logistic regression on embeddings — this is exactly what the agent's own
-`model.py` classifier does for triage re-ranking, so it's a fair floor to beat). Then
-ensembles: random forest, gradient boosting, stacking. Cross-validate honestly
-(`StratifiedKFold`, no leakage between folds) — a score on data the model was trained on
-is not a result.
+Baselines first — `scripts/train_baseline_classifier.py` (see below) is that baseline:
+logistic regression on embeddings, exactly what the agent's own `model.py` classifier
+does for triage re-ranking, so it's a fair floor to beat. Then ensembles: random forest,
+gradient boosting, stacking. Cross-validate honestly (`StratifiedKFold`, no leakage
+between folds) — a score on data the model was trained on is not a result.
 
 **Week 4 — Evaluate, error-analyse, write up**
 Held-out evaluation, error analysis (which papers does the model get wrong, and why),
@@ -55,7 +55,10 @@ data/
   processed/    cleaned / feature-engineered outputs of your own pipeline
 notebooks/      exploratory notebooks (one per week/topic is fine)
 scripts/        standalone, runnable analysis scripts
-  compare_embeddings.py   week-2 embedding model comparison (see below)
+  embedding_utils.py           shared embedding logic (model registry, prefixes, cross-
+                                validation) behind BOTH scripts below — not run directly
+  compare_embeddings.py        week-2 embedding model comparison (see below)
+  train_baseline_classifier.py week-3 baseline classifier (see below)
 reports/        write-ups, figures, model comparison tables
 ```
 
@@ -91,10 +94,35 @@ classifier, `model.py`) as a secondary "does this space support classification" 
 python scripts/compare_embeddings.py --data data/raw/your-export.parquet
 ```
 
-Outputs: `reports/latent_space_comparison.png` (the visual comparison) and
-`reports/embedding_comparison.csv` (the scalar metrics behind it). See the script's own
-docstring for the full walkthrough — what each metric means, why those specific ones,
-and every flag (`--models`, `--projection tsne`, `--use-case-text`, `--list-models`, …).
+Outputs (named after the input file, so different exports never overwrite each other):
+`reports/<data filename>_latent_space_comparison.png` (the visual comparison) and
+`reports/<data filename>_embedding_comparison.csv` (the scalar metrics behind it). See the
+script's own docstring for the full walkthrough — what each metric means, why those
+specific ones, and every flag (`--models`, `--projection tsne`, `--use-case-text`,
+`--list-models`, `--out`/`--out-plot`, …). See also `reports/model_shortlist.md` for the
+reasoning behind the default model set and what testing each one actually found.
+
+### `scripts/train_baseline_classifier.py`
+
+The Week-3 baseline: a plain `LogisticRegression` on paper embeddings, predicting the
+analyst's triage label, cross-validated honestly (out-of-fold predictions, never a row
+graded by a model that trained on it). Uses
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` by default — the model
+picked in `reports/model_shortlist.md` §5 after comparing 4 shortlisted models on 2 real
+corpora. When that model matches the export's own `embed_model` column, it reuses the
+export's precomputed vectors directly instead of re-embedding (faster, and literally the
+vectors the agent's own UI already ranked by).
+
+```bash
+python scripts/train_baseline_classifier.py --data data/raw/your-export.parquet
+```
+
+Outputs: `reports/<data filename>_baseline_metrics.json` (ROC-AUC, confusion matrix,
+full classification report), `reports/<data filename>_baseline_confusion_matrix.png`,
+and `reports/<data filename>_baseline_scored_pool.csv` — every paper with a usable
+vector (labelled or not) with a predicted P(positive), sorted highest first. That last
+file is the interesting one to actually read: it also scores every "pass"-labelled and
+unlabelled paper, which can surface papers worth a second look.
 
 ## Conventions carried over from academic_research_agent
 
