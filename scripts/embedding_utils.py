@@ -1,11 +1,11 @@
 """
-embedding_utils.py — shared embedding logic behind compare_embeddings.py AND
-train_baseline_classifier.py, so both scripts embed text identically (same model
-registry, same prefixes, same title/abstract join) instead of two copies quietly
-drifting apart.
+embedding_utils.py — shared embedding logic behind compare_embeddings.py and
+future_work/train_baseline_classifier.py (parked, see that file), so both embed text
+identically (same model registry, same prefixes, same title/abstract join) instead of
+two copies quietly drifting apart.
 
 Nothing in here is specific to comparison OR training — it's "given a model name and
-some papers, produce vectors", plus the export-loading helpers both scripts need.
+some papers, produce vectors", plus the export-loading helpers both callers need.
 """
 
 from __future__ import annotations

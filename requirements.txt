@@ -17,5 +17,10 @@ fastembed>=0.8.0
 # domain-specific academic-paper model) — still fully local/offline, just PyTorch-backed.
 sentence-transformers>=3.0.0
 
+# Local NER (scripts/compare_ner_models.py) — fully offline, no PyTorch requirement for
+# the small pipeline. After installing, fetch the model once with:
+#   python -m spacy download en_core_web_sm
+spacy>=3.7.0
+
 # Notebooks (optional, week 1 EDA)
 jupyter>=1.0.0

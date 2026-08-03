@@ -8,6 +8,10 @@ data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
+# Use-case JSON files are small, non-bulky config (the agent's real objective/key-terms
+# definition for a corpus), not bulk export data — track them, unlike the parquet exports.
+!data/raw/*.usecase.json
+
 # Local fastembed model cache, if pointed here
 .cache/
 

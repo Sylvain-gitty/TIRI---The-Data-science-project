@@ -5,6 +5,14 @@ in three parts: the properties we're optimising for, the full ranked candidate l
 came from, and the models we selected to actually run — with the concrete config
 (backend, prefixes) each one runs under, and what testing them actually found.
 
+**Scope note:** this comparison is a diagnostic exercise against an already-labelled
+dataset — latent-space sanity, cosine similarity, use-case centrality (see
+`scripts/compare_embeddings.py`'s docstring) — not a pipeline for selecting a future
+classifier's model. §5 below used to frame its pick as "the Week-3 baseline"; that framing
+has been retired (see `HANDOFF.md`) — nothing downstream in this repo is wired to whatever
+"wins" a run of this script. See `reports/ner_model_notes.md` for the same kind of
+exercise applied to NER-derived representations instead of embeddings.
+
 ## 1. Priority properties (why these, for THIS workflow)
 
 Not a generic embedding-benchmark checklist — grounded in `academic_research_agent`'s own
@@ -106,11 +114,51 @@ the two real datasets tested. Two non-obvious things worth carrying forward:
   metric assumes a shared geometry that symmetric models guarantee and asymmetric ones
   don't), not necessarily a real topical mismatch.
 
-## 5. Step 4 — the winner picked for the Week-3 baseline
+## 4b. The use-case TEXT matters as much as the model — tested with the real use-case file
+
+Every result above used the export's short `use_case` NAME column
+("High quality microbial and fungal community in Soil"). The actual objective/key-terms
+JSON behind that corpus
+(`data/raw/high-quality-microbial-and-fungal-community-in-soil.usecase.json` — the
+analyst's real use-case definition, not the export's abbreviated name) was used to build
+a fuller `--use-case-text` string (`objective` + `terms.must_include` +
+`terms.nice_to_have`, space-joined) and re-run against the same 602-paper corpus, same 4
+models, outputs at `reports/high-quality-microbial-and-fungal-community-in-soil-labelledFULLRUN_richer_usecase_*`.
+
+| Model | use-case percentile (short name) | use-case percentile (full objective+terms) | ROC-AUC / dispersion |
+|---|---|---|---|
+| `allenai-specter` | 29th (sim 0.68) | **98.5th (sim 0.96)** — huge jump | unchanged: 0.776 / 0.84 (collapsed) |
+| `bge-small-en-v1.5` | 5th (sim 0.85) | 10.8th (sim 0.84) — still an outlier | unchanged: 0.803 / 0.78 (collapsed) |
+| `paraphrase-multilingual` (control) | 81st (sim 0.85) | 88.5th (sim 0.82) | unchanged: 0.768 / 0.56 (moderate) |
+| `all-MiniLM-L6-v2` | 56th (sim ~0.73) | 63.8th (sim 0.73) | unchanged: 0.793 / 0.48 (best dispersion) |
+
+Two things worth carrying forward:
+
+- **ROC-AUC and dispersion are mathematically invariant to `--use-case-text`** — confirmed
+  identical to rounding, before vs. after, for every model. This isn't a coincidence to
+  re-verify each time: `cross_validated_roc_auc`/`dispersion_metrics` only ever see paper
+  vectors + labels, the use-case vector never enters that calculation. Only the
+  centrality panel (`use_case_to_centroid_sim` / percentile) can move when
+  `--use-case-text` changes — don't expect the other numbers to.
+- **Richer text moved centrality a lot, but not uniformly, and mostly upward.** Specter's
+  jump (29th→98.5th) is the standout — going from "looks like an outlier relative to its
+  own corpus" to "looks like one of the most prototypical papers in it," just from
+  swapping a 6-word name for the real objective + key terms. `bge-small` barely moved and
+  stayed an outlier both times, consistent with §4's standing hypothesis that its outlier
+  behaviour is a geometry artifact (asymmetric prefix handling) rather than a genuine
+  topical signal that more text would fix. There is no single "richer text helps"
+  verdict — the size of the effect is model-specific.
+
+This matters beyond curiosity: if a future step ever uses use-case-centroid similarity as
+a *feature* (not just a diagnostic), the wording fed into `--use-case-text` is a real,
+uncontrolled variable that can swing results by up to 70 percentile points — it needs to
+be fixed and documented, not left to whichever column happened to be read that day.
+
+## 5. Which model looked most consistent across the 2 corpora tested (observation, not a pick)
 
 **`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`** (the control /
-academic_research_agent's current default) is what `scripts/train_baseline_classifier.py`
-uses by default. Reasoning, weighing the evidence above against the priorities in §1:
+academic_research_agent's current default) held up most consistently across the two real
+corpora tested, weighing the evidence above against the priorities in §1:
 
 1. **Most consistent across both real corpora tested.** Never chance-level (Specter was,
    once), never the most collapsed (bge was, both times) — solid and unsurprising both
@@ -127,5 +175,10 @@ uses by default. Reasoning, weighing the evidence above against the priorities i
    vectors academic_research_agent's own UI already ranked by, not a fresh approximation
    of them.
 
-This is a judgement call from 2 data points, not a proof — `--model` overrides it any
-time a different corpus's own comparison run (§4's table) suggests otherwise.
+This is a judgement call from 2 data points about the DIAGNOSTIC itself, not a model pick
+for future modelling work — `--model`/`--models` overrides it any time a different
+corpus's own comparison run (§4's table) suggests otherwise. Week 3's actual
+baseline-classifier work (which features, which model, how to validate it) is unstarted,
+unscoped, and intentionally NOT decided by this exercise — see `future_work/
+train_baseline_classifier.py` for plumbing that used to be wired to this section's old
+"winner" framing and is now parked, decoupled, and unused by the current workflow.

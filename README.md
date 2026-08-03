@@ -32,16 +32,22 @@ abstracts), check label balance, EDA on year/venue/citation_count/language/sourc
 
 **Week 2 — Feature engineering**
 Text features: the embeddings that ship with the export, plus alternatives (see
-`scripts/compare_embeddings.py` below — this is the week to run it, inspect the latent
-space of each candidate model, and pick one). Metadata features: citation counts,
+`scripts/compare_embeddings.py` and `scripts/compare_ner_models.py` below — this is the
+week to run them and inspect the latent space of each candidate embedding/NER
+representation against the already-labelled dataset: is the space sane or collapsed, how
+central does the use case sit relative to its own corpus, does it separate the existing
+labels at all). This is a diagnostic exercise, not a model-selection step for Week 3 —
+see the scope note in each script's docstring. Metadata features: citation counts,
 venue/source one-hots, recency.
 
 **Week 3 — Modelling**
-Baselines first — `scripts/train_baseline_classifier.py` (see below) is that baseline:
-logistic regression on embeddings, exactly what the agent's own `model.py` classifier
-does for triage re-ranking, so it's a fair floor to beat. Then ensembles: random forest,
-gradient boosting, stacking. Cross-validate honestly (`StratifiedKFold`, no leakage
-between folds) — a score on data the model was trained on is not a result.
+Baselines and ensembles (random forest, gradient boosting, stacking) — unstarted,
+unscoped as of this writing. Which features/model the baseline trains on is a decision
+for that week, not something Week 2's embedding/NER comparison pre-selects. Cross-validate
+honestly (`StratifiedKFold`, no leakage between folds) — a score on data the model was
+trained on is not a result. `future_work/train_baseline_classifier.py` has cross-
+validation/scoring plumbing kept from an earlier, now-retired framing where it was wired
+to Week 2's comparison — functional but parked, not part of the current workflow.
 
 **Week 4 — Evaluate, error-analyse, write up**
 Held-out evaluation, error analysis (which papers does the model get wrong, and why),
@@ -55,10 +61,15 @@ data/
   processed/    cleaned / feature-engineered outputs of your own pipeline
 notebooks/      exploratory notebooks (one per week/topic is fine)
 scripts/        standalone, runnable analysis scripts
-  embedding_utils.py           shared embedding logic (model registry, prefixes, cross-
-                                validation) behind BOTH scripts below — not run directly
-  compare_embeddings.py        week-2 embedding model comparison (see below)
-  train_baseline_classifier.py week-3 baseline classifier (see below)
+  embedding_utils.py       shared embedding logic (model registry, prefixes, cross-
+                            validation) behind compare_embeddings.py — not run directly
+  latent_space_utils.py    shared latent-space diagnostics + plotting (dispersion,
+                            centroid analysis, 2D projection) behind BOTH comparison
+                            scripts below — not run directly
+  compare_embeddings.py    week-2 embedding-vs-labelled-dataset comparison (see below)
+  compare_ner_models.py    week-2 NER-vs-labelled-dataset comparison (see below)
+future_work/    parked, deferred work — not part of the current workflow
+  train_baseline_classifier.py   Week-3 baseline plumbing, kept but unwired (see below)
 reports/        write-ups, figures, model comparison tables
 ```
 
@@ -72,11 +83,19 @@ pip install -r requirements.txt
 
 ## Scripts
 
+Both comparison scripts below share one scope note, worth stating once: they test how a
+representation (an embedding model, or an NER-derived feature) relates to an
+**already-labelled dataset** — latent-space sanity, cosine similarity, use-case
+centrality — purely as a diagnostic. Neither one selects a model for a future classifier
+baseline; nothing downstream in this repo is wired to whatever "wins" a run of either
+script. See `future_work/train_baseline_classifier.py` below for where that used to not
+be true, and why it's parked now.
+
 ### `scripts/compare_embeddings.py`
 
-Visually compares the **latent space** of several embedding/NLP models on your labelled
-export — a lexical TF-IDF baseline plus one or more fastembed neural models by default.
-For each model it draws a row of three plots:
+Visually compares the **latent space** of several embedding/NLP models against your
+labelled export — a lexical TF-IDF baseline plus one or more fastembed neural models by
+default. For each model it draws a row of three plots:
 
 1. a 2D map of the whole corpus (PCA or t-SNE), coloured by triage label, with the
    corpus centroid and the embedded use case marked;
@@ -88,7 +107,9 @@ For each model it draws a row of three plots:
    corpus?**
 
 It also reports cross-validated ROC-AUC (same lens as the agent's own adaptive triage
-classifier, `model.py`) as a secondary "does this space support classification" check.
+classifier, `model.py`) as a secondary "does this space separate the labels you already
+have" diagnostic — a reading on the labelled dataset, not a signal for picking a future
+classifier's model (see scope note above).
 
 ```bash
 python scripts/compare_embeddings.py --data data/raw/your-export.parquet
@@ -102,27 +123,48 @@ specific ones, and every flag (`--models`, `--projection tsne`, `--use-case-text
 `--list-models`, `--out`/`--out-plot`, …). See also `reports/model_shortlist.md` for the
 reasoning behind the default model set and what testing each one actually found.
 
-### `scripts/train_baseline_classifier.py`
+### `scripts/compare_ner_models.py`
 
-The Week-3 baseline: a plain `LogisticRegression` on paper embeddings, predicting the
-analyst's triage label, cross-validated honestly (out-of-fold predictions, never a row
-graded by a model that trained on it). Uses
-`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` by default — the model
-picked in `reports/model_shortlist.md` §5 after comparing 4 shortlisted models on 2 real
-corpora. When that model matches the export's own `embed_model` column, it reuses the
-export's precomputed vectors directly instead of re-embedding (faster, and literally the
-vectors the agent's own UI already ranked by).
+The same latent-space/cosine-similarity comparison as `compare_embeddings.py`, but for
+**NER-derived representations** instead of sentence embeddings — extracting named
+entities (organisations, locations, dates, ...) from titles/abstracts via a local spaCy
+pipeline (`en_core_web_sm` by default) and testing whether turning a paper into an
+entity-based vector produces a sane latent space, and where the use case lands in it,
+against the same labelled dataset. Two representations by default: an entity-type-count
+profile, and a TF-IDF-over-entity-text representation — same 3-panel-per-row plot and
+scalar metrics as the embedding comparison, via shared `scripts/latent_space_utils.py`.
 
 ```bash
-python scripts/train_baseline_classifier.py --data data/raw/your-export.parquet
+python scripts/compare_ner_models.py --data data/raw/your-export.parquet
 ```
 
-Outputs: `reports/<data filename>_baseline_metrics.json` (ROC-AUC, confusion matrix,
-full classification report), `reports/<data filename>_baseline_confusion_matrix.png`,
-and `reports/<data filename>_baseline_scored_pool.csv` — every paper with a usable
-vector (labelled or not) with a predicted P(positive), sorted highest first. That last
-file is the interesting one to actually read: it also scores every "pass"-labelled and
-unlabelled paper, which can surface papers worth a second look.
+Outputs: `reports/<data filename>_ner_latent_space_comparison.png` and
+`reports/<data filename>_ner_representation_comparison.csv`. See the script's own
+docstring for every flag (`--spacy-model`, `--representations`, `--list-entity-labels`,
+…) and `reports/ner_model_notes.md` for why spaCy was picked over GLiNER/scispaCy and
+what testing it on both real corpora actually found — including the honest negative
+result that a short use-case NAME often yields zero recognisable entities.
+
+Requires the spaCy model to be downloaded once after `pip install`:
+```bash
+python -m spacy download en_core_web_sm
+```
+
+### `future_work/train_baseline_classifier.py` — parked, not part of the current workflow
+
+Originally built as "the Week-3 baseline," with its default model framed as the winner
+of `compare_embeddings.py`'s comparison. That framing is retired (see `HANDOFF.md`): the
+comparison scripts are diagnostics against the labelled dataset, not a model-selection
+step for future classifier work, and Week 3's actual baseline (which features, which
+model, how to validate it) hasn't been decided. The script still runs — a plain
+`LogisticRegression` on paper embeddings, cross-validated honestly (out-of-fold
+predictions, never a row graded by a model that trained on it), scoring every paper with
+a usable vector — kept here so that plumbing isn't lost, but it is not wired to either
+comparison script's output and its default model is a placeholder, not a decision.
+
+```bash
+python future_work/train_baseline_classifier.py --data data/raw/your-export.parquet
+```
 
 ## Conventions carried over from academic_research_agent
 
