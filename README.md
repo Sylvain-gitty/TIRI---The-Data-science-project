@@ -53,7 +53,9 @@ compare against the agent's own relevance ranking as a baseline, final report.
 data/
   raw/          exports dropped in as-is (gitignored — data doesn't belong in git)
   processed/    cleaned / feature-engineered outputs of your own pipeline
-notebooks/      exploratory notebooks (one per week/topic is fine)
+notebooks/      see notebooks/README.md for the current list and what each one does
+  eda/            exploratory analysis — read-only, no files written back to data/
+  data_compile/   data-processing pipelines — data/raw/ -> data/processed/
 scripts/        standalone, runnable analysis scripts
   embedding_utils.py           shared embedding logic (model registry, prefixes, cross-
                                 validation) behind BOTH scripts below — not run directly
@@ -134,3 +136,25 @@ unlabelled paper, which can surface papers worth a second look.
 - **Label which critic is speaking.** When a deterministic metric (e.g. CV ROC-AUC) and a
   qualitative judgement (e.g. "this looks like a good split") sit side by side, say which
   is which — a reader can't otherwise tell a measurement from an opinion.
+
+## Collaboration conventions
+
+### Branch naming
+
+Prefix every branch with your initials, then a short, descriptive slug:
+`<initials>-<what-it-does>` — e.g. `wf-eda-notebooks`, `wf-data-compile`. In a
+2-person repo where several branches can be in flight at once, this makes
+`git branch -a` self-explanatory about who's working on what, without having to open
+each branch to check.
+
+### Documentation standards
+
+- Every notebook gets a one-line description in `notebooks/README.md`, kept current
+  with the actual folder structure (`eda/`, `data_compile/`, ...) — that file is the
+  source of truth for "what notebooks exist and what do they do", not this README.
+- Notebooks explain *why*, not just *what*, in markdown cells, and label which claims
+  are hard computed numbers vs. judgement calls (same "label which critic is
+  speaking" convention as above).
+- Scripts keep the existing convention: a long module docstring carrying the
+  reasoning — and any negative results from real runs — behind the choices made (see
+  `scripts/compare_embeddings.py` for the reference example).
