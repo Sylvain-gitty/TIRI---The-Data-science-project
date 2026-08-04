@@ -6,8 +6,10 @@ whether it's safe to just read (`eda/`) or whether it writes to `data/processed/
 
 ```
 notebooks/
-  eda/            exploratory analysis — read-only, no files written back to data/
-  data_compile/   data-processing pipelines — data/raw/ -> data/processed/
+  eda/                  exploratory analysis — read-only, no files written back to data/
+  data_compile/         data-processing pipelines — data/raw/ -> data/processed/
+  feature_experiments/  small, experimental viability checks for candidate Week-3
+                        features — read-only, no files written back to data/
 ```
 
 ## eda/
@@ -23,6 +25,12 @@ notebooks/
 | Notebook | What it does |
 |---|---|
 | `combine_use_cases.ipynb` | Reads all 6 JSONL exports + their matching `usecase.json` search-brief definitions from `data/raw/`, applies the cleaning/standardisation punch list found by the `eda/` notebooks (compound `paper_id`, nullable `Int64` dtypes, `venue` casing, `sources` parsed into booleans, fixed `triage_label`/`review_label` categoricals, `abstract_source` dropped, `has_abstract` flag), broadcasts both files' metadata onto every paper row, and writes `data/processed/papers_combined.parquet` — the file `scripts/compare_embeddings.py` and `scripts/train_baseline_classifier.py` are meant to consume via `--data`. See also `data/processed/README.md` for a full description of the output dataset. |
+
+## feature_experiments/
+
+| Notebook | What it does |
+|---|---|
+| `author_orcid.ipynb` | Viability check for an "author prolificacy" feature: samples ~10 authors from `papers_combined.parquet` (known repeat authors + singleton-paper authors), resolves each to an ORCID iD via their paper's `doi` against the open Crossref API, and where found, reads a total-works count off the public ORCID record. Headline result is the ORCID coverage/match rate, not the feature values themselves — small, experimental, not a pipeline. |
 
 ## Running a notebook
 
