@@ -24,3 +24,8 @@ spacy>=3.7.0
 
 # Notebooks (optional, week 1 EDA)
 jupyter>=1.0.0
+
+# Interactive scatter (notebooks/eda/wf_data_enrich.ipynb citations-vs-age plot) — the
+# only chart in the repo that needs real hover/zoom, so it's the one chart on plotly
+# rather than matplotlib.
+plotly>=5.24.0
