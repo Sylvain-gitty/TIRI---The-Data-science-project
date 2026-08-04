@@ -11,6 +11,7 @@ notebooks/
   data_compile/         data-processing pipelines — data/raw/ -> data/processed/
   feature_experiments/  small, sample-sized viability checks for candidate features —
                         read-only, not the Week-3 modelling pipeline itself
+  modelling/            Week-3 classifier-prep — fold/CV design, feature stacking; read-only
   comparisons/    runs scripts/compare_*.py's own functions with output inline — reads
                   data/raw/, writes nothing (reports/ holds decision-trail .md only)
 ```
@@ -40,6 +41,12 @@ notebooks/
 | `trl_estimate.ipynb` | Viability check on a 34-paper hand-picked sample: can a paper's own Technology Readiness Level be estimated from its title + abstract, as a genuinely per-row feature (unlike the constant-per-use-case `trl_min`/`trl_max` columns)? Hand-labels the sample against a transparent keyword heuristic — 53% agreement, barely above the majority-band floor. Not viable as a plain keyword list. Read-only. |
 | `venue_quality.ipynb` | Viability check for a candidate feature: looks up the 10 known-clean `venue` values (and a few known-dirty ones, as a negative-result check) against the OpenAlex `/sources` API, then joins the resulting venue-quality metrics (`works_count`, `2yr_mean_citedness`, `h_index`) onto their actual papers in `data/processed/papers_combined.parquet` to see whether external venue prestige diverges usefully from raw `citation_count` as a relevance signal, or just tracks it — it doesn't (r≈-0.04 with `triage_label`, r≈0.78 with the venue's own mean `citation_count`). Not viable. Read-only. |
 
+## modelling/
+
+| Notebook | What it does |
+|---|---|
+| `wf_fold_pca_test.ipynb` | Week-3 classifier-prep on `papers_combined.parquet` (distinct from the diagnostic-only `scripts/compare_*.py`, per `HANDOFF.md`). Holds one use case out entirely for generalisation testing, builds a `StratifiedGroupKFold` scheme (stratified on use_case+label, grouped by first author) with explicit leakage checks, and tests a stacked ensemble (raw-embedding gradient boosting + PCA-reduced-embedding logistic regression) against a plain-embedding baseline, in-distribution and on the held-out use case. Read-only. |
+
 ## comparisons/
 
 | Notebook | What it does |
@@ -50,8 +57,8 @@ notebooks/
 
 Each notebook assumes it's run with its own folder as the working directory (so its
 `../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`,
-`notebooks/data_compile/`, or `notebooks/feature_experiments/`, not from `notebooks/`
-itself.
+`notebooks/data_compile/`, `notebooks/feature_experiments/`, or `notebooks/modelling/`,
+not from `notebooks/` itself.
 
 ## Conventions
 
