@@ -8,6 +8,7 @@ whether it's safe to just read (`eda/`) or whether it writes to `data/processed/
 notebooks/
   eda/            exploratory analysis — read-only, no files written back to data/
   data_compile/   data-processing pipelines — data/raw/ -> data/processed/
+  modelling/      Week-3 classifier-prep — fold/CV design, feature stacking; read-only
 ```
 
 ## eda/
@@ -23,6 +24,12 @@ notebooks/
 | Notebook | What it does |
 |---|---|
 | `combine_use_cases.ipynb` | Reads all 6 JSONL exports + their matching `usecase.json` search-brief definitions from `data/raw/`, applies the cleaning/standardisation punch list found by the `eda/` notebooks (compound `paper_id`, nullable `Int64` dtypes, `venue` casing, `sources` parsed into booleans, fixed `triage_label`/`review_label` categoricals, `abstract_source` dropped, `has_abstract` flag), broadcasts both files' metadata onto every paper row, and writes `data/processed/papers_combined.parquet` — the file `scripts/compare_embeddings.py` and `scripts/train_baseline_classifier.py` are meant to consume via `--data`. See also `data/processed/README.md` for a full description of the output dataset. |
+
+## modelling/
+
+| Notebook | What it does |
+|---|---|
+| `wf_fold_pca_test.ipynb` | Week-3 classifier-prep on `papers_combined.parquet` (distinct from the diagnostic-only `scripts/compare_*.py`, per `HANDOFF.md`). Holds one use case out entirely for generalisation testing, builds a `StratifiedGroupKFold` scheme (stratified on use_case+label, grouped by first author) with explicit leakage checks, and tests a stacked ensemble (raw-embedding gradient boosting + PCA-reduced-embedding logistic regression) against a plain-embedding baseline, in-distribution and on the held-out use case. Read-only. |
 
 ## Running a notebook
 
