@@ -1,19 +1,22 @@
 """
-train_baseline_classifier.py — Week 3 baseline: does a plain LogisticRegression on paper
-embeddings predict the analyst's triage label, cross-validated honestly?
+train_baseline_classifier.py — PARKED / DEFERRED, not part of the current workflow.
 
-WHY THIS MODEL, BY DEFAULT (full trail: reports/model_shortlist.md §5)
---------------------------------------------------------------------------
-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 — the winner picked after
-comparing 4 shortlisted models on 2 real, differently-sized/differently-domain corpora
-(scripts/compare_embeddings.py): the only model that was never chance-level and never the
-most collapsed on either corpus, it's symmetric (no prefix-config fragility bge/nomic
-carry), it matches the real — if small — multilingual fraction present in both corpora,
-and it's the SAME model academic_research_agent's own exports already ship precomputed
-embeddings for, so this script reuses those vectors directly instead of re-embedding
-(see embedding_utils.resolve_paper_vectors) whenever they match --model.
+This script used to be framed as "the Week-3 baseline" and its default model used to be
+described as "the winner" of scripts/compare_embeddings.py's comparison. That framing has
+been retired: compare_embeddings.py (and scripts/compare_ner_models.py) exist to test how
+an embedding/NER model's latent space relates to an already-labelled dataset — dispersion,
+cosine similarity, use-case centrality — not to select a classifier for future modelling
+work. See HANDOFF.md and reports/model_shortlist.md for the current framing.
 
-WHAT THIS SCRIPT DOES
+Week 3's actual baseline-classifier work (which embedding/features to train on, which
+model, how to validate it) has NOT been decided and is intentionally out of scope for this
+session. This file is kept here, functional but unused by the current workflow, purely so
+the cross-validation/scoring plumbing isn't lost — it is NOT wired to any "winner" from the
+comparison scripts and its DEFAULT_MODEL below is an arbitrary placeholder, not a decision.
+Moved out of scripts/ into future_work/ to make that parked status obvious at a glance.
+
+WHAT THIS SCRIPT DOES (unchanged mechanically — only the framing above changed)
+---------------------------------------------------------------------------------
 ----------------------
 1. loads a labelled export,
 2. gets paper vectors for --model (reused from the export if they match, embedded fresh
@@ -27,9 +30,8 @@ WHAT THIS SCRIPT DOES
    in the export (labelled or not) — so "pass"/unlabelled papers get a predicted
    probability too, the same "score everything embedded" idea as the agent's model.py.
 
-This is a BASELINE — Week 3's own framing (see README.md): the floor an ensemble has to
-beat later. No feature engineering beyond the raw embedding, no ensembling here yet —
-that scope boundary is intentional, not an oversight.
+No feature engineering beyond the raw embedding, no ensembling here yet — that scope
+boundary was intentional when this was written and still stands now that it's parked.
 
 OUTPUTS (named after the input file, same convention as compare_embeddings.py)
 ------------------------------------------------------------------------------------
@@ -44,7 +46,7 @@ OUTPUTS (named after the input file, same convention as compare_embeddings.py)
 
 HOW TO RUN IT
 --------------
-    python scripts/train_baseline_classifier.py --data data/raw/your-export.parquet
+    python future_work/train_baseline_classifier.py --data data/raw/your-export.parquet
 
 Useful flags:
     --model "BAAI/bge-small-en-v1.5"    use a different embedding model as the features
@@ -62,6 +64,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -72,6 +75,10 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix
 
+# embedding_utils lives in scripts/, not future_work/ — this script moved, that module
+# didn't, so it needs its directory on sys.path explicitly (a plain script invocation
+# only auto-adds ITS OWN directory, not a sibling one).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from embedding_utils import (
     MAX_CV_FOLDS,
     NEGATIVE_VALUES,
@@ -84,6 +91,8 @@ from embedding_utils import (
     resolve_paper_vectors,
 )
 
+# Placeholder, not a decision — see the module docstring. Whatever model Week 3 actually
+# trains on is unstarted, unscoped work.
 DEFAULT_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 

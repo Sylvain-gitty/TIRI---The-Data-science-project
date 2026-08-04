@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "name": "High quality microbial and fungal community in Soil",
+  "problem_statement": "Farmers across a range of scales (from private gardens to large farms) need better understanding, engineering, and injection of soil microbial and fungal communities in order to improve soil quality, crop production, and resilience to extreme weather events such as heat and flooding.",
+  "objective": "Identify research on microbial and fungal community management strategies that enhance soil health, crop productivity, and resistance to extreme heat and flooding stress.",
+  "domain": {
+    "industry": "Agriculture",
+    "application": "Soil health and crop production",
+    "technology_focus": [
+      "Soil microbial communities",
+      "Soil fungal communities",
+      "Biological soil amendments",
+      "Stress tolerance in crops and soils",
+      "soil microbial injection",
+      "soil fungal injection",
+      "soil microbial engineering",
+      "soil fungal engineering"
+    ]
+  },
+  "terms": {
+    "must_include": [
+      "soil microbial community",
+      "soil fungal community",
+      "soil health",
+      "crop production",
+      "heat stress resistance",
+      "flood stress resistance",
+      "soil microbial injection",
+      "soil fungal injection",
+      "soil microbial engineering",
+      "soil fungal engineering"
+    ],
+    "nice_to_have": [
+      "mycorrhizal fungi",
+      "rhizosphere microbiome",
+      "plant growth-promoting bacteria",
+      "soil microbiome",
+      "biocontrol"
+    ],
+    "exclude": [
+      "human microbiome"
+    ]
+  },
+  "performance_criteria": [],
+  "constraints": {
+    "trl": null,
+    "scale": "",
+    "cost": ""
+  },
+  "decision_criteria": {
+    "must_have": [
+      "Paper addresses microbial or fungal communities in agricultural soils",
+      "Paper relates to at least one of: soil quality, crop production, crop/soil health, or stress resistance"
+    ],
+    "nice_to_have": [
+      "Covers both small-scale and large-scale farming contexts",
+      "Addresses multiple stressors (heat and/or flooding)"
+    ],
+    "exclusions": [
+      "Studies focused solely on non-agricultural soils (e.g. mining, industrial sites) with no relevance to crop systems"
+    ],
+    "decision_rules": []
+  },
+  "notes": "Scope covers the full range of farm sizes, from individual gardens to large commercial farms. Both microbial and fungal communities are of interest. Key outcomes of interest are soil quality, crop yield, and resilience to extreme heat and flooding."
+}

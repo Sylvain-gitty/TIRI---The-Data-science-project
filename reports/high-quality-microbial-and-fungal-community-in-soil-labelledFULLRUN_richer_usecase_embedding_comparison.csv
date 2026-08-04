@@ -1,0 +1,5 @@
+model,dim,embed_seconds,avg_pairwise_cosine,participation_ratio,top1_variance_ratio,use_case_to_centroid_sim,use_case_centroid_percentile,roc_auc,n_folds,note
+sentence-transformers/allenai-specter,768,221.11,0.8367,15.13,0.1374,0.9631,98.5,0.7763,5,
+BAAI/bge-small-en-v1.5,384,164.05,0.7778,24.69,0.0708,0.8444,10.8,0.8026,5,
+sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2,384,44.78,0.5568,20.31,0.1125,0.821,88.5,0.7678,5,
+sentence-transformers/all-MiniLM-L6-v2,384,17.97,0.4821,22.92,0.0883,0.7292,63.8,0.793,5,
