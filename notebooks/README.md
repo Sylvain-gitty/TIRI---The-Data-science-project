@@ -6,8 +6,10 @@ whether it's safe to just read (`eda/`) or whether it writes to `data/processed/
 
 ```
 notebooks/
-  eda/            exploratory analysis — read-only, no files written back to data/
-  data_compile/   data-processing pipelines — data/raw/ -> data/processed/
+  eda/                 exploratory analysis — read-only, no files written back to data/
+  data_compile/        data-processing pipelines — data/raw/ -> data/processed/
+  feature_experiments/ viability checks for candidate features — read-only, not a
+                       feature-matrix build; see the folder's own section below
 ```
 
 ## eda/
@@ -25,11 +27,18 @@ notebooks/
 |---|---|
 | `combine_use_cases.ipynb` | Reads all 6 JSONL exports + their matching `usecase.json` search-brief definitions from `data/raw/`, applies the cleaning/standardisation punch list found by the `eda/` notebooks (compound `paper_id`, nullable `Int64` dtypes, `venue` casing, `sources` parsed into booleans, fixed `triage_label`/`review_label` categoricals, `abstract_source` dropped, `has_abstract` flag), broadcasts both files' metadata onto every paper row, and writes `data/processed/papers_combined.parquet` — the file `scripts/compare_embeddings.py` and `scripts/train_baseline_classifier.py` are meant to consume via `--data`. See also `data/processed/README.md` for a full description of the output dataset. |
 
+## feature_experiments/
+
+| Notebook | What it does |
+|---|---|
+| `terms_overlap.ipynb` | Viability check for a candidate feature: a per-paper term-overlap score against its own use case's `terms_must_include`/`terms_nice_to_have`/`terms_exclude` search-brief lists (whole-word matching). Tests whether the score separates `positive`/`negative` `triage_label`s and how it relates to `relevance_score` — real signal (ROC-AUC 0.70–0.80) on 3 of 6 use cases, none on the other 3. Read-only, no model trained. |
+
 ## Running a notebook
 
 Each notebook assumes it's run with its own folder as the working directory (so its
-`../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`
-or `notebooks/data_compile/`, not from `notebooks/` itself.
+`../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`,
+`notebooks/data_compile/`, or `notebooks/feature_experiments/`, not from `notebooks/`
+itself.
 
 ## Conventions
 
