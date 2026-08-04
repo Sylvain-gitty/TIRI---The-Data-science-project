@@ -1,13 +1,16 @@
 # Notebooks
 
 Organised by what a notebook does, not by week — a notebook's folder tells you
-whether it's safe to just read (`eda/`) or whether it writes to `data/processed/`
-(`data_compile/`).
+whether it's safe to just read (`eda/`), whether it writes to `data/processed/`
+(`data_compile/`), or whether it's a small viability check for a candidate feature
+that isn't part of the model yet (`feature_experiments/`).
 
 ```
 notebooks/
-  eda/            exploratory analysis — read-only, no files written back to data/
-  data_compile/   data-processing pipelines — data/raw/ -> data/processed/
+  eda/                  exploratory analysis — read-only, no files written back to data/
+  data_compile/         data-processing pipelines — data/raw/ -> data/processed/
+  feature_experiments/  small, sample-sized viability checks for candidate features —
+                        read-only, not the Week-3 modelling pipeline itself
 ```
 
 ## eda/
@@ -24,11 +27,18 @@ notebooks/
 |---|---|
 | `combine_use_cases.ipynb` | Reads all 6 JSONL exports + their matching `usecase.json` search-brief definitions from `data/raw/`, applies the cleaning/standardisation punch list found by the `eda/` notebooks (compound `paper_id`, nullable `Int64` dtypes, `venue` casing, `sources` parsed into booleans, fixed `triage_label`/`review_label` categoricals, `abstract_source` dropped, `has_abstract` flag), broadcasts both files' metadata onto every paper row, and writes `data/processed/papers_combined.parquet` — the file `scripts/compare_embeddings.py` and `scripts/train_baseline_classifier.py` are meant to consume via `--data`. See also `data/processed/README.md` for a full description of the output dataset. |
 
+## feature_experiments/
+
+| Notebook | What it does |
+|---|---|
+| `trl_estimate.ipynb` | Viability check on a ~30-paper sample: can a paper's own Technology Readiness Level be estimated from its title + abstract, as a genuinely per-row feature (unlike the constant-per-use-case `trl_min`/`trl_max` columns)? Hand-labels a sample against a transparent keyword heuristic and reports the honest agreement rate. Read-only. |
+
 ## Running a notebook
 
 Each notebook assumes it's run with its own folder as the working directory (so its
-`../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`
-or `notebooks/data_compile/`, not from `notebooks/` itself.
+`../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`,
+`notebooks/data_compile/`, or `notebooks/feature_experiments/`, not from `notebooks/`
+itself.
 
 ## Conventions
 
