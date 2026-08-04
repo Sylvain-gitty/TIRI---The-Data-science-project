@@ -1,15 +1,16 @@
 # Notebooks
 
 Organised by what a notebook does, not by week — a notebook's folder tells you
-whether it's safe to just read (`eda/`) or whether it writes to `data/processed/`
-(`data_compile/`).
+whether it's safe to just read (`eda/`), whether it writes to `data/processed/`
+(`data_compile/`), or whether it's a small viability check for a candidate feature
+that isn't part of the model yet (`feature_experiments/`).
 
 ```
 notebooks/
-  eda/                 exploratory analysis — read-only, no files written back to data/
-  data_compile/        data-processing pipelines — data/raw/ -> data/processed/
-  feature_experiments/ viability checks for candidate features — read-only, not a
-                       feature-matrix build; see the folder's own section below
+  eda/                  exploratory analysis — read-only, no files written back to data/
+  data_compile/         data-processing pipelines — data/raw/ -> data/processed/
+  feature_experiments/  small, sample-sized viability checks for candidate features —
+                        read-only, not the Week-3 modelling pipeline itself
 ```
 
 ## eda/
@@ -33,6 +34,7 @@ notebooks/
 |---|---|
 | `terms_overlap.ipynb` | Viability check for a candidate feature: a per-paper term-overlap score against its own use case's `terms_must_include`/`terms_nice_to_have`/`terms_exclude` search-brief lists (whole-word matching). Tests whether the score separates `positive`/`negative` `triage_label`s and how it relates to `relevance_score` — real signal (ROC-AUC 0.70–0.80) on 3 of 6 use cases, none on the other 3. Read-only, no model trained. |
 | `terms_overlap_spacy.ipynb` | Follow-up to `terms_overlap.ipynb`: does spaCy (lemma matching, phrase/hyphenation-normalized matching, negation-aware `terms_exclude`) beat plain whole-word regex matching? Best variant (hybrid surface-or-lemma) gives a small, safe +0.01 AUC gain on 2 of the 3 working use cases and rescues none of the 3 dead ones — marginal, not transformative; semantic/word-vector similarity scoped but not built (no headroom left to justify it, and this repo's own `combined_features_notes.md` already found generic spaCy-derived features add no reliable win alongside embeddings). Read-only, no model trained. |
+| `trl_estimate.ipynb` | Viability check on a 34-paper hand-picked sample: can a paper's own Technology Readiness Level be estimated from its title + abstract, as a genuinely per-row feature (unlike the constant-per-use-case `trl_min`/`trl_max` columns)? Hand-labels the sample against a transparent keyword heuristic — 53% agreement, barely above the majority-band floor. Not viable as a plain keyword list. Read-only. |
 
 ## Running a notebook
 
