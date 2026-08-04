@@ -68,9 +68,25 @@ NER-derived "how central is the use case" is not a meaningful question for a use
 NAME this short, whatever the corpus. It might be more meaningful with the agent's
 fuller objective/key-terms wording (--use-case-text) — untested here, don't assume.
 
+METRICS REWORK — see compare_embeddings.py's "THE METRICS" docstring section for the
+full explanation (this script reuses the exact same evaluate_representation/
+centroid_analysis machinery): roc_auc is now roc_auc_strict/roc_auc_conservative (two
+label readings, plus roc_auc_std) and comes with a query-conditioned counterpart
+(query_auc_strict/conservative, recall_at_Xpct, wss_at_95) that this script's ROC-AUC
+never had — the classifier version is fit on paper vectors alone and never looks at the
+use-case vector at all, which matters most exactly here: a NER representation whose
+use-case vector collapsed to all-zero (see above) could still, in principle, score a
+normal-looking roc_auc, since that metric wouldn't have noticed the collapse either way.
+
 HOW TO RUN IT
 --------------
+Preferred: open notebooks/comparisons/run_comparisons.ipynb (from inside
+notebooks/comparisons/) and run all cells — output renders inline, nothing written to
+disk. Run this script directly only for scripting/automation:
+
     python scripts/compare_ner_models.py --data data/raw/your-export.parquet
+
+Prints the scalar-metrics table to the console. No file is written.
 
 Useful flags:
     --spacy-model en_core_web_md          use a different local spaCy pipeline
@@ -79,12 +95,11 @@ Useful flags:
     --use-case-text "..."                 override the export's short use_case name
     --projection tsne                     use t-SNE instead of PCA for the 2D map
     --list-entity-labels                  print the loaded spaCy model's entity types
-    --out / --out-plot                    override the default output paths below
+    --out path.csv                        ALSO write the metrics table to this CSV
+    --out-plot path.png                   ALSO build + write the comparison figure
 
-OUTPUTS (same naming convention as compare_embeddings.py)
-------------------------------------------------------------------------------------------
-    reports/<data filename>_ner_latent_space_comparison.png   the visual comparison
-    reports/<data filename>_ner_representation_comparison.csv the scalar metrics behind it
+OUTPUTS: none, by default — see compare_embeddings.py's docstring for why (short version:
+reports/ holds decision-trail .md files in this repo, not a CSV/PNG per run).
 """
 
 from __future__ import annotations
@@ -102,14 +117,14 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from embedding_utils import (
-    NEGATIVE_VALUES,
-    POSITIVE_VALUES,
+    build_label_masks,
     build_paper_texts,
-    cross_validated_roc_auc,
     drop_empty_rows,
+    evaluate_representation,
     get_title_abstract,
     get_use_case_text,
     load_export,
+    round_floats,
 )
 from latent_space_utils import (
     centroid_analysis,
@@ -237,8 +252,8 @@ def main() -> None:
     parser.add_argument("--spacy-model", default=DEFAULT_SPACY_MODEL, help=f"Local spaCy pipeline to run NER with (default: {DEFAULT_SPACY_MODEL})")
     parser.add_argument("--representations", default=None, help="Comma-separated representation names (default: entity_type_counts,entity_text_tfidf)")
     parser.add_argument("--projection", choices=["pca", "tsne"], default="pca", help="2D projection method for the corpus map (default: pca)")
-    parser.add_argument("--out", type=Path, default=None, help="Where to save the scalar metrics table (default: reports/<data filename>_ner_representation_comparison.csv)")
-    parser.add_argument("--out-plot", type=Path, default=None, help="Where to save the comparison figure (default: reports/<data filename>_ner_latent_space_comparison.png)")
+    parser.add_argument("--out", type=Path, default=None, help="Save the scalar metrics table to this CSV path (default: not saved — printed to the console only)")
+    parser.add_argument("--out-plot", type=Path, default=None, help="Save the comparison figure to this PNG path (default: not built/saved at all — see notebooks/comparisons/ for an inline alternative)")
     parser.add_argument("--list-entity-labels", action="store_true", help="Print the loaded spaCy model's entity label set, then exit")
     args = parser.parse_args()
 
@@ -252,12 +267,10 @@ def main() -> None:
     if args.data is None:
         parser.error("--data is required unless --list-entity-labels is passed")
 
-    # Default output paths are derived from the input filename so results from different
-    # exports land in different files instead of silently overwriting each other.
-    if args.out is None:
-        args.out = Path("reports") / f"{args.data.stem}_ner_representation_comparison.csv"
-    if args.out_plot is None:
-        args.out_plot = Path("reports") / f"{args.data.stem}_ner_latent_space_comparison.png"
+    # Nothing is written to disk unless explicitly asked (--out/--out-plot) — reports/
+    # holds this repo's decision-trail .md files, not a per-run CSV/PNG pile. See
+    # notebooks/comparisons/run_comparisons.ipynb for the inline-output equivalent.
+    make_plot = args.out_plot is not None
 
     representation_names = (
         [r.strip() for r in args.representations.split(",")] if args.representations else DEFAULT_REPRESENTATIONS
@@ -275,18 +288,16 @@ def main() -> None:
     nlp = load_spacy_model(args.spacy_model)
     label_vocab = list(nlp.get_pipe("ner").labels)
 
-    has_labels = args.label_col in df.columns
-    if has_labels:
-        y_mask = df[args.label_col].isin(POSITIVE_VALUES | NEGATIVE_VALUES).to_numpy()
-        y_full = df[args.label_col].isin(POSITIVE_VALUES).astype(int).to_numpy()
-        n_pos, n_neg = int(y_full[y_mask].sum()), int((y_mask.sum() - y_full[y_mask].sum()))
-        print(f"  Labels: {n_pos} positive, {n_neg} negative (column '{args.label_col}')")
+    masks = build_label_masks(df, args.label_col)
+    if masks["has_labels"]:
+        print(f"  Labels: {masks['n_pos']} positive, {masks['n_neg']} negative, "
+              f"{masks['n_pass']} pass (column '{args.label_col}')")
     else:
-        y_mask, y_full = np.zeros(len(df), dtype=bool), np.zeros(len(df), dtype=int)
-        print(f"  No '{args.label_col}' column found — plots will skip label colouring and ROC-AUC.")
+        print(f"  No '{args.label_col}' column found — plots will skip label colouring and evaluation metrics.")
 
     n_reps = len(representation_names)
-    fig, axes = plt.subplots(n_reps, 3, figsize=(15, 4.6 * n_reps), squeeze=False)
+    if make_plot:
+        fig, axes = plt.subplots(n_reps, 3, figsize=(15, 4.6 * n_reps), squeeze=False)
 
     rows = []
     for row_idx, rep_name in enumerate(representation_names):
@@ -298,51 +309,53 @@ def main() -> None:
         except Exception as exc:
             print(f"  FAILED: {exc}")
             rows.append({"representation": rep_name, "dim": None, "seconds": None,
-                         "avg_pairwise_cosine": None, "participation_ratio": None,
-                         "top1_variance_ratio": None, "use_case_to_centroid_sim": None,
-                         "use_case_centroid_percentile": None, "roc_auc": None, "n_folds": 0,
-                         "n_zero_entity_papers": None, "note": f"failed: {exc}"})
-            for ax in axes[row_idx]:
-                ax.set_title(f"{rep_name}\nFAILED: {exc}", fontsize=8, color="red")
+                         "note": f"failed: {exc}"})
+            if make_plot:
+                for ax in axes[row_idx]:
+                    ax.set_title(f"{rep_name}\nFAILED: {exc}", fontsize=8, color="red")
             continue
 
         disp = dispersion_metrics(paper_vectors)
-        cent = centroid_analysis(paper_vectors, use_case_vec)
+        cent = centroid_analysis(paper_vectors, use_case_vec, masks["pos_mask"], masks["neg_mask"])
+        metrics = evaluate_representation(paper_vectors, use_case_vec, masks)
 
-        roc = {"roc_auc": None, "n_folds": 0}
-        if has_labels and y_mask.sum() >= 6:
-            roc = cross_validated_roc_auc(paper_vectors[y_mask], y_full[y_mask])
-
-        coords_2d, uc_xy, centroid_xy, var_ratio = project_2d(
-            paper_vectors, use_case_vec, cent["centroid"], args.projection
-        )
-        plot_model_row(axes[row_idx], rep_name, df, args.label_col,
-                        coords_2d, uc_xy, centroid_xy, var_ratio, disp, cent, roc)
+        if make_plot:
+            coords_2d, uc_xy, centroid_xy, var_ratio = project_2d(
+                paper_vectors, use_case_vec, cent["centroid"], args.projection
+            )
+            plot_model_row(axes[row_idx], rep_name, df, args.label_col,
+                            coords_2d, uc_xy, centroid_xy, var_ratio, disp, cent, metrics)
 
         rows.append({
             "representation": rep_name,
             "dim": paper_vectors.shape[1],
             "seconds": round(elapsed, 2),
-            "avg_pairwise_cosine": round(disp["avg_pairwise_cosine"], 4),
-            "participation_ratio": round(disp["participation_ratio"], 2),
-            "top1_variance_ratio": round(disp["top1_variance_ratio"], 4),
-            "use_case_to_centroid_sim": round(cent["use_case_to_centroid_sim"], 4),
-            "use_case_centroid_percentile": round(cent["use_case_centroid_percentile"], 1),
-            "roc_auc": round(roc["roc_auc"], 4) if roc["roc_auc"] is not None else None,
-            "n_folds": roc["n_folds"],
+            **round_floats({
+                "avg_pairwise_cosine": disp["avg_pairwise_cosine"],
+                "participation_ratio": disp["participation_ratio"],
+                "top1_variance_ratio": disp["top1_variance_ratio"],
+                "use_case_to_centroid_sim": cent["use_case_to_centroid_sim"],
+                "use_case_centroid_percentile": cent["use_case_centroid_percentile"],
+                "use_case_to_positive_centroid_sim": cent["use_case_to_positive_centroid_sim"],
+                "use_case_to_negative_centroid_sim": cent["use_case_to_negative_centroid_sim"],
+                "use_case_discriminative_gap": cent["use_case_discriminative_gap"],
+                **metrics,
+            }),
             "n_zero_entity_papers": extra["n_zero_entity_papers"],
             "note": "",
         })
         print(f"  dim={paper_vectors.shape[1]}  avg_pairwise_cosine={disp['avg_pairwise_cosine']:.3f} "
               f"({interpret_dispersion(disp['avg_pairwise_cosine'])})  "
               f"use_case_percentile={cent['use_case_centroid_percentile']:.0f}  "
-              f"roc_auc={roc['roc_auc']}  "
+              f"roc_auc_strict={metrics['roc_auc_strict']}  "
+              f"query_auc_strict={metrics['query_auc_strict']}  "
               f"zero_entity_papers={extra['n_zero_entity_papers']}/{len(df)}")
 
-    fig.tight_layout()
-    args.out_plot.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(args.out_plot, dpi=150)
-    print(f"\nSaved comparison figure to {args.out_plot}")
+    if make_plot:
+        fig.tight_layout()
+        args.out_plot.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(args.out_plot, dpi=150)
+        print(f"\nSaved comparison figure to {args.out_plot}")
 
     results_df = pd.DataFrame(rows)
     print("\n" + "=" * 70)
@@ -350,9 +363,12 @@ def main() -> None:
     print("=" * 70)
     print(results_df.to_string(index=False))
 
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    results_df.to_csv(args.out, index=False)
-    print(f"\nSaved metrics table to {args.out}")
+    if args.out is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        results_df.to_csv(args.out, index=False)
+        print(f"\nSaved metrics table to {args.out}")
+    else:
+        print("\n(--out not given — nothing written to disk; the table above is the only output.)")
 
 
 if __name__ == "__main__":

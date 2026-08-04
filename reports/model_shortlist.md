@@ -13,6 +13,16 @@ has been retired (see `HANDOFF.md`) — nothing downstream in this repo is wired
 "wins" a run of this script. See `reports/ner_model_notes.md` for the same kind of
 exercise applied to NER-derived representations instead of embeddings.
 
+> **Corpus retired (2026-08-04):** `data/raw/sample-export.parquet` — the
+> "climate/agriculture" 100-paper corpus §3 and most of §5 below are about — has been
+> removed from this repo. It was a placeholder used to start testing before this project
+> had real use-case briefs: no real use-case text of its own (just a generic short name)
+> and too few observations to trust a comparison drawn from it. The numbers below are kept
+> as historical record and can no longer be reproduced by re-running against that file.
+> New comparisons should use the soil-microbiome corpus (§4) or
+> `data/processed/papers_combined.parquet`'s 6 real research questions — see
+> `notebooks/comparisons/run_comparisons.ipynb`.
+
 ## 1. Priority properties (why these, for THIS workflow)
 
 Not a generic embedding-benchmark checklist — grounded in `academic_research_agent`'s own
@@ -78,16 +88,17 @@ meant to be re-run often while iterating.
   The domain-specific model did not outperform on this corpus even once its known input
   quirk was corrected — a real, if unflattering, result.
 
-Run the shortlist with one command:
+**Run it yourself, with output inline:** open `notebooks/comparisons/run_comparisons.ipynb`
+(from inside `notebooks/comparisons/`), set `CORPUS_KEY`, run all cells — every table and
+plot renders in the notebook itself, nothing is written to `reports/` by default. See
+`notebooks/README.md`.
 
-```bash
-python scripts/compare_embeddings.py --data data/raw/your-export.parquet
-```
-
-Outputs (named after the input file, so different exports never overwrite each other):
-`reports/<data filename>_latent_space_comparison.png` (visual comparison) and
-`reports/<data filename>_embedding_comparison.csv` (scalar metrics) — see the script's
-own docstring for what each metric means.
+`scripts/compare_embeddings.py` is the library these functions live in (the notebook
+imports it, doesn't reimplement it) and still works as a CLI for scripting/automation —
+`python scripts/compare_embeddings.py --data data/raw/your-export.parquet` prints the same
+metrics table to the console; pass `--out`/`--out-plot` explicitly if you also want a CSV
+or PNG written to disk (neither is written unless asked, on purpose — `reports/` holds
+this decision trail, not a growing pile of per-run artifacts).
 
 ## 4. Second corpus tested (602-paper soil microbiome export) — the ranking flipped
 

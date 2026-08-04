@@ -12,6 +12,15 @@ latent-space sanity (dense/disperse), cosine similarity structure, use-case cent
 **not** select a model for a future classifier baseline. Nothing downstream is wired to
 whatever "wins" a run of this script.
 
+> **Corpus retired (2026-08-04):** `data/raw/sample-export.parquet` — the
+> "climate/agriculture" 100-paper corpus §4 below is about — has been removed from this
+> repo. It was a placeholder used to start testing before this project had real use-case
+> briefs: no real use-case text of its own (just a generic short name) and too few
+> observations to trust a comparison drawn from it. The numbers below are kept as
+> historical record and can no longer be reproduced by re-running against that file. New
+> comparisons should use the soil-microbiome corpus or `data/processed/papers_combined.parquet`'s
+> 6 real research questions — see `notebooks/comparisons/run_comparisons.ipynb`.
+
 ## 2. Why spaCy, over GLiNER / scispaCy
 
 | Property | spaCy (`en_core_web_sm`) | GLiNER | scispaCy |
@@ -71,8 +80,8 @@ parts):**
 - **Tested with the real fuller use-case text — and it moved the two representations in
   OPPOSITE directions, not both toward "better."** Using the analyst's actual objective/
   key-terms JSON (`data/raw/high-quality-microbial-and-fungal-community-in-soil.usecase.json`)
-  instead of the short name, re-run on the same soil corpus
-  (`reports/high-quality-microbial-and-fungal-community-in-soil-labelledFULLRUN_richer_usecase_ner_representation_comparison.csv`):
+  instead of the short name, re-run on the same soil corpus via `--use-case-text`
+  (reproduce in the notebook by setting `use_case_text` to that file's built string):
   `entity_type_counts` percentile DROPPED from 70th to 39th (sim 0.89→0.30), while
   `entity_text_tfidf` percentile ROSE from 89th to 100th (sim 0.29→0.46) — the most
   extreme value the metric can report. ROC-AUC and dispersion were unchanged for both
@@ -115,12 +124,11 @@ both improve on scientific text, and (b) test `entity_type_counts`/`entity_text_
 concatenated onto an embedding vector rather than standalone, since standalone
 performance being weaker than embeddings doesn't rule out an additive contribution.
 
-Run it yourself:
+**Run it yourself, with output inline:** `notebooks/comparisons/run_comparisons.ipynb`
+§2 — see `notebooks/README.md`.
 
-```bash
-python scripts/compare_ner_models.py --data data/raw/your-export.parquet
-```
-
-Outputs: `reports/<data filename>_ner_latent_space_comparison.png` (visual comparison) and
-`reports/<data filename>_ner_representation_comparison.csv` (scalar metrics) — see the
-script's own docstring for what each metric means.
+`scripts/compare_ner_models.py` still works as a CLI (`python scripts/compare_ner_models.py
+--data data/raw/your-export.parquet`) for scripting/automation, printing the same table to
+the console; pass `--out`/`--out-plot` explicitly if you also want a CSV/PNG on disk
+(neither is written by default — `reports/` holds this decision trail, not per-run
+artifacts).

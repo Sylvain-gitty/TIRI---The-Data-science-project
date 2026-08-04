@@ -8,6 +8,8 @@ whether it's safe to just read (`eda/`) or whether it writes to `data/processed/
 notebooks/
   eda/            exploratory analysis — read-only, no files written back to data/
   data_compile/   data-processing pipelines — data/raw/ -> data/processed/
+  comparisons/    runs scripts/compare_*.py's own functions with output inline — reads
+                  data/raw/, writes nothing (reports/ holds decision-trail .md only)
 ```
 
 ## eda/
@@ -24,11 +26,17 @@ notebooks/
 |---|---|
 | `combine_use_cases.ipynb` | Reads all 6 JSONL exports + their matching `usecase.json` search-brief definitions from `data/raw/`, applies the cleaning/standardisation punch list found by the `eda/` notebooks (compound `paper_id`, nullable `Int64` dtypes, `venue` casing, `sources` parsed into booleans, fixed `triage_label`/`review_label` categoricals, `abstract_source` dropped, `has_abstract` flag), broadcasts both files' metadata onto every paper row, and writes `data/processed/papers_combined.parquet` — the file `scripts/compare_embeddings.py` and `scripts/train_baseline_classifier.py` are meant to consume via `--data`. See also `data/processed/README.md` for a full description of the output dataset. |
 
+## comparisons/
+
+| Notebook | What it does |
+|---|---|
+| `run_comparisons.ipynb` | **The primary way to run and see this repo's comparisons.** Imports `scripts/compare_embeddings.py`, `compare_ner_models.py`, `compare_combined_features.py`'s own functions (doesn't reimplement them) and shows every table and plot inline, plus a paired significance check across representations — clone the repo, run all cells, see the full result with nothing pre-generated. Toggle `CORPUS_KEY` to switch between the two real corpora. Writes nothing to disk. See `reports/metrics_rework_and_rerun.md` for the evaluation-metrics rework this notebook exercises. |
+
 ## Running a notebook
 
 Each notebook assumes it's run with its own folder as the working directory (so its
-`../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`
-or `notebooks/data_compile/`, not from `notebooks/` itself.
+`../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`,
+`notebooks/data_compile/`, or `notebooks/comparisons/`, not from `notebooks/` itself.
 
 ## Conventions
 

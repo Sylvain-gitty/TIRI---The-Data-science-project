@@ -14,7 +14,65 @@ labelled, ML-ready parquet exports (title/abstract/metadata, `triage_label`/
 month-long ML workflow (README.md has the full 4-week plan: clean → feature-engineer →
 model → ensemble → evaluate).
 
-## Current branch: `EMsanitycaheck` — decoupling comparison from baseline selection
+## Current work (on `main`, uncommitted): evaluation-metrics rework
+
+A methodology review of the three comparison scripts found `roc_auc` (fit on paper
+vectors alone, never sees the use-case query) and the centroid percentile (sees the
+query, never sees labels) left a real gap — neither one answers "does this
+representation retrieve the right papers for THIS query." Fixed in
+`embedding_utils.py`/`latent_space_utils.py`, re-run on both real corpora, full trail
+(what changed, what the new numbers say, what old claims didn't survive) in
+`reports/metrics_rework_and_rerun.md` — **read that file, not this summary, before
+trusting any AUC number in this repo.** Headlines:
+
+- Every comparison script now reports **two AUC families** (`roc_auc_*`, classifier on
+  paper vectors — the old metric; `query_auc_*`, ranking by cosine-to-use-case — new)
+  under **two label readings** (`_strict` = positive vs. negative only; `_conservative` =
+  positive vs. negative+pass), plus `roc_auc_std` (fold-level spread, previously computed
+  then discarded) and `recall_at_Xpct`/`wss_at_95` (standard citation-screening metrics).
+  `centroid_analysis` now also splits by class (`use_case_to_positive_centroid_sim` /
+  `_negative_centroid_sim` / `_discriminative_gap`), not just the corpus-wide pool.
+- **On the soil corpus, every embedding model's `query_auc` is BELOW 0.5** (0.29–0.43) —
+  ranking by similarity to the use case's own text is worse than random at separating
+  accepted from rejected papers, for all four models, despite `roc_auc` calling them
+  solid (0.77–0.80). NER's `entity_type_counts` — the representation the old `roc_auc`
+  reading called the weakest thing tested — has the only positive `query_auc` (0.579) of
+  any single representation on that corpus.
+- A **paired significance test** (new: `notebooks/comparisons/run_comparisons.ipynb` §4,
+  using fold-level AUCs that used to be computed then thrown away) found most of this
+  repo's old "X beats Y" point-difference claims are not statistically distinguishable
+  from fold-to-fold noise on 5 folds — including `combined_features_notes.md`'s "combining
+  made things worse" claim on the climate corpus (p=0.475–0.673).
+- **`notebooks/comparisons/run_comparisons.ipynb` is now the primary way to run and see
+  this repo's comparisons** — clone, open, run all cells, every table/plot renders
+  inline. See `notebooks/README.md`.
+- **`reports/` was cleaned out down to its `.md` decision-trail files** (`model_shortlist.md`,
+  `ner_model_notes.md`, `combined_features_notes.md`, `metrics_rework_and_rerun.md`) —
+  every per-run `_comparison.csv`/`_latent_space_comparison.png` (base and
+  `richer_usecase` variants) was deleted. The three `compare_*.py` scripts no longer write
+  a file by default — `--out`/`--out-plot` must be passed explicitly if a CSV/PNG is
+  wanted for some other purpose. The `.md` files' own numeric tables are unaffected (the
+  numbers are copied into the prose, not read from those files) — only their "run it
+  yourself"/"outputs" pointer sentences were updated to point at the notebook.
+  `future_work/train_baseline_classifier.py`'s `reports/*_baseline_*` files are untouched
+  (out of scope — that script is unrelated to the comparison notebook).
+- **`data/raw/sample-export.parquet` (the "climate/agriculture" 100-paper corpus) is
+  removed from the repo.** It was a placeholder used to start testing before this
+  project had real use-case briefs — no real use-case text of its own, too few
+  observations to trust a comparison drawn from it, and it shouldn't be used for future
+  model comparisons. Every `.md` report's climate-corpus numbers are kept as historical
+  record with a notice marking them non-reproducible now. In its place, the notebook
+  gained a second corpus source: `data/processed/papers_combined.parquet` — 2,873 papers
+  across 6 real research questions (`cement_binders`, `soil_microbiome`, `ner`,
+  `solar_leo`, `carbon_capture`, `tech_forecasting`, see `data/processed/README.md`) in
+  one file, each carrying its own real objective + must-include/nice-to-have search terms.
+  `notebooks/comparisons/run_comparisons.ipynb`'s `CORPUS_KEY` now takes `"soil"`
+  (unchanged) or `"combined"` (pick a `USE_CASE_KEY`); for `"combined"`, the notebook
+  builds a richer use-case query straight from those objective/terms columns
+  (`build_richer_use_case_text`) instead of a short placeholder name — no separate
+  `.usecase.json` file needed the way the standalone soil export required one.
+
+## Prior branch `EMsanitycaheck` (merged into `main` via PR #18) — decoupling comparison from baseline selection
 
 Prior sessions had built `scripts/compare_embeddings.py` (a latent-space/cosine-
 similarity comparison of embedding models against a labelled export) and then treated its
@@ -135,33 +193,50 @@ scripts/
 future_work/
   train_baseline_classifier.py     parked Week-3 baseline plumbing — NOT wired to any
                                     comparison script, default model is a placeholder
+notebooks/
+  comparisons/run_comparisons.ipynb    same comparison functions, output inline — see notebooks/README.md
 reports/
-  model_shortlist.md               embedding decision trail (§1-5, §4b) — READ THIS FIRST
+  metrics_rework_and_rerun.md      evaluation-metrics rework decision trail — READ THIS FIRST for AUC numbers
+  model_shortlist.md               embedding decision trail (§1-5, §4b)
   ner_model_notes.md               NER decision trail — same structure, for NER
-  combined_features_notes.md       does concatenating NER onto an embedding help? — mixed/no
-  <dataset>_latent_space_comparison.png / _embedding_comparison.csv
-  <dataset>_ner_latent_space_comparison.png / _ner_representation_comparison.csv
-  <dataset>_combined_features_latent_space_comparison.png / _combined_features_comparison.csv
-  <dataset>_richer_usecase_*                     same 3 comparisons, re-run with the real
-                                                  .usecase.json's fuller text (soil corpus only)
+  combined_features_notes.md       does concatenating NER onto an embedding help? — mixed/no (roc_auc reading; see metrics_rework_and_rerun.md for the query_auc reading)
   <dataset>_baseline_confusion_matrix.png / _baseline_metrics.json / _baseline_scored_pool.csv
+                                    (from future_work/train_baseline_classifier.py — unrelated
+                                    to the 3 comparison scripts above, which write nothing by
+                                    default now; run notebooks/comparisons/run_comparisons.ipynb
+                                    to see their output instead of looking for a file here)
 data/raw/
-  sample-export.parquet                                        (climate/agriculture, 100 papers)
   high-quality-microbial-and-fungal-community-in-soil-labelledFULLRUN.parquet  (602 papers)
   high-quality-microbial-and-fungal-community-in-soil.usecase.json  (the analyst's real
                                                   objective/key-terms JSON for that corpus —
                                                   tracked via a narrow .gitignore exception)
+                                                  (sample-export.parquet removed — see above)
+data/processed/
+  papers_combined.parquet          6 real research questions in one file, see README.md
+                                    in that folder + notebooks/comparisons/run_comparisons.ipynb
 ```
 
-All comparison-style outputs are named after the input file — safe to re-run on a new
-export without overwriting prior results.
+The 3 comparison scripts write nothing to disk by default — run
+`notebooks/comparisons/run_comparisons.ipynb` to see output, or pass `--out`/`--out-plot`
+explicitly for a one-off file (name it after the input, `reports/<stem>_*`, if you do —
+never a fixed path, so re-running on a different export doesn't overwrite prior results).
 
 ## Established conventions worth keeping
 
 - **TIRI-only changes.** Read `academic_research_agent` for reference; never edit it.
-- **Dataset-specific output filenames** (`reports/<stem>_*`) — never a fixed path.
+- **`reports/` holds decision-trail `.md` files, not per-run artifacts.** The comparison
+  scripts default to writing nothing; `notebooks/comparisons/run_comparisons.ipynb` is how
+  you see a run's output. If you DO pass `--out`/`--out-plot` for a one-off file, name it
+  after the input (`reports/<stem>_*`) — never a fixed path — but don't check that file in.
 - **Cross-validated, never train-then-score.** Any AUC/accuracy number must come from
   held-out folds.
+- **Report `roc_auc` alongside `query_auc`, never `roc_auc` alone** — the classifier
+  version never sees the use-case query, the ranking version never needs training; they
+  can and do disagree (see `reports/metrics_rework_and_rerun.md`'s soil-corpus result).
+  Same for `_strict` vs. `_conservative`: don't drop `pass` rows without also reporting
+  the reading that keeps them.
+- **A fold-count difference is a claim, not a given — check `roc_auc_std` or run the
+  notebook's paired test before calling one number "better" than another.**
 - **NULL is not 0** — "never found out" vs. "looked, found nothing" are different facts.
 - **Shared logic lives in a `*_utils.py` module**, not duplicated per script —
   `embedding_utils.py` (embedding-specific) and `latent_space_utils.py`

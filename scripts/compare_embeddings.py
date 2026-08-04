@@ -58,21 +58,52 @@ top1_variance_ratio — the fraction of variance explained by the single largest
     could be making.
 
 use_case_to_centroid_sim / use_case_centroid_percentile — cosine similarity between the
-    embedded use case and the corpus's centroid vector (the mean of all abstract
-    vectors), and what percentile that similarity falls at relative to every abstract's
-    own similarity to that same centroid. A high percentile says the use case's wording
-    sits near the "centre" of the papers found for it — as central as a typical
-    abstract, or more so. A low percentile says the use case is an outlier relative to
-    its own corpus, worth a second look at whether the query terms actually match the
-    literature's vocabulary.
+    embedded use case and the corpus's centroid vector (the mean of ALL abstract
+    vectors — positive, negative, AND pass pooled together, unweighted by label), and
+    what percentile that similarity falls at relative to every abstract's own similarity
+    to that same centroid. A high percentile says the use case's wording sits near the
+    "centre" of the papers this search retrieved — as central as a typical retrieved
+    paper, or more so. A low percentile says the use case is an outlier relative to its
+    own retrieved pool, worth a second look at whether the query terms actually match the
+    literature's vocabulary. NOTE what this does NOT tell you: because the pool is
+    unweighted by label, "typical of everything retrieved" is not the same claim as
+    "typical of the papers actually accepted" — see use_case_discriminative_gap below for
+    the label-aware version of this same question.
 
-roc_auc (secondary) — cross-validated LogisticRegression AUC predicting the triage
-    label from the embeddings, IDENTICAL to academic_research_agent's own
-    model.py:_cross_validated_roc_auc. This is a diagnostic about the labelled dataset
-    itself ("does this space separate the labels you already have"), NOT a signal for
-    choosing a model to train a future classifier on — the dense/disperse and centroid
-    questions above are what this script is actually built around; roc_auc is one more
-    lens on the same "test against the labelled dataset" goal, nothing more.
+use_case_to_positive_centroid_sim / use_case_to_negative_centroid_sim /
+    use_case_discriminative_gap — the label-aware counterpart to the corpus-wide
+    centrality above: a separate centroid for positive-labelled rows and one for
+    negative-labelled rows, and how similar the use case is to each. The gap (positive
+    minus negative) is a single query-aware, label-aware number: positive means the use
+    case's own wording sits closer to the papers that got KEPT than to the ones that got
+    REJECTED — a claim corpus-wide centrality alone cannot make, since it never looks at
+    labels at all. Needs >=2 rows in each class to compute; None below that.
+
+roc_auc_strict / roc_auc_conservative (secondary) — cross-validated LogisticRegression
+    AUC predicting the triage label from the embeddings, IDENTICAL to
+    academic_research_agent's own model.py:_cross_validated_roc_auc. "strict" = positive
+    vs. negative only (pass/unlabelled excluded, the reading this script always reported
+    before this rework). "conservative" = positive vs. everything NOT accepted
+    (negative + pass) — a harsher second reading that doesn't let the ambiguous middle
+    get skipped, since a deployed tool can't skip it either. Both come with roc_auc_std
+    (the standard deviation ACROSS folds, not just the mean) so a "0.006 difference is
+    noise" claim can be checked against a number instead of asserted. NOTE what this
+    metric does NOT measure, in either reading: the classifier is fit on paper vectors
+    ALONE — the use-case/query vector never enters this computation. A space can be
+    perfectly label-separable here while being useless for ranking-by-similarity-to-a-
+    specific-query — see query_auc below for the metric that actually uses the query.
+
+query_auc_strict / query_auc_conservative, recall_at_10pct / recall_at_20pct, wss_at_95
+    (secondary, query-conditioned) — rank papers by cosine similarity to the USE-CASE
+    VECTOR ITSELF (the actual nearest-neighbour mechanism a retrieval step uses, and the
+    thing roc_auc above never looks at), then score that ranking against the labels.
+    query_auc is on the same 0.5/1.0 scale as roc_auc but answers a different question
+    ("does ranking BY THIS QUERY separate relevant from not" vs. "is this space linearly
+    separable by label at all"). recall_at_Xpct: of the top X% of the ranked list, what
+    fraction of the true positives an analyst would already have seen. wss_at_95: Work
+    Saved over Sampling at 95% recall (Cohen et al. 2006, a standard citation-screening-
+    automation metric) — the fraction of the corpus an analyst could skip while still
+    catching 95% of the positives, minus the 5% skippable by chance alone.
 
 WHERE THE USE CASE TEXT COMES FROM
 --------------------------------------
@@ -153,9 +184,15 @@ still try any fastembed model ad hoc via --models without editing this file), an
 
 HOW TO RUN IT
 --------------
+Preferred: open notebooks/comparisons/run_comparisons.ipynb (from inside
+notebooks/comparisons/) and run all cells — every table and plot renders inline, nothing
+is written to disk. This script is the library that notebook imports, not a separate
+tool; run it directly only for scripting/automation, or to sanity-check a change:
+
     python scripts/compare_embeddings.py --data data/raw/your-export.parquet
 
-That one command runs all 4 shortlisted models above — no extra flags needed.
+That one command runs all 4 shortlisted models above — no extra flags needed — and prints
+the scalar-metrics table to the console. No file is written.
 
 Useful flags:
     --models "tfidf,BAAI/bge-small-en-v1.5"     run a different set instead of the 4 above
@@ -164,19 +201,34 @@ Useful flags:
     --projection tsne                           use t-SNE instead of PCA for the 2D map
     --list-models                               print fastembed's full model catalogue
                                                  (+ this script's own MODEL_CONFIGS)
-    --out / --out-plot                          override the default output paths below
+    --out path.csv                              ALSO write the metrics table to this CSV
+    --out-plot path.png                         ALSO build + write the comparison figure
+                                                 (skipped entirely without this flag — no
+                                                 PCA/t-SNE projection is even computed)
 
-OUTPUTS (one pair of files per export, so different datasets never overwrite each other)
-------------------------------------------------------------------------------------------
-    reports/<data filename>_latent_space_comparison.png   the visual comparison (main output)
-    reports/<data filename>_embedding_comparison.csv      the scalar metrics behind the plot
+OUTPUTS: none, by default — the metrics table above is printed, not saved. `reports/` in
+this repo holds decision-trail `.md` files, not a CSV/PNG per run; pass --out/--out-plot
+explicitly if you want a file for some other purpose (e.g. feeding another tool).
 
 A LIMITATION TO KNOW ABOUT
 -----------------------------
 All of this is descriptive of ONE corpus (typically a few hundred papers at most). With
 a small n, the PCA map and histograms show real structure but the scalar metrics have
 wide error bars — read them as "which model looks meaningfully different", not as
-precise measurements.
+precise measurements. roc_auc_std now gives that error bar a number instead of a hand-
+wave; a "the two runs are basically the same" claim should be checked against it, not
+asserted from the point estimate alone.
+
+METRICS REWORK (see reports/metrics_rework_and_rerun.md for the full trail) — a
+methodology review flagged that the original roc_auc never used the query vector at all
+(classifier-on-paper-vectors, query-blind) while the centrality percentile never used
+labels at all (query-aware, label-blind) — neither one actually answered "does this
+representation retrieve the right papers for THIS query", which is the tool's actual
+job. query_auc/recall/wss_at_95 and the positive/negative centroid split close that gap;
+roc_auc_conservative and roc_auc_std address two further gaps (the "pass" middle being
+silently dropped, and fold variance being computed then discarded). Old CSVs from before
+this rework only have the single roc_auc/n_folds columns — don't assume a numeric column
+name means the same thing across an old vs. new run without checking the header.
 """
 
 from __future__ import annotations
@@ -187,19 +239,18 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")  # write PNGs without needing a display — this is a batch script
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
 from embedding_utils import (
     MODEL_CONFIGS,
-    NEGATIVE_VALUES,
-    POSITIVE_VALUES,
-    cross_validated_roc_auc,
+    build_label_masks,
     drop_empty_rows,
     embed_corpus_and_use_case,
+    evaluate_representation,
     get_title_abstract,
     get_use_case_text,
     load_export,
+    round_floats,
 )
 from latent_space_utils import (
     centroid_analysis,
@@ -231,8 +282,8 @@ def main() -> None:
     parser.add_argument("--use-case-text", default=None, help="Override the use case text instead of reading --use-case-col")
     parser.add_argument("--models", default=None, help="Comma-separated model names/types (default: the 4 shortlisted models, see --list-models)")
     parser.add_argument("--projection", choices=["pca", "tsne"], default="pca", help="2D projection method for the corpus map (default: pca)")
-    parser.add_argument("--out", type=Path, default=None, help="Where to save the scalar metrics table (default: reports/<data filename>_embedding_comparison.csv)")
-    parser.add_argument("--out-plot", type=Path, default=None, help="Where to save the comparison figure (default: reports/<data filename>_latent_space_comparison.png)")
+    parser.add_argument("--out", type=Path, default=None, help="Save the scalar metrics table to this CSV path (default: not saved — printed to the console only)")
+    parser.add_argument("--out-plot", type=Path, default=None, help="Save the comparison figure to this PNG path (default: not built/saved at all — see notebooks/comparisons/ for an inline alternative)")
     parser.add_argument("--list-models", action="store_true", help="Print every model fastembed supports, then exit")
     args = parser.parse_args()
 
@@ -251,12 +302,10 @@ def main() -> None:
     if args.data is None:
         parser.error("--data is required unless --list-models is passed")
 
-    # Default output paths are derived from the input filename so results from different
-    # exports land in different files instead of silently overwriting each other.
-    if args.out is None:
-        args.out = Path("reports") / f"{args.data.stem}_embedding_comparison.csv"
-    if args.out_plot is None:
-        args.out_plot = Path("reports") / f"{args.data.stem}_latent_space_comparison.png"
+    # Nothing is written to disk unless explicitly asked (--out/--out-plot) — reports/
+    # holds this repo's decision-trail .md files, not a per-run CSV/PNG pile. See
+    # notebooks/comparisons/run_comparisons.ipynb for the inline-output equivalent.
+    make_plot = args.out_plot is not None
 
     model_names = [m.strip() for m in args.models.split(",")] if args.models else DEFAULT_MODELS
 
@@ -268,18 +317,16 @@ def main() -> None:
     use_case_text = get_use_case_text(df, args.use_case_col, args.use_case_text)
     print(f"  {len(df)} papers. Use case text: \"{use_case_text}\"")
 
-    has_labels = args.label_col in df.columns
-    if has_labels:
-        y_mask = df[args.label_col].isin(POSITIVE_VALUES | NEGATIVE_VALUES).to_numpy()
-        y_full = df[args.label_col].isin(POSITIVE_VALUES).astype(int).to_numpy()
-        n_pos, n_neg = int(y_full[y_mask].sum()), int((y_mask.sum() - y_full[y_mask].sum()))
-        print(f"  Labels: {n_pos} positive, {n_neg} negative (column '{args.label_col}')")
+    masks = build_label_masks(df, args.label_col)
+    if masks["has_labels"]:
+        print(f"  Labels: {masks['n_pos']} positive, {masks['n_neg']} negative, "
+              f"{masks['n_pass']} pass (column '{args.label_col}')")
     else:
-        y_mask, y_full = np.zeros(len(df), dtype=bool), np.zeros(len(df), dtype=int)
-        print(f"  No '{args.label_col}' column found — plots will skip label colouring and ROC-AUC.")
+        print(f"  No '{args.label_col}' column found — plots will skip label colouring and evaluation metrics.")
 
     n_models = len(model_names)
-    fig, axes = plt.subplots(n_models, 3, figsize=(15, 4.6 * n_models), squeeze=False)
+    if make_plot:
+        fig, axes = plt.subplots(n_models, 3, figsize=(15, 4.6 * n_models), squeeze=False)
 
     rows = []
     for row_idx, model_name in enumerate(model_names):
@@ -289,49 +336,51 @@ def main() -> None:
         except Exception as exc:
             print(f"  FAILED: {exc}")
             rows.append({"model": model_name, "dim": None, "embed_seconds": None,
-                         "avg_pairwise_cosine": None, "participation_ratio": None,
-                         "top1_variance_ratio": None, "use_case_to_centroid_sim": None,
-                         "use_case_centroid_percentile": None, "roc_auc": None, "n_folds": 0,
                          "note": f"embedding failed: {exc}"})
-            for ax in axes[row_idx]:
-                ax.set_title(f"{model_name}\nFAILED: {exc}", fontsize=8, color="red")
+            if make_plot:
+                for ax in axes[row_idx]:
+                    ax.set_title(f"{model_name}\nFAILED: {exc}", fontsize=8, color="red")
             continue
 
         disp = dispersion_metrics(paper_vectors)
-        cent = centroid_analysis(paper_vectors, use_case_vec)
+        cent = centroid_analysis(paper_vectors, use_case_vec, masks["pos_mask"], masks["neg_mask"])
+        metrics = evaluate_representation(paper_vectors, use_case_vec, masks)
 
-        roc = {"roc_auc": None, "n_folds": 0}
-        if has_labels and y_mask.sum() >= 6:
-            roc = cross_validated_roc_auc(paper_vectors[y_mask], y_full[y_mask])
-
-        coords_2d, uc_xy, centroid_xy, var_ratio = project_2d(
-            paper_vectors, use_case_vec, cent["centroid"], args.projection
-        )
-        plot_model_row(axes[row_idx], model_name, df, args.label_col,
-                        coords_2d, uc_xy, centroid_xy, var_ratio, disp, cent, roc)
+        if make_plot:
+            coords_2d, uc_xy, centroid_xy, var_ratio = project_2d(
+                paper_vectors, use_case_vec, cent["centroid"], args.projection
+            )
+            plot_model_row(axes[row_idx], model_name, df, args.label_col,
+                            coords_2d, uc_xy, centroid_xy, var_ratio, disp, cent, metrics)
 
         rows.append({
             "model": model_name,
             "dim": paper_vectors.shape[1],
             "embed_seconds": round(elapsed, 2),
-            "avg_pairwise_cosine": round(disp["avg_pairwise_cosine"], 4),
-            "participation_ratio": round(disp["participation_ratio"], 2),
-            "top1_variance_ratio": round(disp["top1_variance_ratio"], 4),
-            "use_case_to_centroid_sim": round(cent["use_case_to_centroid_sim"], 4),
-            "use_case_centroid_percentile": round(cent["use_case_centroid_percentile"], 1),
-            "roc_auc": round(roc["roc_auc"], 4) if roc["roc_auc"] is not None else None,
-            "n_folds": roc["n_folds"],
+            **round_floats({
+                "avg_pairwise_cosine": disp["avg_pairwise_cosine"],
+                "participation_ratio": disp["participation_ratio"],
+                "top1_variance_ratio": disp["top1_variance_ratio"],
+                "use_case_to_centroid_sim": cent["use_case_to_centroid_sim"],
+                "use_case_centroid_percentile": cent["use_case_centroid_percentile"],
+                "use_case_to_positive_centroid_sim": cent["use_case_to_positive_centroid_sim"],
+                "use_case_to_negative_centroid_sim": cent["use_case_to_negative_centroid_sim"],
+                "use_case_discriminative_gap": cent["use_case_discriminative_gap"],
+                **metrics,
+            }),
             "note": "",
         })
         print(f"  dim={paper_vectors.shape[1]}  avg_pairwise_cosine={disp['avg_pairwise_cosine']:.3f} "
               f"({interpret_dispersion(disp['avg_pairwise_cosine'])})  "
               f"use_case_percentile={cent['use_case_centroid_percentile']:.0f}  "
-              f"roc_auc={roc['roc_auc']}")
+              f"roc_auc_strict={metrics['roc_auc_strict']}  "
+              f"query_auc_strict={metrics['query_auc_strict']}")
 
-    fig.tight_layout()
-    args.out_plot.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(args.out_plot, dpi=150)
-    print(f"\nSaved comparison figure to {args.out_plot}")
+    if make_plot:
+        fig.tight_layout()
+        args.out_plot.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(args.out_plot, dpi=150)
+        print(f"\nSaved comparison figure to {args.out_plot}")
 
     results_df = pd.DataFrame(rows)
     print("\n" + "=" * 70)
@@ -339,9 +388,12 @@ def main() -> None:
     print("=" * 70)
     print(results_df.to_string(index=False))
 
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    results_df.to_csv(args.out, index=False)
-    print(f"\nSaved metrics table to {args.out}")
+    if args.out is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        results_df.to_csv(args.out, index=False)
+        print(f"\nSaved metrics table to {args.out}")
+    else:
+        print("\n(--out not given — nothing written to disk; the table above is the only output.)")
 
 
 if __name__ == "__main__":
