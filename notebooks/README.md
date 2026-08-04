@@ -6,8 +6,10 @@ whether it's safe to just read (`eda/`) or whether it writes to `data/processed/
 
 ```
 notebooks/
-  eda/            exploratory analysis — read-only, no files written back to data/
-  data_compile/   data-processing pipelines — data/raw/ -> data/processed/
+  eda/                 exploratory analysis — read-only, no files written back to data/
+  data_compile/        data-processing pipelines — data/raw/ -> data/processed/
+  feature_experiments/ viability checks for candidate features — read-only, no files
+                       written back to data/
 ```
 
 ## eda/
@@ -23,6 +25,12 @@ notebooks/
 | Notebook | What it does |
 |---|---|
 | `combine_use_cases.ipynb` | Reads all 6 JSONL exports + their matching `usecase.json` search-brief definitions from `data/raw/`, applies the cleaning/standardisation punch list found by the `eda/` notebooks (compound `paper_id`, nullable `Int64` dtypes, `venue` casing, `sources` parsed into booleans, fixed `triage_label`/`review_label` categoricals, `abstract_source` dropped, `has_abstract` flag), broadcasts both files' metadata onto every paper row, and writes `data/processed/papers_combined.parquet` — the file `scripts/compare_embeddings.py` and `scripts/train_baseline_classifier.py` are meant to consume via `--data`. See also `data/processed/README.md` for a full description of the output dataset. |
+
+## feature_experiments/
+
+| Notebook | What it does |
+|---|---|
+| `venue_quality.ipynb` | Viability check for a candidate feature: looks up the 10 known-clean `venue` values (and a few known-dirty ones, as a negative-result check) against the OpenAlex `/sources` API, then joins the resulting venue-quality metrics (`works_count`, `2yr_mean_citedness`, `h_index`) onto their actual papers in `data/processed/papers_combined.parquet` to see whether external venue prestige diverges usefully from raw `citation_count` as a relevance signal, or just tracks it. Read-only. |
 
 ## Running a notebook
 
