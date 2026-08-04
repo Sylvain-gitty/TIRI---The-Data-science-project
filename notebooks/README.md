@@ -22,6 +22,7 @@ notebooks/
 | `explore_use_cases.ipynb` | Compares structure and volume across the 6 labelled JSONL exports in `data/raw/` — schema, nulls, label balance, duplicates, citation/abstract-length distributions. Read-only. |
 | `explore_usecase_definitions.ipynb` | Compares the 6 `usecase.json` search-brief definitions (problem statement, objective, terms, TRL constraints, decision criteria) against their matching JSONL export — structure, and a table joining each definition against its resulting corpus. Read-only. |
 | `wf_data_enrich.ipynb` | Descriptive EDA on `data/processed/papers_combined.parquet`: `notes` content, author/citation/venue breakdowns by use case and `triage_label`, an outlier review (author/citation extremes, long venue names), author frequency per use case, and an interactive citations-vs-age scatter (plotly) plus a citations-by-label-by-use-case boxplot. Read-only. |
+| `wf_pre_pipeline_checks.ipynb` | Follow-up to `reports/wf_eda_fe_report.md`: validates 4 open questions before pipeline/ensemble work — `relevance_score` alone vs. the embedding baseline (same fold scheme), cross-use-case duplicate papers (a risk for the held-out-use-case design), abstract text-quality contamination, and whether the term-overlap feature is really just an abstract-length proxy. Read-only. |
 
 ## data_compile/
 
