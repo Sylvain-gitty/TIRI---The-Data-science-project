@@ -78,10 +78,27 @@ def interpret_dispersion(avg_cos: float) -> str:
     return "very disperse (near-orthogonal) - check this isn't noise"
 
 
-def centroid_analysis(V: np.ndarray, use_case_vec: np.ndarray) -> dict:
+def centroid_analysis(
+    V: np.ndarray, use_case_vec: np.ndarray,
+    pos_mask: np.ndarray | None = None, neg_mask: np.ndarray | None = None,
+) -> dict:
     """How central the use case's vector is relative to the corpus — see
     compare_embeddings.py's docstring for the use_case_to_centroid_sim / percentile
-    explanation."""
+    explanation.
+
+    The corpus-wide percentile above answers "is the use case typical of everything this
+    search retrieved" — positive, negative, AND pass rows pooled together, unweighted by
+    label. That is NOT the same question as "is the use case typical of the papers an
+    analyst actually accepted", which is what pos_mask/neg_mask (optional, full-corpus-
+    length booleans aligned to V) answer: a SEPARATE centroid for the positive-labelled
+    rows and one for the negative-labelled rows, and how similar the use case is to each.
+    use_case_discriminative_gap (positive-centroid sim minus negative-centroid sim) is a
+    single, label-aware, query-aware number — positive means the use case's own wording
+    sits closer to the papers that got kept than to the ones that got rejected, which
+    corpus-wide centrality alone cannot tell you. Needs at least 2 rows in a mask to form
+    a centroid at all (a judgement-call floor, same spirit as this module's other
+    small-n guards) — below that, the corresponding key is None.
+    """
     V_norm = normalize_rows(V)
     centroid = V_norm.mean(axis=0)
     centroid_norm = np.linalg.norm(centroid) or 1.0
@@ -93,12 +110,32 @@ def centroid_analysis(V: np.ndarray, use_case_vec: np.ndarray) -> dict:
 
     percentile = float((abstract_to_centroid < use_case_to_centroid).mean() * 100)
 
-    return {
+    result = {
         "centroid": centroid,
         "abstract_to_centroid_sims": abstract_to_centroid,
         "use_case_to_centroid_sim": use_case_to_centroid,
         "use_case_centroid_percentile": percentile,
+        "use_case_to_positive_centroid_sim": None,
+        "use_case_to_negative_centroid_sim": None,
+        "use_case_discriminative_gap": None,
     }
+
+    if pos_mask is not None and pos_mask.sum() >= 2:
+        pos_centroid = V_norm[pos_mask].mean(axis=0)
+        pos_centroid_norm = np.linalg.norm(pos_centroid) or 1.0
+        result["use_case_to_positive_centroid_sim"] = float(np.dot(uc_norm, pos_centroid) / pos_centroid_norm)
+
+    if neg_mask is not None and neg_mask.sum() >= 2:
+        neg_centroid = V_norm[neg_mask].mean(axis=0)
+        neg_centroid_norm = np.linalg.norm(neg_centroid) or 1.0
+        result["use_case_to_negative_centroid_sim"] = float(np.dot(uc_norm, neg_centroid) / neg_centroid_norm)
+
+    if result["use_case_to_positive_centroid_sim"] is not None and result["use_case_to_negative_centroid_sim"] is not None:
+        result["use_case_discriminative_gap"] = (
+            result["use_case_to_positive_centroid_sim"] - result["use_case_to_negative_centroid_sim"]
+        )
+
+    return result
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -122,7 +159,7 @@ def project_2d(V: np.ndarray, use_case_vec: np.ndarray, centroid: np.ndarray, me
 
 def plot_model_row(axes_row, model_name: str, df: pd.DataFrame, label_col: str,
                     coords_2d: np.ndarray, uc_xy: np.ndarray, centroid_xy: np.ndarray,
-                    var_ratio: tuple, disp: dict, cent: dict, roc: dict) -> None:
+                    var_ratio: tuple, disp: dict, cent: dict, metrics: dict) -> None:
     ax_map, ax_disp, ax_cent = axes_row
 
     # --- panel 1: 2D map of the whole corpus, coloured by label ---
@@ -166,13 +203,25 @@ def plot_model_row(axes_row, model_name: str, df: pd.DataFrame, label_col: str,
     # --- panel 3: abstract-to-centroid histogram — how central is the use case? ---
     ax_cent.hist(cent["abstract_to_centroid_sims"], bins=30, color="#55a868")
     ax_cent.axvline(cent["use_case_to_centroid_sim"], color="#8c00ff", linestyle="--", linewidth=2)
+    gap = cent.get("use_case_discriminative_gap")
+    gap_txt = f"  |  gap(+/-)={gap:+.2f}" if gap is not None else ""
     ax_cent.set_title(
-        f"use case @ {ordinal(round(cent['use_case_centroid_percentile']))} pct of abstracts\n"
-        f"(sim={cent['use_case_to_centroid_sim']:.2f})",
+        f"use case @ {ordinal(round(cent['use_case_centroid_percentile']))} pct of ALL abstracts\n"
+        f"(sim={cent['use_case_to_centroid_sim']:.2f}){gap_txt}",
         fontsize=8,
     )
     ax_cent.set_xlabel("abstract-to-centroid cosine similarity")
     ax_cent.set_ylabel("paper count")
 
-    roc_txt = f"roc_auc={roc['roc_auc']:.3f} (n_folds={roc['n_folds']})" if roc["roc_auc"] is not None else "roc_auc: n/a (too few labels)"
-    ax_map.annotate(roc_txt, xy=(0, -0.18), xycoords="axes fraction", fontsize=7, color="#555555")
+    # --- annotation: both AUC families, both label readings (see embedding_utils.py's
+    # evaluate_representation for what "strict"/"conservative" and "query_auc" mean) ---
+    def _fmt_auc(mode: str) -> str:
+        auc, std = metrics.get(f"roc_auc_{mode}"), metrics.get(f"roc_auc_{mode}_std")
+        qauc = metrics.get(f"query_auc_{mode}")
+        if auc is None:
+            return f"{mode}: n/a (too few labels)"
+        qauc_txt = f", query_auc={qauc:.3f}" if qauc is not None else ""
+        return f"{mode}: roc_auc={auc:.3f}±{std:.3f} (k={metrics.get(f'n_folds_{mode}')}){qauc_txt}"
+
+    roc_txt = _fmt_auc("strict") + "\n" + _fmt_auc("conservative")
+    ax_map.annotate(roc_txt, xy=(0, -0.24), xycoords="axes fraction", fontsize=6.5, color="#555555")

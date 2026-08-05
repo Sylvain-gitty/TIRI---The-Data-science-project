@@ -23,6 +23,16 @@ diagnostics.
 Default embedding block: `paraphrase-multilingual-MiniLM-L12-v2` — a convenience default
 (the model both exports ship precomputed vectors for), not a pick.
 
+> **Corpus retired (2026-08-04):** `data/raw/sample-export.parquet` — the
+> "climate/agriculture" 100-paper corpus §2 below is about — has been removed from this
+> repo. It was a placeholder used to start testing before this project had real use-case
+> briefs: no real use-case text of its own (just a generic short name) and too few
+> observations to trust a comparison drawn from it. §2's numbers are kept as historical
+> record and can no longer be reproduced by re-running against that file — §3 (soil
+> corpus) is unaffected. New comparisons should use the soil-microbiome corpus or
+> `data/processed/papers_combined.parquet`'s 6 real research questions — see
+> `notebooks/comparisons/run_comparisons.ipynb`.
+
 ## 2. Results: climate/agriculture corpus (100 papers, short use-case name)
 
 | Signal | ROC-AUC | avg pairwise cosine |
@@ -111,11 +121,11 @@ reliably do, on this evidence, is rescue the use-case centrality diagnostic from
 degenerate all-zero-block case — a real, if narrower, benefit than the one originally
 hoped for.
 
-Run it yourself:
+**Run it yourself, with output inline:** `notebooks/comparisons/run_comparisons.ipynb`
+§3 — see `notebooks/README.md`.
 
-```bash
-python scripts/compare_combined_features.py --data data/raw/your-export.parquet
-```
-
-Outputs: `reports/<data filename>_combined_features_latent_space_comparison.png` and
-`reports/<data filename>_combined_features_comparison.csv`.
+`scripts/compare_combined_features.py` still works as a CLI (`python
+scripts/compare_combined_features.py --data data/raw/your-export.parquet`) for
+scripting/automation, printing the same table to the console; pass `--out`/`--out-plot`
+explicitly if you also want a CSV/PNG on disk (neither is written by default —
+`reports/` holds this decision trail, not per-run artifacts).

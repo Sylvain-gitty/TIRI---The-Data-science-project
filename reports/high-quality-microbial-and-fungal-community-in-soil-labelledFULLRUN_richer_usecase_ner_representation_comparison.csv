@@ -1,3 +1,0 @@
-representation,dim,seconds,avg_pairwise_cosine,participation_ratio,top1_variance_ratio,use_case_to_centroid_sim,use_case_centroid_percentile,roc_auc,n_folds,n_zero_entity_papers,note
-entity_type_counts,18,32.53,0.2398,4.6,0.3933,0.2989,38.7,0.551,5,172,
-entity_text_tfidf,100,32.7,0.0116,38.74,0.0507,0.461,99.7,0.6184,5,172,
