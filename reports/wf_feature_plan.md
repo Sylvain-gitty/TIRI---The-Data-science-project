@@ -236,41 +236,178 @@ possibly none of it.
 
 ---
 
-## 4. What to do instead
+## 4. Why `solar_leo` and `soil_microbiome` resist everything
 
-The metadata track is close to exhausted. Four candidate features have now been tested and
-rejected on measurement (TRL keyword estimate, venue quality via OpenAlex, author ORCID,
-and now this list), which is a healthy trail — but the remaining headroom is elsewhere.
+Investigated in full in `notebooks/feature_experiments/wf_hard_use_cases.ipynb`. Three
+findings, and the third turned out to matter more than the question that prompted it.
 
-**The thread worth pulling:** three of six use cases resist *everything* tried so far.
+### 4.1 The mechanism: the classes are interleaved in embedding space
 
-| use case | term overlap | metadata | embedding (OOF) |
+For each labelled paper, take its 10 nearest neighbours by cosine similarity within its own
+use case and measure how often they share its label — against the majority-class rate as
+the do-nothing baseline:
+
+| use case | k-NN agreement | majority baseline | lift |
 |---|---|---|---|
-| cement_binders | 0.801 | 0.765 | 0.799 |
-| carbon_capture | 0.709 | 0.593 | 0.775 |
-| ner | 0.698 | 0.510 | 0.707 |
-| soil_microbiome | 0.504 | 0.513 | 0.689 |
-| solar_leo | 0.464 | 0.513 | **0.556** |
-| tech_forecasting | 0.563 | — | held out |
+| carbon_capture | 0.636 | 0.505 | **+0.131** |
+| cement_binders | 0.760 | 0.649 | **+0.111** |
+| tech_forecasting | 0.604 | 0.595 | +0.009 |
+| ner | 0.699 | 0.715 | −0.015 |
+| solar_leo | 0.703 | 0.767 | **−0.064** |
+| soil_microbiome | 0.656 | 0.737 | **−0.080** |
 
-`solar_leo` is the standout problem: term overlap is *below* chance and even the embedding
-only reaches 0.556 out-of-fold. Its own analyst notes flag a citation-biased seed corpus,
-and it is the one corpus where a metadata feature (recency) beats the embedding. That is a
-labelling/corpus-construction question, not a feature-engineering one, and it is more
-likely to move the project than a twelfth metadata column.
+That ordering is the ordering of every feature result in this repo. In the two hard corpora
+a paper's nearest topical neighbours predict its label *worse than guessing the majority
+class*. Embeddings, TF-IDF and term overlap all read topical similarity, so **no topical
+feature can separate these labels.** The axis has to come from somewhere else.
 
-**Judgement call:** before adding features, work out why those three corpora behave
-differently. `soil_microbiome` has the richest term list of any use case and still shows
-nothing — that is a fact worth explaining.
+### 4.2 `solar_leo`: the boundary is publication vintage, and the brief says so
+
+Positive rate by year: 0.33 (pre-2018) → 0.63 (2018–20) → **0.98** (2020–22) → 0.86
+(2024+). Plain `year` scores **0.766** against the embedding's 0.648 out-of-fold. And
+topically identical papers sit on both sides of the boundary — *"Film Morphology Control
+For High Efficiency Perovskite Solar Cells"* is negative (2015); *"Film Grain-Size Related
+Long-Term Stability of Inverted Perovskite Solar Cells"* is positive (2016).
+
+The use case brief explains it. The analyst's note says the corpus was *"seeded from the
+reference lists of this field's review papers, so the starting pool is CANON — well-cited,
+established work"*, and the `objective` asks for approaches that improve on incumbents
+*"beyond what incumbent technologies currently deliver"*. Seed the pool with canon, then
+reward going beyond canon, and old canonical papers are negative by construction.
+
+**This is a labelling-design property, not a missing feature.** A model can reach 0.805
+here on `year + author_count` alone, but it has learned this corpus's vintage distribution
+and should not be expected to transfer. The corpus also carries outright retrieval noise
+labelled negative (a 2011 spinal-cord neuroscience paper, a 1997 crystal-optics paper) —
+a smaller, separate data-quality issue.
+
+### 4.3 `soil_microbiome`: the axis is in `objective`, not in `terms.must_include`
+
+Positives and negatives are near-indistinguishable by topic — both are soil-microbiome
+crop papers. The split is **applied-intervention framing vs descriptive-ecology framing**:
+
+| field | content |
+|---|---|
+| `terms.must_include` | soil microbial community, soil health, crop production, … *(pure topic — every paper has it, because the corpus was retrieved with it)* |
+| `objective` | "research on microbial and fungal community **management strategies** that enhance…" |
+
+A length-normalised two-column regex on that axis (intervention-word rate minus
+descriptive-word rate) scores **0.718 full-population** (p = 3.6e-10, split-half stable at
+0.722 / 0.719) and **0.727 out-of-fold — beating the 384-dim embedding's 0.712**, term
+overlap's 0.504 and `relevance_score`'s 0.542.
+
+**Caveat, stated plainly:** those regexes were written after reading ~16 labelled titles
+from this corpus, so that number is optimistic. The transferable claim is not "use these
+regexes" — it is that **`objective` and `problem_statement` carry the decision axis and no
+feature in this repo currently reads them.**
+
+### 4.4 The finding that outgrew the question: concatenation dilution
+
+Both diagnosed features beat the embedding standing alone, yet adding them to it changes
+almost nothing (`soil_microbiome` 0.712 → 0.713). That is not about these features — it is
+what happens when one informative column is standardised alongside 384 embedding
+dimensions on ~350 rows.
+
+Compressing the embedding first fixes it, **on all six use cases**:
+
+| use case | emb384 | emb384 + overlap | PCA32 | PCA32 + overlap | gain |
+|---|---|---|---|---|---|
+| carbon_capture | 0.732 | 0.738 | 0.796 | 0.813 | **+0.081** |
+| soil_microbiome | 0.712 | 0.711 | 0.785 | 0.783 | **+0.071** |
+| cement_binders | 0.799 | 0.798 | 0.864 | 0.865 | **+0.066** |
+| tech_forecasting | 0.689 | 0.690 | 0.759 | 0.755 | **+0.066** |
+| solar_leo | 0.648 | 0.653 | 0.701 | 0.705 | **+0.057** |
+| ner | 0.700 | 0.705 | 0.723 | 0.731 | **+0.031** |
+
+This reframes `reports/combined_features_notes.md`, which concluded that extra features
+alongside a sentence embedding are "neutral-to-harmful". On this evidence that was a
+finding about the *representation*, not the features — those experiments concatenated onto
+the full-width embedding.
 
 ---
 
-## 5. Where this evidence lives
+## 5. Actions for the ensemble
+
+Ordered by measured impact on the number that matters — performance on a use case the
+model has never seen. The pooled test below holds `tech_forecasting` out entirely and
+scores it once:
+
+| config | OOF dev | held-out `tech_forecasting` |
+|---|---|---|
+| emb384 (LR) | 0.772 | 0.520 |
+| emb384 + overlap (LR) | 0.774 | 0.533 |
+| PCA32 + overlap (LR) | 0.808 | 0.611 |
+| PCA64 + overlap (LR) | 0.803 | 0.645 |
+| emb384 + overlap (HGB) | **0.839** | 0.584 |
+| **PCA32 + overlap (HGB)** | 0.820 | **0.714** |
+
+### Action 1 — PCA-compress the embedding before anything is concatenated to it *(highest impact)*
+
+The raw embedding transfers to an unseen use case at **0.520 — chance**. At 32 components
+plus term overlap it reaches **0.714**. Fit the PCA **inside each training fold**; fitting
+it on all rows leaks the test fold's covariance structure.
+
+Tune `n_components` (32 and 64 both work; 64 was better under LR, 32 under HGB) as a real
+hyperparameter, selected on held-out-use-case score.
+
+### Action 2 — select on the held-out use case, not on dev OOF
+
+Row 5 of that table is the trap: `emb384 + overlap` with gradient boosting has the **best
+dev score in the table (0.839)** and transfers at 0.584. Choosing on dev OOF picks it and
+loses 0.130 AUC on the unseen use case. Rotate the holdout across all six use cases rather
+than trusting one, since `tech_forecasting` is the smallest corpus.
+
+### Action 3 — build term overlap, and extend it to read `objective` / `problem_statement`
+
+`term_overlap_positive` / `_negative` as specified in §3.1 — the only proposed feature with
+a measured effect. Then extend it: §4.3 shows the discriminating vocabulary for
+`soil_microbiome` lives in `objective`, which no current feature reads. Concretely, derive
+a second term list from `objective` + `problem_statement` + `decision_must_have` (content
+words, stopwords removed) and score overlap against it as a separate column.
+
+This is the one genuinely new feature idea the investigation produced, and it is cheap.
+Validate it on a corpus nobody has read before trusting the number.
+
+### Action 4 — add `year` / `paper_age`, but as two raw columns and with eyes open
+
+Not `citation_velocity` (§2.1). `year` carries real signal on the wide-span corpora
+(`solar_leo` 0.766, `soil_microbiome` 0.577) and near-nothing elsewhere, and on `solar_leo`
+it is partly the labelling artefact of §4.2. Include it, and check per-use-case feature
+importance rather than assuming it means "recent papers are better".
+
+### Action 5 — put provenance in as a negative control, never as a feature
+
+Do not add `has_venue`, `citation_count_missing`, or `venue_is_arxiv_only`. Instead, track
+whether held-out performance depends on the `from_*` columns: nullness is 100% determined
+by which API answered (§2.2), so any model leaning on it has learned the retrieval
+pipeline, not relevance. This is the most likely cause of a good CV score collapsing on a
+new use case.
+
+### Action 6 — treat `solar_leo` as a corpus problem, not a modelling one
+
+Its labels encode "published recently enough to be beyond the incumbent". Options, in
+increasing cost: exclude it from the pooled ensemble; keep it but never report it as
+evidence the system finds relevant work; or re-label a sample against the decision criteria
+without showing the labeller the publication year. Its own brief already warns the pool is
+citation-biased canon — that warning should propagate into how its numbers are quoted.
+
+### Not worth doing
+
+Adding more metadata columns. Eight of them together are worth +0.002 (§1), and four
+separate feature ideas have now been measured and rejected (TRL keywords, OpenAlex venue
+quality, author ORCID, and this punch list). The headroom is in the representation
+(Action 1) and in reading the parts of the use-case brief nobody reads yet (Action 3).
+
+---
+
+## 6. Where this evidence lives
 
 | Claim | Source |
 |---|---|
 | Every number in §1–§3 | `notebooks/feature_experiments/wf_feature_validation.ipynb` |
+| Every number in §4–§5 | `notebooks/feature_experiments/wf_hard_use_cases.ipynb` |
 | Term-overlap AUCs | `notebooks/feature_experiments/terms_overlap.ipynb` |
 | spaCy variant, lemma regression | `notebooks/feature_experiments/terms_overlap_spacy.ipynb` |
-| Fold design reused here | `notebooks/modelling/wf_fold_pca_test.ipynb` |
+| Fold design reused throughout | `notebooks/modelling/wf_fold_pca_test.ipynb` |
 | Original punch list this supersedes | `reports/wf_eda_fe_report.md` §4 |
+| "Combined features don't help" — reframed by §4.4 | `reports/combined_features_notes.md` |
