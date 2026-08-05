@@ -36,6 +36,14 @@ predictions:
 All the metadata engineering together is worth **−0.001 / +0.002 AUC**. That is the
 central finding, and it is why this plan is mostly a list of things not to build.
 
+**The conclusion does not depend on `relevance_score`**, which `reports/wf_ensemble_report.md`
+§0 has since disqualified as an ensemble feature. Re-run with it removed entirely, metadata
+is not merely useless but mildly harmful to transfer: `PCA32 + term_overlap` scores 0.820
+OOF / **0.714** on the held-out use case; adding the 5 metadata columns moves that to 0.828
+OOF / **0.666** — dev score up, unseen-use-case score down by 0.048. One holdout of 264
+rows, so read it as directional, but it is the direction the provenance confound in §2.3
+predicts. See `reports/wf_featureengineering_review.md` §6.3 for the full table.
+
 ---
 
 ## 2. What changed against the original table, and why
