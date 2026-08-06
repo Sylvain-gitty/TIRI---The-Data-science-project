@@ -46,3 +46,11 @@ modal>=1.0.0
 # independent external validation benchmark, see reports/wf_ensemble_report.md action
 # item #2. CC0-licensed, no auth needed; Dataset(name).to_frame() downloads on demand.
 synergy-dataset>=1.2
+
+# Advanced tree ensemble candidate (notebooks/pipelines/sf_catboost_fold_pipeline.ipynb) —
+# ordered boosting specifically targets the target-leakage-during-training that's already
+# been observed on this dataset (RandomForestClassifier/HistGradientBoostingClassifier both
+# hit train AUC 1.000 under LOGO); native missing-value/categorical handling, monotonic
+# constraints, mature SHAP tooling; CPU-only, no GPU required. Not yet installed/run — that
+# notebook is a template (CONFIG["run_training"] = False) until this is actually needed.
+# catboost>=1.2.0
