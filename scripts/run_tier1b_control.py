@@ -136,10 +136,60 @@ def within_silo(
     return pd.DataFrame(rows).set_index("use_case")
 
 
+def warm_start(
+    variants: dict[str, pd.DataFrame],
+    y: np.ndarray,
+    use_case: pd.Series,
+    budgets: tuple[int, ...],
+    seeds: int,
+) -> pd.DataFrame:
+    """How good is each representation at n labels from the target use case?
+
+    This is the question production actually asks. A new customer arrives with some
+    labels, and the only thing that matters is how few of them are needed before the
+    ranking is useful. Labels are drawn at RANDOM rather than stratified, because that
+    is what arriving labels look like -- stratifying would quietly hand the model a
+    balanced sample it will not get.
+
+    The n=0 row is the transfer baseline: trained on the other five use cases, zero
+    labels from the target. It is the honest reference point for "was the cross-domain
+    work worth it", and it is the number every LOGO experiment in this repo reports.
+    """
+    rows = []
+    for name, X in variants.items():
+        for uc in sorted(use_case.unique()):
+            mask = (use_case == uc).to_numpy()
+            Xu, yu = X[mask], y[mask]
+
+            transfer = model().fit(X[~mask], y[~mask]).predict_proba(Xu)[:, 1]
+            rows.append({"representation": name, "use_case": uc, "n_labels": 0,
+                         **scores(yu, transfer)})
+
+            for n in budgets:
+                if n >= len(yu):
+                    continue
+                per_seed = []
+                for seed in range(seeds):
+                    rng = np.random.default_rng(seed)
+                    order = rng.permutation(len(yu))
+                    train_idx, test_idx = order[:n], order[n:]
+                    if len(np.unique(yu[train_idx])) < 2:
+                        continue  # a single-class draw teaches nothing; skip, don't impute
+                    pipe = model().fit(Xu.iloc[train_idx], yu[train_idx])
+                    per_seed.append(scores(yu[test_idx], pipe.predict_proba(Xu.iloc[test_idx])[:, 1]))
+                if per_seed:
+                    rows.append({"representation": name, "use_case": uc, "n_labels": n,
+                                 **pd.DataFrame(per_seed).mean().to_dict()})
+    return pd.DataFrame(rows)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--shuffles", type=int, default=5, help="wrong-brief derangements")
     parser.add_argument("--seeds", type=int, default=5, help="seeds for within-silo CV")
+    parser.add_argument("--ws-seeds", type=int, default=25, help="seeds for warm-start curve")
+    parser.add_argument("--budgets", type=int, nargs="+", default=[25, 50, 100, 200],
+                        help="target-use-case label budgets for the warm-start curve")
     args = parser.parse_args()
 
     df = pd.read_parquet(DATA)
@@ -239,6 +289,34 @@ def main() -> None:
         real.drop(columns=GROUPS["length_normalised"]), y, use_case)["roc_auc"].mean()
     emit(to_md(pd.Series(ablation).round(3).to_frame("mean LOGO ROC-AUC"), "feature group"))
     emit()
+
+    # ---- 4. Warm-start curve: the label-efficiency claim ------------------------------
+    emit("## 4. Warm-start curve — ROC-AUC vs. number of labels from the target use case")
+    emit()
+    emit("`n=0` is the transfer baseline (trained on the other five use cases). Labels are "
+         "drawn at random, not stratified, because that is what arriving labels look like. "
+         f"Mean of {args.ws_seeds} seeds.")
+    emit()
+    curve = warm_start(
+        {"embedding": embeddings, "Tier 1b": real,
+         "Tier 1b + embedding": pd.concat([real, embeddings], axis=1)},
+        y, use_case, tuple(args.budgets), args.ws_seeds,
+    )
+    curve.to_csv(REPO / "reports" / "wf_tier1b_warm_start_curve.csv", index=False)
+
+    pooled = curve.pivot_table(index="n_labels", columns="representation",
+                               values="roc_auc", aggfunc="mean").round(3)
+    emit("Mean across all six use cases:")
+    emit()
+    emit(to_md(pooled, "n_labels"))
+    emit()
+    for name in ("Tier 1b + embedding", "Tier 1b", "embedding"):
+        block = curve[curve.representation == name].pivot_table(
+            index="use_case", columns="n_labels", values="roc_auc").round(3)
+        emit(f"Per use case — {name}:")
+        emit()
+        emit(to_md(block, "use_case"))
+        emit()
 
     OUT.write_text("\n".join(lines) + "\n")
     print(f"\nWritten to {OUT.relative_to(REPO)}")
