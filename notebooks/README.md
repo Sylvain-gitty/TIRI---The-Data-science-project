@@ -12,6 +12,8 @@ notebooks/
   feature_experiments/  small, sample-sized viability checks for candidate features —
                         read-only, not the Week-3 modelling pipeline itself
   modelling/            Week-3 classifier-prep — fold/CV design, feature stacking; read-only
+  pipelines/            config-driven fold + preprocessing pipelines, built to keep working
+                        once feature engineering lands a differently-shaped dataset; read-only
   comparisons/    runs scripts/compare_*.py's own functions with output inline — reads
                   data/raw/, writes nothing (reports/ holds decision-trail .md only)
 ```
@@ -48,6 +50,7 @@ notebooks/
 | `wf_hard_use_cases.ipynb` | Diagnoses why `solar_leo` and `soil_microbiome` resist every feature tried so far. Finds their classes are **interleaved in embedding space** (k-NN label agreement below the majority-class baseline: −0.064 and −0.080), so no topical feature can separate them; that `solar_leo`'s boundary is publication vintage (the brief seeds the pool with cited canon, then rewards going "beyond the incumbent" — `year` 0.766 vs the embedding's 0.648), a labelling-design property rather than a missing feature; and that `soil_microbiome` splits on applied-intervention vs descriptive-ecology framing, a distinction stated in the use case's `objective` and absent from its `terms.must_include`. Also finds the effect that outgrew the question: adding a small feature to the raw 384-dim embedding is worth +0.001, but compressing to PCA32 first is worth +0.03 to +0.08 on all six use cases and takes held-out-use-case AUC from 0.520 to 0.714 — reframing `reports/combined_features_notes.md`'s "combined features don't help". Actions in `reports/wf_feature_plan.md` §5. Read-only. |
 | `wf_feature_validation.ipynb` | Measures the 11-feature metadata punch list `reports/wf_eda_fe_report.md` §4 recommended from EDA but never tested (`citation_velocity`, `has_venue`, `venue_is_arxiv_only`, `author_count`, the two per-use-case percentile ranks, `is_english`). Builds each one, audits coverage/degeneracy, then reports per-use-case full-population ROC-AUC plus the decisive out-of-fold test on the `wf_fold_pca_test.ipynb` fold design: all 8 metadata columns together move OOF AUC from 0.834 to 0.836 on top of embedding + `relevance_score`. Also shows nullness is 100% determined by which search API found the paper, that the percentile features are mathematically inert within a use case, and that the "clean out long venue strings" step would delete 40 real conference names to remove 2 dirty ones. Verdicts written up in `reports/wf_feature_plan.md`. Read-only. |
 | `venue_quality.ipynb` | Viability check for a candidate feature: looks up the 10 known-clean `venue` values (and a few known-dirty ones, as a negative-result check) against the OpenAlex `/sources` API, then joins the resulting venue-quality metrics (`works_count`, `2yr_mean_citedness`, `h_index`) onto their actual papers in `data/processed/papers_combined.parquet` to see whether external venue prestige diverges usefully from raw `citation_count` as a relevance signal, or just tracks it — it doesn't (r≈-0.04 with `triage_label`, r≈0.78 with the venue's own mean `citation_count`). Not viable. Read-only. |
+| `sftestdropusecase.ipynb` | Ablation, not a feature check: combines both `notebooks/pipelines/` workflows (pooled and LOGO) into one notebook and drops `use_case_key` from every fold-stratification key (label-only stratification), to test whether use-case-aware stratification was helping or hurting — the classifier never saw `use_case_key` as a feature either way. **Finding:** no meaningful effect. LOGO's holdout AUC is bit-for-bit identical (0.536) since it never depended on inner-fold stratification; the pooled workflow's validation AUC barely moves (0.746 → 0.744) — the one place a bigger gap shows up (`final_holdout` AUC 0.753 → 0.793) is one single 20%-of-data holdout draw changing which specific rows landed in it, not a reproducible effect. Reuses `scripts/fold_pipeline_utils.py` unchanged. |
 
 ## modelling/
 
@@ -55,6 +58,23 @@ notebooks/
 |---|---|
 | `wf_fold_pca_test.ipynb` | Week-3 classifier-prep on `papers_combined.parquet` (distinct from the diagnostic-only `scripts/compare_*.py`, per `HANDOFF.md`). Holds one use case out entirely for generalisation testing, builds a `StratifiedGroupKFold` scheme (stratified on use_case+label, grouped by first author) with explicit leakage checks, and tests a stacked ensemble (raw-embedding gradient boosting + PCA-reduced-embedding logistic regression) against a plain-embedding baseline, in-distribution and on the held-out use case. Read-only. |
 | `sf_logo_fold_strategy.ipynb` | Generalises `wf_fold_pca_test.ipynb`/`sf_eda_v2.ipynb` §14's single-use-case holdout into a full Leave-One-Use-Case-Out (LOGO) rotation across all 6 use cases, on `sf_eda_v2.ipynb` §13's exact 3 baseline candidates + feature set, unchanged. Adds a cross-use-case duplicate-title leakage check, a bootstrap CI on each held-out AUC, Recall/F2 (`beta=2`) alongside ROC-AUC, and a train → validation → holdout decomposition (§3.2) separating the overfitting gap from the domain-shift gap. **Hard finding:** the collapse is general across all 6 use cases, not specific to `tech_forecasting` (mean held-out AUC 0.50–0.54 for all 3 candidates); `RandomForestClassifier`/`HistGradientBoostingClassifier` score *below* the 0.5 dummy floor on 2 of 6 rotations each; the in-distribution ranking (`HistGradientBoostingClassifier` > `RandomForestClassifier` > `LogisticRegression`) reverses on average under LOGO; the domain-shift gap (validation→holdout, ~0.22–0.31 AUC) is consistently larger than the overfitting gap (train→validation, ~0.17–0.19 AUC); and held-out Recall (7–20%) collapses far more than held-out AUC would suggest. Read-only. |
+
+## pipelines/
+
+Both notebooks below share `scripts/fold_pipeline_utils.py` (a `CONFIG` dict + a
+`scikit-learn` `Pipeline`-building helper) instead of redefining preprocessing/metrics
+code twice — see that module's own docstring for the "fit only on train" contract it
+enforces. Both are built to keep working, after editing `CONFIG` only, once the
+in-progress feature-engineering track ships a differently-shaped dataset — each notebook's
+own §6 is a checklist for that swap, and §0 marks the one stand-in feature (`citation_velocity`,
+not yet in `papers_combined.parquet`) each removes once the real dataset lands.
+
+| Notebook | What it does |
+|---|---|
+| `sf_generalized_fold_pipeline.ipynb` | The "generalized" fold strategy: pools all 6 use cases and splits at the *row* level (`StratifiedGroupKFold`, grouped by first-author, stratified on a `use_case_key + label` composite) instead of holding a use case out — answers "how well does this LogisticRegression do on more data from research questions it has already seen," not "on a genuinely new one." Outer split carves a `final_holdout` (~20%), touched once; inner CV within the rest validates. **Hard finding:** validation AUC (0.746) and holdout AUC (0.753) — and Recall (0.723 vs. 0.714) — land within noise of each other here, unlike `sf_logo_fold_pipeline.ipynb`'s large validation→holdout gap; that contrast (a model can look "fine" under this design while still failing a genuinely new use case) is the point of building both notebooks side by side. |
+| `sf_logo_fold_pipeline.ipynb` | The Leave-One-Use-Case-Out strategy from `sf_logo_fold_strategy.ipynb`, rebuilt on the same config-driven `Pipeline` architecture as `sf_generalized_fold_pipeline.ipynb`, scoped to `LogisticRegression` alone. **Hard finding:** reproduces `sf_logo_fold_strategy.ipynb`'s `LogisticRegression` numbers almost exactly (mean holdout AUC 0.536 ± 0.078, vs. mean validation AUC 0.760) — confirming the domain-shift gap (0.224) exceeds the overfitting gap (0.167) for this model alone, not just as an average across 3 models. Mean holdout Recall (0.196, down from 0.730 validation) is propped up almost entirely by one rotation (`cement_binders`, 0.606); the other five sit at 0.011–0.238. |
+| `sf_catboost_fold_pipeline.ipynb` | **Template — `CONFIG["run_training"] = False`, not executed.** Both fold strategies above, rebuilt around `CatBoostClassifier` via `scripts/fold_pipeline_utils.py`'s `build_tree_pipeline`/`build_tree_preprocessor` (no scaling/imputation — native missing-value + `category`-dtype categorical handling instead; `boosting_type="Ordered"` and `cat_features` pinned explicitly). Every cell that would fit a model is gated and prints a skip message; safe to Run All today. Picked over LightGBM/XGBoost specifically because ordered boosting targets the target-leakage-during-training already observed on this dataset (`RandomForestClassifier`/`HistGradientBoostingClassifier` both hit train AUC 1.000 under LOGO) — not assumed to close the domain-shift gap on its own; see this session's model-recommendation writeup for the full reasoning. |
+| `sf_llm_fold_pipeline.ipynb` | **Template — `CONFIG["run_training"] = False`, and `call_llm_stub` raises `NotImplementedError` regardless.** A prompted-LLM classifier that reads each use case's own broadcast brief (`objective`, `terms_must_include/nice_to_have/exclude`, `decision_rules`, ...) plus the paper's title/abstract — no embedding, no scaling, no training data required for a genuinely new use case. Uses the new `scripts/llm_pipeline_utils.py` for prompt construction, leakage-safe few-shot example selection (drawn from the training fold only, never validation/holdout), and response parsing; reuses `fold_pipeline_utils.py`'s split/metric helpers unchanged. §3 builds and prints one real prompt end-to-end with no model call, so the template is verifiably functional without training or testing anything. |
 
 ## comparisons/
 
@@ -66,8 +86,8 @@ notebooks/
 
 Each notebook assumes it's run with its own folder as the working directory (so its
 `../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`,
-`notebooks/data_compile/`, `notebooks/feature_experiments/`, or `notebooks/modelling/`,
-not from `notebooks/` itself.
+`notebooks/data_compile/`, `notebooks/feature_experiments/`, `notebooks/modelling/`, or
+`notebooks/pipelines/`, not from `notebooks/` itself.
 
 ## Conventions
 
