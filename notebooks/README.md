@@ -11,6 +11,9 @@ notebooks/
   data_compile/         data-processing pipelines — data/raw/ -> data/processed/
   feature_experiments/  small, sample-sized viability checks for candidate features —
                         read-only, not the Week-3 modelling pipeline itself
+  feature_engineering/  assembles validated feature blocks into one model-ready
+                        dataset — data/processed/papers_combined.parquet ->
+                        data/processed/papers_fe.parquet
   modelling/            Week-3 classifier-prep — fold/CV design, feature stacking; read-only
   pipelines/            config-driven fold + preprocessing pipelines, built to keep working
                         once feature engineering lands a differently-shaped dataset; read-only
@@ -52,6 +55,12 @@ notebooks/
 | `venue_quality.ipynb` | Viability check for a candidate feature: looks up the 10 known-clean `venue` values (and a few known-dirty ones, as a negative-result check) against the OpenAlex `/sources` API, then joins the resulting venue-quality metrics (`works_count`, `2yr_mean_citedness`, `h_index`) onto their actual papers in `data/processed/papers_combined.parquet` to see whether external venue prestige diverges usefully from raw `citation_count` as a relevance signal, or just tracks it — it doesn't (r≈-0.04 with `triage_label`, r≈0.78 with the venue's own mean `citation_count`). Not viable. Read-only. |
 | `sftestdropusecase.ipynb` | Ablation, not a feature check: combines both `notebooks/pipelines/` workflows (pooled and LOGO) into one notebook and drops `use_case_key` from every fold-stratification key (label-only stratification), to test whether use-case-aware stratification was helping or hurting — the classifier never saw `use_case_key` as a feature either way. **Finding:** no meaningful effect. LOGO's holdout AUC is bit-for-bit identical (0.536) since it never depended on inner-fold stratification; the pooled workflow's validation AUC barely moves (0.746 → 0.744) — the one place a bigger gap shows up (`final_holdout` AUC 0.753 → 0.793) is one single 20%-of-data holdout draw changing which specific rows landed in it, not a reproducible effect. Reuses `scripts/fold_pipeline_utils.py` unchanged. |
 
+## feature_engineering/
+
+| Notebook | What it does |
+|---|---|
+| `wf_build_fe_dataset.ipynb` | Assembles every already-validated, row-local feature block into one model-ready table: reads `data/processed/papers_combined.parquet` + the three cached embeddings in `data/processed/embeddings_cache/` (Jasper-Token-Compression-600M, Qwen3-Embedding-4B, Qwen3-Embedding-8B), filters to labelled rows, dedupes within each use case, adds the Tier 1b lexical block (`scripts/lexical_features.py`, `lex_*`), joins the three embeddings separately (`emb_jasper_*`/`emb_qwen4b_*`/`emb_qwen8b_*`, no concatenation, no PCA), adds cosine-similarity-to-brief + its within-use-case percentile rank per model, and admissible raw metadata (`year`, `paper_age`, `has_abstract`, `n_authors`, `citation_count`). Only row-local facts — nothing fitted (PCA/scalers/imputers) — so the output is safe to split into folds downstream. Writes `data/processed/papers_fe.parquet` (1,848 rows × 8,742 cols), the file `sf_*_fold_pipeline.ipynb` are meant to consume once their `CONFIG` is pointed at it. |
+
 ## modelling/
 
 | Notebook | What it does |
@@ -86,8 +95,8 @@ not yet in `papers_combined.parquet`) each removes once the real dataset lands.
 
 Each notebook assumes it's run with its own folder as the working directory (so its
 `../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`,
-`notebooks/data_compile/`, `notebooks/feature_experiments/`, `notebooks/modelling/`, or
-`notebooks/pipelines/`, not from `notebooks/` itself.
+`notebooks/data_compile/`, `notebooks/feature_experiments/`, `notebooks/feature_engineering/`,
+`notebooks/modelling/`, or `notebooks/pipelines/`, not from `notebooks/` itself.
 
 ## Conventions
 
