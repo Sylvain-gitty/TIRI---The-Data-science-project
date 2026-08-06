@@ -4,8 +4,15 @@ future_work/train_baseline_classifier.py (parked, see that file), so both embed 
 identically (same model registry, same prefixes, same title/abstract join) instead of
 two copies quietly drifting apart.
 
+ALSO home to the evaluation-metrics layer all three comparison scripts share (label
+masks, cross-validated ROC-AUC, and the query-conditioned ranking metrics —
+query_similarity_auc/recall@k/WSS@95) — grouped here rather than a new module because
+they're built directly on top of the POSITIVE_VALUES/NEGATIVE_VALUES/PASS_VALUES label
+handling this file already owns. See build_label_masks and evaluate_representation.
+
 Nothing in here is specific to comparison OR training — it's "given a model name and
-some papers, produce vectors", plus the export-loading helpers both callers need.
+some papers, produce vectors", plus the export-loading and label-evaluation helpers
+every caller needs.
 """
 
 from __future__ import annotations
@@ -126,6 +133,7 @@ _UNREGISTERED_MODEL_DEFAULT = {
 # Triage/review label values the agent's exports use.
 POSITIVE_VALUES = {"positive"}
 NEGATIVE_VALUES = {"negative"}
+PASS_VALUES = {"pass"}
 MAX_CV_FOLDS = 5
 
 
@@ -195,6 +203,50 @@ def get_use_case_text(df: pd.DataFrame, use_case_col: str, override: str | None)
         f"No use case text found: column '{use_case_col}' is missing/empty and "
         "no override text was given."
     )
+
+
+def build_label_masks(df: pd.DataFrame, label_col: str) -> dict:
+    """Every boolean mask + integer label array the comparison scripts need, built once
+    instead of copy-pasted (and silently drifting) across compare_embeddings.py,
+    compare_ner_models.py, and compare_combined_features.py.
+
+    Two label readings are built, not one — see reports/metrics_rework_and_rerun.md for
+    why:
+    - "strict": positive vs. negative only, `pass` and unlabelled rows excluded entirely.
+      This is the reading every AUC number in this repo used before the rework — it's
+      informative about the CLEAR-CUT cases, but a deployed triage tool can't skip the
+      ambiguous middle the way this metric does, so it tends to read more optimistic than
+      an analyst's real experience.
+    - "conservative": positive vs. everything the analyst did NOT accept (negative AND
+      pass). A harsher, deployment-shaped second reading of the exact same data — the gap
+      between strict and conservative on any run is itself informative (a big gap means
+      the `pass` rows are doing a lot of the classification work).
+    """
+    n = len(df)
+    if label_col not in df.columns:
+        empty_bool, empty_int = np.zeros(n, dtype=bool), np.zeros(n, dtype=int)
+        return {
+            "has_labels": False,
+            "pos_mask": empty_bool, "neg_mask": empty_bool, "pass_mask": empty_bool,
+            "strict_mask": empty_bool, "strict_y": empty_int,
+            "conservative_mask": empty_bool, "conservative_y": empty_int,
+            "n_pos": 0, "n_neg": 0, "n_pass": 0,
+        }
+
+    labels = df[label_col]
+    pos_mask = labels.isin(POSITIVE_VALUES).to_numpy()
+    neg_mask = labels.isin(NEGATIVE_VALUES).to_numpy()
+    pass_mask = labels.isin(PASS_VALUES).to_numpy()
+
+    return {
+        "has_labels": True,
+        "pos_mask": pos_mask, "neg_mask": neg_mask, "pass_mask": pass_mask,
+        "strict_mask": pos_mask | neg_mask,
+        "strict_y": pos_mask.astype(int),  # only meaningful where strict_mask is True
+        "conservative_mask": pos_mask | neg_mask | pass_mask,
+        "conservative_y": pos_mask.astype(int),  # only meaningful where conservative_mask is True
+        "n_pos": int(pos_mask.sum()), "n_neg": int(neg_mask.sum()), "n_pass": int(pass_mask.sum()),
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -379,16 +431,31 @@ def resolve_paper_vectors(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Cross-validated ROC-AUC — the "does this space separate my labels" honesty check
+# Evaluation metrics — see reports/metrics_rework_and_rerun.md for the full reasoning
+# behind why each of these exists and what it does/doesn't measure.
 # ─────────────────────────────────────────────────────────────────────────────
 
 def cross_validated_roc_auc(X: np.ndarray, y: np.ndarray) -> dict:
-    """Mean cross-validated ROC-AUC for a fresh LogisticRegression, mirroring
-    academic_research_agent's model.py:_cross_validated_roc_auc exactly."""
+    """Mean (+ std, + the raw per-fold list) cross-validated ROC-AUC for a fresh
+    LogisticRegression, mirroring academic_research_agent's model.py:
+    _cross_validated_roc_auc.
+
+    WHAT THIS DOES NOT MEASURE: the classifier is fit on paper vectors alone — the
+    use-case/query vector never enters this computation. A representation can score well
+    here (label-separable in the abstract) while being useless for ranking-by-similarity-
+    to-a-specific-query, and vice versa. See query_similarity_auc below for the
+    query-conditioned counterpart; report both, don't treat this one as "the" score.
+
+    fold_aucs is returned (not just the mean) so callers doing a cross-representation
+    comparison can run a PAIRED test across folds instead of eyeballing a point
+    difference — StratifiedKFold(shuffle=False) makes fold membership depend only on `y`,
+    so two representations scored on the identical y get identical fold row-membership,
+    making per-fold AUCs directly pairable.
+    """
     n_pos, n_neg = int(y.sum()), int((1 - y).sum())
     k = min(MAX_CV_FOLDS, n_pos, n_neg)
     if k < 2:
-        return {"roc_auc": None, "n_folds": 0}
+        return {"roc_auc": None, "roc_auc_std": None, "n_folds": 0, "fold_aucs": []}
 
     folds = StratifiedKFold(n_splits=k, shuffle=False)
     aucs = []
@@ -403,8 +470,138 @@ def cross_validated_roc_auc(X: np.ndarray, y: np.ndarray) -> dict:
         aucs.append(roc_auc_score(y_test, y_score))
 
     if not aucs:
-        return {"roc_auc": None, "n_folds": 0}
-    return {"roc_auc": float(np.mean(aucs)), "n_folds": len(aucs)}
+        return {"roc_auc": None, "roc_auc_std": None, "n_folds": 0, "fold_aucs": []}
+    return {
+        "roc_auc": float(np.mean(aucs)),
+        "roc_auc_std": float(np.std(aucs)),
+        "n_folds": len(aucs),
+        "fold_aucs": aucs,
+    }
+
+
+def query_similarity_scores(paper_vectors: np.ndarray, use_case_vector: np.ndarray) -> np.ndarray:
+    """Cosine similarity between every paper vector and the use-case query vector — the
+    actual ranking signal a nearest-neighbour retrieval step (and the agent's own triage
+    ranking) uses. Deliberately re-derived here rather than imported from
+    latent_space_utils.normalize_rows, to keep this module's only dependency on that one
+    a documentation-level one (see query_similarity_auc's docstring), not an import edge."""
+    norms = np.linalg.norm(paper_vectors, axis=1, keepdims=True)
+    norms[norms == 0] = 1.0
+    V_norm = paper_vectors / norms
+    q_norm = use_case_vector / (np.linalg.norm(use_case_vector) or 1.0)
+    return V_norm @ q_norm
+
+
+def retrieval_ranking_metrics(
+    paper_vectors: np.ndarray, use_case_vector: np.ndarray, y: np.ndarray,
+    recall_fractions: tuple[float, ...] = (0.1, 0.2), wss_target_recall: float = 0.95,
+) -> dict:
+    """Score ranking-by-similarity-to-the-use-case-query against the labels — the
+    query-conditioned counterpart cross_validated_roc_auc is missing (that one ignores
+    the query; this one ignores nothing, and needs no classifier/training at all, since
+    it's just a ranking of raw cosine similarities).
+
+    query_similarity_auc: AUC of "papers ranked by cosine-to-use-case" vs. the binary
+      label. Same 0.5=chance/1.0=perfect scale as roc_auc, directly comparable to it, but
+      answers a different question: does ranking BY THIS QUERY separate relevant from
+      not, rather than "is this space linearly separable by label at all, however scored".
+    recall_at_Xpct: of the top X% of papers by that ranking, what fraction of the true
+      positives an analyst would already have seen. Maps directly onto "how much of the
+      ranked list do I have to read".
+    wss_at_95: Work Saved over Sampling at 95% recall (Cohen et al. 2006) — a standard
+      citation-screening-automation metric: the fraction of the corpus an analyst could
+      skip while still catching 95% of the positives, minus the 5% they'd have saved by
+      chance alone. 0 = no better than random ordering; higher is better.
+    """
+    n = len(y)
+    n_pos = int(y.sum())
+    empty = {
+        "query_similarity_auc": None,
+        **{f"recall_at_{int(f * 100)}pct": None for f in recall_fractions},
+        "wss_at_95": None, "wss_at_95_recall_achieved": None, "n": n, "n_pos": n_pos,
+    }
+    if n_pos == 0 or n_pos == n:
+        return empty
+
+    scores = query_similarity_scores(paper_vectors, use_case_vector)
+    auc = float(roc_auc_score(y, scores))
+
+    order = np.argsort(-scores)  # descending: most-similar-to-query first
+    cum_pos = np.cumsum(y[order])
+
+    recalls = {}
+    for frac in recall_fractions:
+        k = max(1, int(round(frac * n)))
+        recalls[f"recall_at_{int(frac * 100)}pct"] = float(cum_pos[k - 1] / n_pos)
+
+    target_count = int(np.ceil(wss_target_recall * n_pos))
+    cutoff_idx = int(np.searchsorted(cum_pos, target_count, side="left"))
+    screened = cutoff_idx + 1
+    recall_achieved = float(cum_pos[cutoff_idx] / n_pos)
+    wss = float((n - screened) / n - (1 - wss_target_recall))
+
+    return {
+        "query_similarity_auc": auc,
+        **recalls,
+        "wss_at_95": wss,
+        "wss_at_95_recall_achieved": recall_achieved,
+        "n": n,
+        "n_pos": n_pos,
+    }
+
+
+def evaluate_representation(paper_vectors: np.ndarray, use_case_vector: np.ndarray, masks: dict) -> dict:
+    """The full "test this representation against the labelled data" bundle every
+    comparison script runs: classifier separability (roc_auc, query-blind) AND
+    query-conditioned ranking (query_similarity_auc/recall/wss, query-aware) — each under
+    BOTH the strict and conservative label readings from build_label_masks. Flat dict,
+    ready to fold straight into a results row.
+    """
+    out = {}
+    if not masks["has_labels"]:
+        for mode in ("strict", "conservative"):
+            out.update({
+                f"n_{mode}": 0, f"roc_auc_{mode}": None, f"roc_auc_{mode}_std": None,
+                f"n_folds_{mode}": 0, f"query_auc_{mode}": None,
+                f"recall_at_10pct_{mode}": None, f"recall_at_20pct_{mode}": None,
+                f"wss_at_95_{mode}": None,
+            })
+        return out
+
+    for mode in ("strict", "conservative"):
+        mask = masks[f"{mode}_mask"]
+        y_full = masks[f"{mode}_y"]
+        n_labelled = int(mask.sum())
+        out[f"n_{mode}"] = n_labelled
+
+        if n_labelled < 6 or len(set(y_full[mask].tolist())) < 2:
+            out.update({
+                f"roc_auc_{mode}": None, f"roc_auc_{mode}_std": None, f"n_folds_{mode}": 0,
+                f"query_auc_{mode}": None, f"recall_at_10pct_{mode}": None,
+                f"recall_at_20pct_{mode}": None, f"wss_at_95_{mode}": None,
+            })
+            continue
+
+        y = y_full[mask]
+        roc = cross_validated_roc_auc(paper_vectors[mask], y)
+        ranking = retrieval_ranking_metrics(paper_vectors[mask], use_case_vector, y)
+
+        out[f"roc_auc_{mode}"] = roc["roc_auc"]
+        out[f"roc_auc_{mode}_std"] = roc["roc_auc_std"]
+        out[f"n_folds_{mode}"] = roc["n_folds"]
+        out[f"query_auc_{mode}"] = ranking["query_similarity_auc"]
+        out[f"recall_at_10pct_{mode}"] = ranking["recall_at_10pct"]
+        out[f"recall_at_20pct_{mode}"] = ranking["recall_at_20pct"]
+        out[f"wss_at_95_{mode}"] = ranking["wss_at_95"]
+
+    return out
+
+
+def round_floats(d: dict, ndigits: int = 4) -> dict:
+    """Round every float value in a flat dict for CSV/console output; leave None, ints,
+    and non-numeric values untouched. Shared so the three comparison scripts' result-row
+    construction doesn't each re-implement the same None-guarded rounding."""
+    return {k: (round(v, ndigits) if isinstance(v, float) else v) for k, v in d.items()}
 
 
 def cross_validated_oof_proba(X: np.ndarray, y: np.ndarray, k: int) -> np.ndarray:

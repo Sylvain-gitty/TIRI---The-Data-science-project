@@ -1,3 +1,0 @@
-combination,dim,seconds,avg_pairwise_cosine,participation_ratio,top1_variance_ratio,use_case_to_centroid_sim,use_case_centroid_percentile,roc_auc,n_folds,note
-paraphrase-multilingual-MiniLM-L12-v2 + entity_type_counts,402,13.19,0.432,14.85,0.1633,0.6819,53.0,0.6047,5,
-paraphrase-multilingual-MiniLM-L12-v2 + entity_text_tfidf,484,12.69,0.3347,37.13,0.05,0.7816,90.0,0.6289,5,
