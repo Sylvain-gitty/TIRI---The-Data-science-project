@@ -10,11 +10,13 @@ some papers, produce vectors", plus the export-loading helpers both callers need
 
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import requests
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -67,7 +69,53 @@ MODEL_CONFIGS = {
         "passage_prefix": "search_document: ",
         "title_abstract_sep": ". ",
     },
+    # Hosted models accessed via OpenRouter's OpenAI-compatible /embeddings endpoint
+    # (needs OPENROUTER_API_KEY — see embed_via_openrouter below), evaluated in
+    # notebooks/eda/wf_embedding_model_bakeoff.ipynb against the local baseline above.
+    # None of these have a documented asymmetric query/passage usage convention for
+    # their OpenRouter-hosted form (unlike BAAI/bge-small-en-v1.5's local fastembed
+    # build above), so prefixes are left empty rather than guessed — flagged in the
+    # bake-off notebook, not assumed.
+    "qwen/qwen3-embedding-8b": {"backend": "openrouter", "query_prefix": "", "passage_prefix": "", "title_abstract_sep": ". "},
+    "openai/text-embedding-3-large": {"backend": "openrouter", "query_prefix": "", "passage_prefix": "", "title_abstract_sep": ". "},
+    "baai/bge-m3": {"backend": "openrouter", "query_prefix": "", "passage_prefix": "", "title_abstract_sep": ". "},
+    "mistralai/mistral-embed-2312": {"backend": "openrouter", "query_prefix": "", "passage_prefix": "", "title_abstract_sep": ". "},
+    "google/gemini-embedding-2": {"backend": "openrouter", "query_prefix": "", "passage_prefix": "", "title_abstract_sep": ". "},
+    "nvidia/nemotron-3-embed-1b:free": {"backend": "openrouter", "query_prefix": "", "passage_prefix": "", "title_abstract_sep": ". "},
+    "perplexity/pplx-embed-v1-4b": {"backend": "openrouter", "query_prefix": "", "passage_prefix": "", "title_abstract_sep": ". "},
 }
+
+OPENROUTER_MODELS = [
+    "qwen/qwen3-embedding-8b",
+    "openai/text-embedding-3-large",
+    "baai/bge-m3",
+    "mistralai/mistral-embed-2312",
+    "google/gemini-embedding-2",
+    "nvidia/nemotron-3-embed-1b:free",
+    "perplexity/pplx-embed-v1-4b",
+]
+
+# 4 heavier HF models run on GPU via the Modal app in scripts/modal_embeddings.py
+# (too slow/impractical for local CPU) -- registered here with their real HF
+# identifiers for consistent display, mapped to the short model_key that Modal app's
+# EmbeddingWorker.embed() dispatches on internally (see that file's dispatch dict).
+# None have a single string-prefix asymmetric convention (SPECTER2 switches adapters,
+# QZhou/Qwen3-Embedding-4B use an instruction template, Jasper uses prompt_name= /
+# compression_ratio=) -- all handled server-side in modal_embeddings.py based on the
+# is_query flag threaded through _raw_embed, not via query_prefix/passage_prefix here.
+MODAL_MODEL_KEYS = {
+    "allenai/specter2": "specter2",
+    "Kingsoft-LLM/QZhou-Embedding": "qzhou",
+    "infgrad/Jasper-Token-Compression-600M": "jasper",
+    "Qwen/Qwen3-Embedding-4B": "qwen3_4b",
+}
+MODAL_MODELS = list(MODAL_MODEL_KEYS.keys())
+for _modal_name in MODAL_MODELS:
+    MODEL_CONFIGS[_modal_name] = {
+        "backend": "modal", "query_prefix": "", "passage_prefix": "",
+        "title_abstract_sep": "[SEP]" if _modal_name == "allenai/specter2" else ". ",
+    }
+del _modal_name
 
 # Fallback used for any model NOT in MODEL_CONFIGS (e.g. an ad hoc model name you type in
 # without registering it here first): no prefixes, fastembed backend, plain ". " join.
@@ -150,10 +198,79 @@ def get_use_case_text(df: pd.DataFrame, use_case_col: str, override: str | None)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Embedding backends — fastembed neural models, sentence-transformers, or TF-IDF+SVD
+# Embedding backends — fastembed neural models, sentence-transformers, TF-IDF+SVD,
+# or OpenRouter's hosted /embeddings endpoint
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _raw_embed(model_name: str, backend: str, texts: list[str]) -> np.ndarray:
+OPENROUTER_EMBEDDINGS_URL = "https://openrouter.ai/api/v1/embeddings"
+
+
+def embed_via_openrouter(
+    model_name: str, texts: list[str], api_key: str | None = None,
+    batch_size: int = 64, max_retries: int = 5,
+) -> np.ndarray:
+    """Embed `texts` through OpenRouter's OpenAI-compatible /embeddings endpoint,
+    batching requests (the endpoint accepts `input` as a list of strings in one call)
+    so 1000+ papers isn't 1000+ separate HTTP round trips.
+
+    Raises on any non-2xx response after retries are exhausted (rather than silently
+    returning zeros/NaNs) — an embedding model that isn't actually reachable is a
+    finding worth surfacing loudly, not a row to quietly skip.
+    """
+    api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY not set (env var or explicit api_key=).")
+
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    all_vectors: list[list[float]] = []
+
+    for start in range(0, len(texts), batch_size):
+        batch = texts[start : start + batch_size]
+        payload = {"model": model_name, "input": batch, "encoding_format": "float"}
+
+        for attempt in range(max_retries):
+            resp = requests.post(OPENROUTER_EMBEDDINGS_URL, headers=headers, json=payload, timeout=120)
+            if resp.status_code == 200:
+                break
+            retryable = resp.status_code == 429 or resp.status_code >= 500
+            if not retryable or attempt == max_retries - 1:
+                raise RuntimeError(
+                    f"OpenRouter embeddings request failed for model={model_name!r} "
+                    f"(status {resp.status_code}): {resp.text[:500]}"
+                )
+            wait = float(resp.headers.get("Retry-After", 2 ** attempt))
+            time.sleep(wait)
+
+        data = resp.json()["data"]
+        # OpenRouter/OpenAI responses aren't guaranteed to preserve input order —
+        # each item carries its own `index`, so sort back into request order rather
+        # than assuming positional alignment.
+        data.sort(key=lambda item: item["index"])
+        all_vectors.extend(item["embedding"] for item in data)
+
+    return np.array(all_vectors)
+
+
+_modal_worker = None
+
+
+def embed_via_modal(model_name: str, texts: list[str], is_query: bool = False) -> np.ndarray:
+    """Embed via the GPU-backed Modal app in scripts/modal_embeddings.py (SPECTER2,
+    QZhou-Embedding, Jasper-Token-Compression-600M, Qwen3-Embedding-4B). Deploy once
+    with `modal deploy scripts/modal_embeddings.py`; this just looks up the already-
+    deployed app by name (no redeploy needed per call, and the app's own EmbeddingWorker
+    keeps whichever model was last used warm across calls)."""
+    if model_name not in MODAL_MODEL_KEYS:
+        raise ValueError(f"{model_name!r} is not a registered Modal-backed model (see MODAL_MODEL_KEYS)")
+    global _modal_worker
+    if _modal_worker is None:
+        import modal
+        _modal_worker = modal.Cls.from_name("tiri-embeddings", "EmbeddingWorker")()
+    vectors = _modal_worker.embed.remote(MODAL_MODEL_KEYS[model_name], texts, is_query)
+    return np.array(vectors)
+
+
+def _raw_embed(model_name: str, backend: str, texts: list[str], is_query: bool = False) -> np.ndarray:
     """Run the actual model forward pass — no prefixing, no timing, just text in,
     vectors out."""
     if model_name == "tfidf":
@@ -161,6 +278,10 @@ def _raw_embed(model_name: str, backend: str, texts: list[str]) -> np.ndarray:
         sparse = vectorizer.fit_transform(texts)
         n_components = max(2, min(100, sparse.shape[0] - 1, sparse.shape[1] - 1))
         return TruncatedSVD(n_components=n_components, random_state=42).fit_transform(sparse)
+    if backend == "modal":
+        return embed_via_modal(model_name, texts, is_query=is_query)
+    if backend == "openrouter":
+        return embed_via_openrouter(model_name, texts)
     if backend == "sentence-transformers":
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(model_name)
@@ -185,6 +306,21 @@ def embed_papers(model_name: str, titles: list[str], abstracts: list[str]) -> tu
     vectors = _raw_embed(model_name, cfg["backend"], passage_texts)
     elapsed = time.monotonic() - start
     return vectors, elapsed
+
+
+def embed_texts(model_name: str, texts: list[str], prefix: str = "", is_query: bool = False) -> np.ndarray:
+    """Embed arbitrary text — e.g. a use-case query built from several export columns
+    rather than a paper's title+abstract — with model_name's configured prefix applied
+    manually. For paper title+abstract text, use embed_papers/embed_corpus_and_use_case
+    instead, which also handle the title/abstract join; this is for callers that already
+    have a single finished string per item.
+
+    `is_query` only matters for Modal-backed models (see MODAL_MODEL_KEYS) whose
+    query/document asymmetry is handled server-side (adapter switch / prompt_name=),
+    not via `prefix` — pass it whenever `texts` are queries, harmless no-op otherwise."""
+    cfg = MODEL_CONFIGS.get(model_name, _UNREGISTERED_MODEL_DEFAULT)
+    prefixed = [prefix + t for t in texts]
+    return _raw_embed(model_name, cfg["backend"], prefixed, is_query=is_query)
 
 
 def embed_corpus_and_use_case(

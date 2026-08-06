@@ -29,3 +29,20 @@ jupyter>=1.0.0
 # only chart in the repo that needs real hover/zoom, so it's the one chart on plotly
 # rather than matplotlib.
 plotly>=5.24.0
+
+# Hosted embedding models via OpenRouter (notebooks/eda/wf_embedding_model_bakeoff.ipynb) —
+# requests calls OpenRouter's /embeddings endpoint, python-dotenv loads OPENROUTER_API_KEY
+# from the repo-root .env (gitignored) rather than requiring it as a shell env var.
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# GPU-backed inference for 4 heavier HF models (SPECTER2, QZhou-Embedding,
+# Jasper-Token-Compression-600M, Qwen3-Embedding-4B) via scripts/modal_embeddings.py —
+# too slow/impractical to run locally on CPU. Needs `modal token new` / an existing
+# ~/.modal.toml to authenticate; see that file's docstring for deploy instructions.
+modal>=1.0.0
+
+# SYNERGY systematic-review dataset (notebooks/eda/wf_synergy_validation.ipynb) — an
+# independent external validation benchmark, see reports/wf_ensemble_report.md action
+# item #2. CC0-licensed, no auth needed; Dataset(name).to_frame() downloads on demand.
+synergy-dataset>=1.2
