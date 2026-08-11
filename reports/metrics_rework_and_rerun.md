@@ -22,7 +22,7 @@ repo's most confident-sounding old claims turned out not to survive the new metr
 | 2 | The centroid percentile pools positive/negative/pass together, unweighted by label — "typical of everything retrieved" isn't "typical of what got accepted" | Split the centroid by class: `use_case_to_positive_centroid_sim`, `use_case_to_negative_centroid_sim`, and their difference, `use_case_discriminative_gap` | `latent_space_utils.centroid_analysis` |
 | 3 | `pass` (borderline) rows were dropped from every AUC — flattering, since the deployed tool can't skip the ambiguous middle either | Every classifier/ranking metric now computes twice: `_strict` (positive vs. negative only, the old behaviour) and `_conservative` (positive vs. negative+pass) | `embedding_utils.build_label_masks` |
 | 4 | Per-fold AUCs were computed, then only the mean was kept — a "0.006 difference is noise" claim in `combined_features_notes.md` §3 was never actually checked against a number | `cross_validated_roc_auc` now returns `roc_auc_std` and the raw `fold_aucs` list | `embedding_utils.cross_validated_roc_auc` |
-| 5 | No representation-vs-representation comparison had ever run a significance test — point differences were eyeballed | `notebooks/comparisons/run_comparisons.ipynb` §4 runs a **paired** t-test across the now-exposed `fold_aucs` (paired, not independent, because `StratifiedKFold(shuffle=False)` makes fold row-membership depend only on the label column, identical across representations scored on the same corpus) | notebook + `scipy.stats.ttest_rel` |
+| 5 | No representation-vs-representation comparison had ever run a significance test — point differences were eyeballed | `notebooks/experiments/run_comparisons.ipynb` §4 runs a **paired** t-test across the now-exposed `fold_aucs` (paired, not independent, because `StratifiedKFold(shuffle=False)` makes fold row-membership depend only on the label column, identical across representations scored on the same corpus) | notebook + `scipy.stats.ttest_rel` |
 | 6 | This class of problem (triage a candidate pool, decide how much of it to keep reading) has a standard domain metric this repo never used | Added `recall_at_10pct` / `recall_at_20pct` and `wss_at_95` (Work Saved over Sampling at 95% recall, Cohen et al. 2006 — the standard citation-screening-automation metric) | `embedding_utils.retrieval_ranking_metrics` |
 
 All three comparison scripts (`compare_embeddings.py`, `compare_ner_models.py`,
@@ -33,7 +33,7 @@ label-mask logic (three copies, silently able to drift) and each computing only 
 label readings' AUCs with their std, plus `query_auc`, on every PNG this repo produces.
 
 **The notebook is now the primary way to run and see any of this.**
-`notebooks/comparisons/run_comparisons.ipynb` imports these same functions (doesn't
+`notebooks/experiments/run_comparisons.ipynb` imports these same functions (doesn't
 reimplement them) and shows every table, every plot, and the paired-significance check
 directly in the notebook — nothing needs to be written to disk first. See
 `notebooks/README.md`. `reports/` holds this decision trail (the `.md` files) and nothing
@@ -59,7 +59,7 @@ up to that point, so old-vs-new was a fair comparison:
 
 The tables below are the full scalar output of that rerun, copied in directly so this
 report stays readable on its own. §2b (soil) is reproducible today — open
-`notebooks/comparisons/run_comparisons.ipynb` and set `CORPUS_KEY = "soil"`. §2a (climate)
+`notebooks/experiments/run_comparisons.ipynb` and set `CORPUS_KEY = "soil"`. §2a (climate)
 is not — that corpus is gone; see the notice below its table. The notebook also now
 supports `data/processed/papers_combined.parquet` (`CORPUS_KEY = "combined"`, pick a
 `USE_CASE_KEY`) for any comparison beyond these two. All numbers below are `_strict`
@@ -186,8 +186,8 @@ are in the notebook's `embedding_df`/`ner_df`/`combined_df` tables.
   use-case query automatically — no separate `.usecase.json` needed. Re-running this
   rework's method against those isn't done here; that's a natural next comparison.
 
-**Run it yourself:** open `notebooks/comparisons/run_comparisons.ipynb` from inside
-`notebooks/comparisons/` and run all cells — every table and plot renders inline.
+**Run it yourself:** open `notebooks/experiments/run_comparisons.ipynb` from inside
+`notebooks/experiments/` and run all cells — every table and plot renders inline.
 `CORPUS_KEY = "soil"` reproduces §2b above; `CORPUS_KEY = "combined"` (with a
 `USE_CASE_KEY`) runs any of the 6 research questions in `papers_combined.parquet`
 instead. Nothing needs to exist in `reports/` first; the notebook loads straight from

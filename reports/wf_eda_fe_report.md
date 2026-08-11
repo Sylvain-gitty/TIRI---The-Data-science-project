@@ -35,7 +35,7 @@ one thing, read the table in §1.
 ## 2. Target and label design
 
 **The finding that changes everything:** `has_abstract` rate by `triage_label` —
-**positive 93.3%, negative 95.0%, pass 15.3%**. (`notebooks/eda/wf_data_enrich.ipynb`)
+**positive 93.3%, negative 95.0%, pass 15.3%**. (`notebooks/experiments/wf_data_enrich.ipynb`)
 
 `pass` isn't mostly a relevance judgement — it's mostly a proxy for "there was no
 abstract to triage." If you train a 3-class model, `has_abstract` becomes a near-perfect,
@@ -135,7 +135,7 @@ EDA. Both `NaN` (26 rows) and empty string (42 rows) mean "not captured" — nei
 The resulting frequency table checks out against reality — e.g. Karen Scrivener on 15
 papers in `cement_binders`, T. Alan Hatton on 7 in `carbon_capture` — both genuinely
 prominent, verifiable researchers in those fields, not parsing noise
-(`notebooks/eda/wf_data_enrich.ipynb`, `notebooks/feature_experiments/author_orcid.ipynb`).
+(`notebooks/experiments/wf_data_enrich.ipynb`, `notebooks/experiments/author_orcid.ipynb`).
 
 *Judgement call, flagged not solved:* the parsing is naive (no identity disambiguation —
 "J. Smith" vs. "John Smith" won't merge, and a single "Last, First" author can get
@@ -158,7 +158,7 @@ apart from "high in absolute terms."
 ## 5. New candidate features — what we actually tested, and the verdict
 
 Four feature ideas were built as small, sample-sized viability notebooks in
-`notebooks/feature_experiments/`, plus one follow-up. All four ideas were plausible
+`notebooks/experiments/`, plus one follow-up. All four ideas were plausible
 going in; two came back negative, one came back weak, one came back genuinely useful
 (conditionally). Reporting the negative ones plainly is deliberate — this repo's
 convention (see `HANDOFF.md`, `reports/combined_features_notes.md`) is to keep honest
@@ -277,7 +277,7 @@ author's papers on both sides of train/test, letting the model partially memoriz
 author's topic/style instead of learning transferable relevance signal — a leakage
 channel that's easy to miss because it doesn't look like a bug.
 
-**What we built and tested** (`notebooks/modelling/wf_fold_pca_test.ipynb`):
+**What we built and tested** (`notebooks/experiments/wf_fold_pca_test.ipynb`):
 
 - Held **`tech_forecasting`** (the smallest use case, 290 rows, and a distinct
   methodological domain — network/graph methods, not a physical-science topic) out
@@ -399,7 +399,7 @@ no mixed-embedding-space problem to solve first.
 | What | Where |
 |---|---|
 | The combined, cleaned dataset | `data/processed/papers_combined.parquet` (see `data/processed/README.md` for the full data card) |
-| Descriptive EDA (all the §2/§4 findings) | `notebooks/eda/wf_data_enrich.ipynb` |
-| Feature viability experiments (§5) | `notebooks/feature_experiments/` — `trl_estimate.ipynb`, `terms_overlap.ipynb`, `terms_overlap_spacy.ipynb`, `venue_quality.ipynb`, `author_orcid.ipynb` |
-| Fold design + stacked PCA ensemble (§6, §8) | `notebooks/modelling/wf_fold_pca_test.ipynb` |
+| Descriptive EDA (all the §2/§4 findings) | `notebooks/experiments/wf_data_enrich.ipynb` |
+| Feature viability experiments (§5) | `notebooks/experiments/` — `trl_estimate.ipynb`, `terms_overlap.ipynb`, `terms_overlap_spacy.ipynb`, `venue_quality.ipynb`, `author_orcid.ipynb` |
+| Fold design + stacked PCA ensemble (§6, §8) | `notebooks/experiments/wf_fold_pca_test.ipynb` |
 | Diagnostic-only embedding/NER comparisons (separate scope — see `HANDOFF.md`) | `scripts/compare_embeddings.py`, `compare_ner_models.py`, `compare_combined_features.py`, and their `reports/*_notes.md` write-ups |

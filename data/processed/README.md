@@ -217,7 +217,7 @@ been applied), so the file is safe to split into folds downstream without leakag
 Anything that needs the embedding block itself — which is the `PCA(50)` pipeline
 shared by the baseline, CatBoost and ensemble notebooks (06-08). To run those,
 regenerate the full `papers_fe.parquet` with
-`notebooks/04_feature_engineering.ipynb`; that needs
+`notebooks/main/04_feature_engineering.ipynb`; that needs
 `data/processed/embeddings_cache/` (~295 MB, not in git) and, if the cache is
 cold, paid API and Modal GPU calls. The notebooks are committed **with their
 outputs intact**, so their results are readable without re-running them.

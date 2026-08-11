@@ -21,7 +21,7 @@ exercise applied to NER-derived representations instead of embeddings.
 > as historical record and can no longer be reproduced by re-running against that file.
 > New comparisons should use the soil-microbiome corpus (§4) or
 > `data/processed/papers_combined.parquet`'s 6 real research questions — see
-> `notebooks/comparisons/run_comparisons.ipynb`.
+> `notebooks/experiments/run_comparisons.ipynb`.
 
 ## 1. Priority properties (why these, for THIS workflow)
 
@@ -88,8 +88,8 @@ meant to be re-run often while iterating.
   The domain-specific model did not outperform on this corpus even once its known input
   quirk was corrected — a real, if unflattering, result.
 
-**Run it yourself, with output inline:** open `notebooks/comparisons/run_comparisons.ipynb`
-(from inside `notebooks/comparisons/`), set `CORPUS_KEY`, run all cells — every table and
+**Run it yourself, with output inline:** open `notebooks/experiments/run_comparisons.ipynb`
+(from inside `notebooks/experiments/`), set `CORPUS_KEY`, run all cells — every table and
 plot renders in the notebook itself, nothing is written to `reports/` by default. See
 `notebooks/README.md`.
 

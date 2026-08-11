@@ -1,6 +1,6 @@
 # Baseline classifier shortlist — decision trail
 
-Standalone write-up of `notebooks/eda/sf_eda_firstrun.ipynb` §13–14's baseline-model
+Standalone write-up of `notebooks/experiments/sf_eda_firstrun.ipynb` §13–14's baseline-model
 comparison, kept here as a decision-trail document per this repo's `reports/` convention
 (see `HANDOFF.md`). The notebook is the source of truth — every number below is copied
 from its own executed output, not recomputed separately here — this file exists so the

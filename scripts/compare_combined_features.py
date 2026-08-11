@@ -49,8 +49,8 @@ answer "does combining help THIS NER representation" independently.
 
 HOW TO RUN IT
 --------------
-Preferred: open notebooks/comparisons/run_comparisons.ipynb (from inside
-notebooks/comparisons/) and run all cells — output renders inline, nothing written to
+Preferred: open notebooks/experiments/run_comparisons.ipynb (from inside
+notebooks/experiments/) and run all cells — output renders inline, nothing written to
 disk. Run this script directly only for scripting/automation:
 
     python scripts/compare_combined_features.py --data data/raw/your-export.parquet
@@ -139,12 +139,12 @@ def main() -> None:
     parser.add_argument("--ner-representations", default=None, help="Comma-separated NER representation names (default: entity_type_counts,entity_text_tfidf)")
     parser.add_argument("--projection", choices=["pca", "tsne"], default="pca", help="2D projection method for the corpus map (default: pca)")
     parser.add_argument("--out", type=Path, default=None, help="Save the scalar metrics table to this CSV path (default: not saved — printed to the console only)")
-    parser.add_argument("--out-plot", type=Path, default=None, help="Save the comparison figure to this PNG path (default: not built/saved at all — see notebooks/comparisons/ for an inline alternative)")
+    parser.add_argument("--out-plot", type=Path, default=None, help="Save the comparison figure to this PNG path (default: not built/saved at all — see notebooks/experiments/ for an inline alternative)")
     args = parser.parse_args()
 
     # Nothing is written to disk unless explicitly asked (--out/--out-plot) — reports/
     # holds this repo's decision-trail .md files, not a per-run CSV/PNG pile. See
-    # notebooks/comparisons/run_comparisons.ipynb for the inline-output equivalent.
+    # notebooks/experiments/run_comparisons.ipynb for the inline-output equivalent.
     make_plot = args.out_plot is not None
 
     ner_representation_names = (

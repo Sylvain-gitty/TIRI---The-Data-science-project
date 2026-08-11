@@ -1,4 +1,6 @@
-"""Shared, config-driven building blocks for notebooks/pipelines/*.ipynb.
+"""Shared, config-driven building blocks for the config-driven fold-pipeline
+notebooks (notebooks/experiments/sf_logo_fold_pipeline.ipynb and the two templates
+in notebooks/future_work/).
 
 sf_generalized_fold_pipeline.ipynb (pooled, whole-dataset splits), sf_logo_fold_pipeline.ipynb
 (leave-one-use-case-out), and sf_catboost_fold_pipeline.ipynb all import this module instead
@@ -42,7 +44,7 @@ def validate_schema(df: pd.DataFrame, config: dict) -> None:
     no context.
 
     `config.get("expand_embedding", True)` gates whether `embedding_col` is required at
-    all - a text-driven model (e.g. a prompted LLM, see `notebooks/pipelines/
+    all - a text-driven model (e.g. a prompted LLM, see `notebooks/future_work/
     sf_llm_fold_pipeline.ipynb`) has no use for the embedding column and can set this to
     False rather than being forced to point CONFIG at a column it never reads. When it's
     False AND `config["embedding_feature_cols"]` is set instead (a dataset that already
@@ -195,7 +197,7 @@ def build_pipeline(config: dict, model=None) -> Pipeline:
 def build_pca_preprocessor(config: dict) -> ColumnTransformer:
     """The PCA-reduced-embedding counterpart to `build_preprocessor`, for a dataset whose
     embedding block is too wide to feed a linear model directly (e.g.
-    `notebooks/pipelines/sf_generalized_fold_pipeline.ipynb` against `papers_fe.parquet`'s
+    `notebooks/main/06_baseline_logreg.ipynb` against `papers_fe.parquet`'s
     8,704 concatenated embedding columns). Two independently-fit branches:
 
     - **`config["_embedding_feature_cols"]`** -> `StandardScaler` -> `PCA(n_components=

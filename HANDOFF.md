@@ -38,12 +38,12 @@ trusting any AUC number in this repo.** Headlines:
   solid (0.77–0.80). NER's `entity_type_counts` — the representation the old `roc_auc`
   reading called the weakest thing tested — has the only positive `query_auc` (0.579) of
   any single representation on that corpus.
-- A **paired significance test** (new: `notebooks/comparisons/run_comparisons.ipynb` §4,
+- A **paired significance test** (new: `notebooks/experiments/run_comparisons.ipynb` §4,
   using fold-level AUCs that used to be computed then thrown away) found most of this
   repo's old "X beats Y" point-difference claims are not statistically distinguishable
   from fold-to-fold noise on 5 folds — including `combined_features_notes.md`'s "combining
   made things worse" claim on the climate corpus (p=0.475–0.673).
-- **`notebooks/comparisons/run_comparisons.ipynb` is now the primary way to run and see
+- **`notebooks/experiments/run_comparisons.ipynb` is now the primary way to run and see
   this repo's comparisons** — clone, open, run all cells, every table/plot renders
   inline. See `notebooks/README.md`.
 - **`reports/` was cleaned out down to its `.md` decision-trail files** (`model_shortlist.md`,
@@ -66,7 +66,7 @@ trusting any AUC number in this repo.** Headlines:
   across 6 real research questions (`cement_binders`, `soil_microbiome`, `ner`,
   `solar_leo`, `carbon_capture`, `tech_forecasting`, see `data/processed/README.md`) in
   one file, each carrying its own real objective + must-include/nice-to-have search terms.
-  `notebooks/comparisons/run_comparisons.ipynb`'s `CORPUS_KEY` now takes `"soil"`
+  `notebooks/experiments/run_comparisons.ipynb`'s `CORPUS_KEY` now takes `"soil"`
   (unchanged) or `"combined"` (pick a `USE_CASE_KEY`); for `"combined"`, the notebook
   builds a richer use-case query straight from those objective/terms columns
   (`build_richer_use_case_text`) instead of a short placeholder name — no separate
@@ -203,7 +203,7 @@ reports/
   <dataset>_baseline_confusion_matrix.png / _baseline_metrics.json / _baseline_scored_pool.csv
                                     (from future_work/train_baseline_classifier.py — unrelated
                                     to the 3 comparison scripts above, which write nothing by
-                                    default now; run notebooks/comparisons/run_comparisons.ipynb
+                                    default now; run notebooks/experiments/run_comparisons.ipynb
                                     to see their output instead of looking for a file here)
 data/raw/
   high-quality-microbial-and-fungal-community-in-soil-labelledFULLRUN.parquet  (602 papers)
@@ -213,11 +213,11 @@ data/raw/
                                                   (sample-export.parquet removed — see above)
 data/processed/
   papers_combined.parquet          6 real research questions in one file, see README.md
-                                    in that folder + notebooks/comparisons/run_comparisons.ipynb
+                                    in that folder + notebooks/experiments/run_comparisons.ipynb
 ```
 
 The 3 comparison scripts write nothing to disk by default — run
-`notebooks/comparisons/run_comparisons.ipynb` to see output, or pass `--out`/`--out-plot`
+`notebooks/experiments/run_comparisons.ipynb` to see output, or pass `--out`/`--out-plot`
 explicitly for a one-off file (name it after the input, `reports/<stem>_*`, if you do —
 never a fixed path, so re-running on a different export doesn't overwrite prior results).
 
@@ -225,7 +225,7 @@ never a fixed path, so re-running on a different export doesn't overwrite prior 
 
 - **TIRI-only changes.** Read `academic_research_agent` for reference; never edit it.
 - **`reports/` holds decision-trail `.md` files, not per-run artifacts.** The comparison
-  scripts default to writing nothing; `notebooks/comparisons/run_comparisons.ipynb` is how
+  scripts default to writing nothing; `notebooks/experiments/run_comparisons.ipynb` is how
   you see a run's output. If you DO pass `--out`/`--out-plot` for a one-off file, name it
   after the input (`reports/<stem>_*`) — never a fixed path — but don't check that file in.
 - **Cross-validated, never train-then-score.** Any AUC/accuracy number must come from

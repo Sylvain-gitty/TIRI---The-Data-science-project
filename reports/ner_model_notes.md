@@ -19,7 +19,7 @@ whatever "wins" a run of this script.
 > observations to trust a comparison drawn from it. The numbers below are kept as
 > historical record and can no longer be reproduced by re-running against that file. New
 > comparisons should use the soil-microbiome corpus or `data/processed/papers_combined.parquet`'s
-> 6 real research questions — see `notebooks/comparisons/run_comparisons.ipynb`.
+> 6 real research questions — see `notebooks/experiments/run_comparisons.ipynb`.
 
 ## 2. Why spaCy, over GLiNER / scispaCy
 
@@ -124,7 +124,7 @@ both improve on scientific text, and (b) test `entity_type_counts`/`entity_text_
 concatenated onto an embedding vector rather than standalone, since standalone
 performance being weaker than embeddings doesn't rule out an additive contribution.
 
-**Run it yourself, with output inline:** `notebooks/comparisons/run_comparisons.ipynb`
+**Run it yourself, with output inline:** `notebooks/experiments/run_comparisons.ipynb`
 §2 — see `notebooks/README.md`.
 
 `scripts/compare_ner_models.py` still works as a CLI (`python scripts/compare_ner_models.py

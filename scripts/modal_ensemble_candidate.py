@@ -102,7 +102,7 @@ def run_cell(variant_name: str, branch_name: str, seeds: int) -> dict:
 )
 def run_oof_cell(variant_name: str, branch_name: str, seed: int) -> dict:
     """One (feature variant, branch) cell's single-seed within-silo OOF probabilities, per
-    use case — what notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb (Phase 2) calls for
+    use case — what notebooks/main/09_ensemble_per_silo.ipynb (Phase 2) calls for
     its diagnostic stages (calibration curves, branch-disagreement correlation, Recall@k
     curves), which need actual predictions rather than run_cell's aggregated scores.
     Same reason run_cell routes CatBoost through Modal at all: CatBoost's default

@@ -113,7 +113,7 @@ default," which these gains don't yet answer either way.
 | Experiment A/B/C compute (Modal) | `scripts/modal_ensemble_experiments.py` |
 | Experiment A/B/C analysis + this report's tables | `scripts/analyze_ensemble_v2_experiments.py` |
 | Raw CatBoost OOF at both hyperparameter settings | `reports/wf_ensemble_v2_hparam_oof.json` |
-| v1 baseline this compares against | `reports/wf_ensemble_v1_results.md`, `notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb` |
+| v1 baseline this compares against | `reports/wf_ensemble_v1_results.md`, `notebooks/main/09_ensemble_per_silo.ipynb` |
 | Noise-floor discipline applied above | `CONTEXT.md` §5 |
 
 ## 7. Axis feature (PCA/SVD follow-up) + iterations=300, all vs. the tuned baseline

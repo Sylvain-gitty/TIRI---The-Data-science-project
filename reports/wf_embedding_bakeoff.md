@@ -40,7 +40,7 @@ good enough, or would a better one give the classifier more to work with?**
 
 We tested candidates the same way every time, so the comparison is fair:
 
-- **Same fold design** as `notebooks/modelling/wf_fold_pca_test.ipynb`: papers grouped by
+- **Same fold design** as `notebooks/experiments/wf_fold_pca_test.ipynb`: papers grouped by
   first author (so the same author's papers never straddle train/test), stratified by
   use case + label, 5 folds.
 - **Same simple classifier** (a plain `LogisticRegression`) on top of whichever
@@ -85,7 +85,7 @@ and held-out (`tech_forecasting`) PR-AUC:
 `qwen3-embedding-8b` came out on top, cheap (~$0.01 per million tokens), and this alone
 was enough to justify testing further, heavier options.
 
-*Notebook: `notebooks/eda/wf_embedding_model_bakeoff.ipynb`.*
+*Notebook: `notebooks/experiments/wf_embedding_model_bakeoff.ipynb`.*
 
 ---
 
@@ -117,7 +117,7 @@ Two things worth flagging plainly:
 - **QZhou (7B, the largest model tested) did not translate its size into better
   results.** Bigger is not automatically better — this is a recurring theme, see §4.
 
-*Notebook: `notebooks/eda/wf_embedding_model_bakeoff.ipynb`; Modal app:
+*Notebook: `notebooks/experiments/wf_embedding_model_bakeoff.ipynb`; Modal app:
 `scripts/modal_embeddings.py`.*
 
 ---
@@ -152,7 +152,7 @@ improvement, but not a universal one.** Which model wins depends on the specific
 and no single model dominates every time — exactly why `reports/wf_ensemble_report.md`
 insisted on testing every use case as its own holdout, rather than trusting one.
 
-*Notebook: `notebooks/eda/wf_top_embeddings_generalization.ipynb`.*
+*Notebook: `notebooks/experiments/wf_top_embeddings_generalization.ipynb`.*
 
 ---
 
@@ -185,7 +185,7 @@ cost of qwen3-8b, and already matched it in Round 1/2 testing, **the cheaper pai
 (Jasper + qwen3-4b) is the more practical choice** — same performance, lower ongoing
 cost.
 
-*Notebook: `notebooks/eda/wf_top_embeddings_generalization.ipynb`.*
+*Notebook: `notebooks/experiments/wf_top_embeddings_generalization.ipynb`.*
 
 ---
 
@@ -230,7 +230,7 @@ one-time cost of ~50 labels per new use case. Two important caveats:
   numbers). If ranking (PR-AUC, Recall@k) is already poor for a use case, calibration
   won't fix that; it only fixes the *meaning* of the score.
 
-*Notebook: `notebooks/eda/wf_top_embeddings_generalization.ipynb`.*
+*Notebook: `notebooks/experiments/wf_top_embeddings_generalization.ipynb`.*
 
 ---
 
@@ -260,7 +260,7 @@ Recall@20% — the most important number for a use case with only 1.7% of papers
 relevant — hit **100%** on the hardest review for both Qwen models. This closes the
 open action item from `reports/wf_ensemble_report.md` §7 (item #2).
 
-*Notebook: `notebooks/eda/wf_synergy_validation.ipynb`.*
+*Notebook: `notebooks/experiments/wf_synergy_validation.ipynb`.*
 
 ---
 
@@ -334,9 +334,9 @@ All of this was run for real, not estimated:
 
 | What | Where |
 |---|---|
-| Round 1 + Round 2 bake-off (12 sources, single holdout) | `notebooks/eda/wf_embedding_model_bakeoff.ipynb` |
-| Leave-one-use-case-out, combining, calibration | `notebooks/eda/wf_top_embeddings_generalization.ipynb` |
-| SYNERGY external validation | `notebooks/eda/wf_synergy_validation.ipynb` |
+| Round 1 + Round 2 bake-off (12 sources, single holdout) | `notebooks/experiments/wf_embedding_model_bakeoff.ipynb` |
+| Leave-one-use-case-out, combining, calibration | `notebooks/experiments/wf_top_embeddings_generalization.ipynb` |
+| SYNERGY external validation | `notebooks/experiments/wf_synergy_validation.ipynb` |
 | GPU-hosted model backend (Modal) | `scripts/modal_embeddings.py` |
 | Shared embedding logic (OpenRouter + Modal backends, model registry) | `scripts/embedding_utils.py` |
 | Embedding cache (gitignored, reused across all 3 notebooks) | `data/processed/embeddings_cache/` |

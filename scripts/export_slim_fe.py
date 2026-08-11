@@ -17,7 +17,7 @@ committed data alone.
 
 What it does NOT give you: anything that needs the embedding block itself — the
 PCA(50) pipeline shared by the baseline, CatBoost and ensemble notebooks. Those
-need the full file, regenerated via `notebooks/04_feature_engineering.ipynb`
+need the full file, regenerated via `notebooks/main/04_feature_engineering.ipynb`
 (which needs `data/processed/embeddings_cache/`, ~295 MB, and paid API / Modal
 GPU calls). `README.md` §Data states that split explicitly rather than letting a
 reader discover it at cell 1.

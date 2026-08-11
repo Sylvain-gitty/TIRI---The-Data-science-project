@@ -31,7 +31,7 @@ Default embedding block: `paraphrase-multilingual-MiniLM-L12-v2` — a convenien
 > record and can no longer be reproduced by re-running against that file — §3 (soil
 > corpus) is unaffected. New comparisons should use the soil-microbiome corpus or
 > `data/processed/papers_combined.parquet`'s 6 real research questions — see
-> `notebooks/comparisons/run_comparisons.ipynb`.
+> `notebooks/experiments/run_comparisons.ipynb`.
 
 ## 2. Results: climate/agriculture corpus (100 papers, short use-case name)
 
@@ -121,7 +121,7 @@ reliably do, on this evidence, is rescue the use-case centrality diagnostic from
 degenerate all-zero-block case — a real, if narrower, benefit than the one originally
 hoped for.
 
-**Run it yourself, with output inline:** `notebooks/comparisons/run_comparisons.ipynb`
+**Run it yourself, with output inline:** `notebooks/experiments/run_comparisons.ipynb`
 §3 — see `notebooks/README.md`.
 
 `scripts/compare_combined_features.py` still works as a CLI (`python

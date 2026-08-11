@@ -66,7 +66,7 @@ easiest way to misread this project.
 | **Leave-one-question-out (LOGO)** | How well does it do on a *brand-new question* with no labels? | **~0.54 ROC-AUC — it doesn't.** This is the finding, not a failure to fix |
 | **Within-question (per-silo)** | How well does it do on a *new paper for a question we have labels for*? — **the production surface** | Per-silo ensemble clears the strong baseline by **0.03–0.18 ROC-AUC** across the six questions |
 
-### Pooled — the model comparison (`notebooks/modelling/`)
+### Pooled — the model comparison (`notebooks/main/06`–`08`)
 
 A random holdout drawn from the same six questions. This is the standard bootcamp
 comparison, and it is *explicitly not* a generalisation test.
@@ -104,7 +104,7 @@ Two honest caveats we'd rather state than bury:
   holdout, so the number is not leaked — but the baseline was never given the same
   treatment, and on the like-for-like 0.5 comparison the gap is +0.020, not +0.101.
 
-### Within-question — the production surface (`notebooks/pipelines/`, `reports/`)
+### Within-question — the production surface (`notebooks/main/09`, `reports/`)
 
 One model per research question, fit only on that question's own labels. Per-silo
 CatBoost + LogisticRegression, 50/50 averaged. Validated externally against three
@@ -138,10 +138,10 @@ step. Notebooks assume they're run with their own folder as the working director
 
 | Runs from a fresh clone | Needs regenerating first |
 |---|---|
-| `notebooks/data_compile/` — rebuilds the cleaned corpus from raw | `notebooks/feature_engineering/` — needs `embeddings_cache/` (~295 MB) |
-| `notebooks/eda/` — EDA, label balance, embedding maps | `notebooks/modelling/sf-*` — need the full `papers_fe.parquet` (106 MB) |
-| `notebooks/modelling/sf_logo_fold_strategy.ipynb` — the validation design | `notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb` — same, plus Modal |
-| `notebooks/feature_experiments/` — the negative-results evidence | |
+| `main/01_data_compile` — rebuilds the cleaned corpus from raw | `main/04_feature_engineering` — needs `embeddings_cache/` (~295 MB) |
+| `main/02_eda_quickstart`, `main/03_eda_full` | `main/06`–`08` — need the full `papers_fe.parquet` (106 MB) |
+| `main/05_validation_design` — where the collapse is measured | `main/09_ensemble_per_silo` — same, plus Modal |
+| `notebooks/experiments/` — the negative-results evidence | |
 
 Everything in the right-hand column is **committed with its outputs intact**, so the
 results are readable without re-running. See [Data](#data) for exactly what ships and
@@ -160,33 +160,38 @@ data/
   processed/        papers_combined.parquet, papers_fe_slim.parquet, and README.md (data dictionary)
 
 notebooks/
-  README.md         one-line description of every notebook — the index
-  data_compile/     raw exports -> papers_combined.parquet
-  eda/              exploratory analysis, read-only
-  feature_experiments/   viability checks for candidate features — mostly negative results, kept on purpose
-  feature_engineering/   assembles validated features -> papers_fe.parquet
-  modelling/        fold/validation design, and the final baseline + advanced models
-  pipelines/        config-driven fold pipelines, incl. the per-silo ensemble
-  comparisons/      runs the compare_*.py scripts with output inline
+  README.md         the index — what every notebook does and what it found
+  main/             the 9-notebook main line, numbered in reading order
+                      01 data compile   02 EDA quickstart   03 EDA full
+                      04 feature eng.   05 validation design
+                      06 baseline       07 CatBoost         08 ensemble (pooled)
+                      09 ensemble (per-question — the production surface)
+  experiments/      supporting evidence: feature viability checks, embedding
+                    bake-offs, external validation, superseded passes. Mostly
+                    negative results, kept on purpose. Never writes to data/
+  future_work/      two templates that have never been executed, by design
 
 scripts/            shared libraries (embedding, folds, lexical features, metrics) + experiment drivers
-future_work/        parked work, kept but not wired into the current workflow
+future_work/        train_baseline_classifier.py — parked, not wired into the workflow
 reports/            the decision trail — what we tried, what we measured, what we rejected
 ```
+
+Only `main/01` and `main/04` write to `data/`. Everything else is read-only, so
+notebooks can be run in any order once the data exists.
 
 ### Where to start reading
 
 1. This file, then [`CONTEXT.md`](CONTEXT.md) for the findings that shaped the work.
-2. [`notebooks/eda/eda_quickstart.ipynb`](notebooks/eda/eda_quickstart.ipynb) — the
+2. [`main/02_eda_quickstart.ipynb`](notebooks/main/02_eda_quickstart.ipynb) — the
    5-minute tour of the corpus.
-3. [`notebooks/eda/sf_eda_v2.ipynb`](notebooks/eda/sf_eda_v2.ipynb) — the full EDA pass,
+3. [`main/03_eda_full.ipynb`](notebooks/main/03_eda_full.ipynb) — the full EDA pass,
    with hypothesis tests.
-4. [`notebooks/modelling/sf_logo_fold_strategy.ipynb`](notebooks/modelling/sf_logo_fold_strategy.ipynb)
+4. [`main/05_validation_design.ipynb`](notebooks/main/05_validation_design.ipynb)
    — the validation design, and where the generalisation collapse is measured.
-5. [`notebooks/modelling/sf-LogRegbaseline.ipynb`](notebooks/modelling/sf-LogRegbaseline.ipynb)
-   → [`sf-catboost-model.ipynb`](notebooks/modelling/sf-catboost-model.ipynb)
-   → [`sf-ensemble.ipynb`](notebooks/modelling/sf-ensemble.ipynb) — baseline, advanced
-   model, ensemble, in that order. Each is self-contained and reports train →
+5. [`main/06_baseline_logreg.ipynb`](notebooks/main/06_baseline_logreg.ipynb)
+   → [`07_advanced_catboost.ipynb`](notebooks/main/07_advanced_catboost.ipynb)
+   → [`08_ensemble_pooled.ipynb`](notebooks/main/08_ensemble_pooled.ipynb) — baseline,
+   advanced model, ensemble, in that order. Each is self-contained and reports train →
    validation → holdout at every stage.
 
 ---
@@ -219,7 +224,7 @@ the bulk that's regenerable (~600 MB).
 
 | Ignored | Size | Rebuild with |
 |---|---|---|
-| `papers_fe.parquet` | 106 MB | `notebooks/feature_engineering/wf_build_fe_dataset.ipynb` |
+| `papers_fe.parquet` | 106 MB | `notebooks/main/04_feature_engineering.ipynb` |
 | `papers_fe_synergy*.parquet` | 173 MB | `scripts/run_synergy_recall_validation.py` |
 | `embeddings_cache/` | 295 MB | `scripts/modal_embeddings.py` (GPU) + OpenRouter (paid) |
 
@@ -242,7 +247,7 @@ The pipeline discovers files by glob and matches them on the `use_case` name rec
 *inside* each file, not on the filename — so adding data is:
 
 1. Drop `<new_key>.jsonl` and `<new_key>.usecase.json` into `data/raw/`.
-2. Add a `USE_CASE_REGISTRY` entry in `notebooks/data_compile/combine_use_cases.ipynb`
+2. Add a `USE_CASE_REGISTRY` entry in `notebooks/main/01_data_compile.ipynb`
    (it raises loudly on an unregistered question rather than guessing a short code).
 3. Re-run that notebook, then feature engineering.
 

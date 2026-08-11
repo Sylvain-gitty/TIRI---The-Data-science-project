@@ -1,7 +1,7 @@
 # Feature engineering plan — the 11-feature punch list, after measurement
 
 **Status:** decision document. Every number here is reproducible from
-`notebooks/feature_experiments/wf_feature_validation.ipynb`, which builds all 11 proposed
+`notebooks/experiments/wf_feature_validation.ipynb`, which builds all 11 proposed
 features and measures them.
 
 **Relationship to `wf_eda_fe_report.md`:** that report's §4 recommended this punch list
@@ -246,7 +246,7 @@ possibly none of it.
 
 ## 4. Why `solar_leo` and `soil_microbiome` resist everything
 
-Investigated in full in `notebooks/feature_experiments/wf_hard_use_cases.ipynb`. Three
+Investigated in full in `notebooks/experiments/wf_hard_use_cases.ipynb`. Three
 findings, and the third turned out to matter more than the question that prompted it.
 
 ### 4.1 The mechanism: the classes are interleaved in embedding space
@@ -412,10 +412,10 @@ quality, author ORCID, and this punch list). The headroom is in the representati
 
 | Claim | Source |
 |---|---|
-| Every number in §1–§3 | `notebooks/feature_experiments/wf_feature_validation.ipynb` |
-| Every number in §4–§5 | `notebooks/feature_experiments/wf_hard_use_cases.ipynb` |
-| Term-overlap AUCs | `notebooks/feature_experiments/terms_overlap.ipynb` |
-| spaCy variant, lemma regression | `notebooks/feature_experiments/terms_overlap_spacy.ipynb` |
-| Fold design reused throughout | `notebooks/modelling/wf_fold_pca_test.ipynb` |
+| Every number in §1–§3 | `notebooks/experiments/wf_feature_validation.ipynb` |
+| Every number in §4–§5 | `notebooks/experiments/wf_hard_use_cases.ipynb` |
+| Term-overlap AUCs | `notebooks/experiments/terms_overlap.ipynb` |
+| spaCy variant, lemma regression | `notebooks/experiments/terms_overlap_spacy.ipynb` |
+| Fold design reused throughout | `notebooks/experiments/wf_fold_pca_test.ipynb` |
 | Original punch list this supersedes | `reports/wf_eda_fe_report.md` §4 |
 | "Combined features don't help" — reframed by §4.4 | `reports/combined_features_notes.md` |
