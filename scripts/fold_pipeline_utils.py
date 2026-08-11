@@ -155,8 +155,9 @@ def build_preprocessor(config: dict) -> ColumnTransformer:
     return ColumnTransformer(transformers)
 
 
-def build_pipeline(config: dict) -> Pipeline:
-    """Preprocessing + LogisticRegression as one fit-once object.
+def build_pipeline(config: dict, model=None) -> Pipeline:
+    """Preprocessing + a linear-friendly classifier (default LogisticRegression) as one
+    fit-once object.
 
     Calling `.fit(X_train, y_train)` on the returned Pipeline fits the imputer/scaler/
     encoder AND the classifier on exactly those rows in one call - the standard
@@ -164,10 +165,16 @@ def build_pipeline(config: dict) -> Pipeline:
     fit/transform calls per fold (what the earlier fold-strategy notebooks did) and
     risking a step getting fit on the wrong rows as the feature set grows. `class_weight=
     "balanced"` matches every other classifier in this repo's `sf_*` notebook lineage.
+
+    `model` defaults to `None` (LogisticRegression) but accepts any estimator that needs
+    imputed/scaled numeric input - e.g. SVC - same swap-in convention as
+    `build_tree_pipeline`'s own `model=` parameter.
     """
+    if model is None:
+        model = LogisticRegression(max_iter=1000, class_weight="balanced")
     return Pipeline([
         ("preprocess", build_preprocessor(config)),
-        ("clf", LogisticRegression(max_iter=1000, class_weight="balanced")),
+        ("clf", model),
     ])
 
 
