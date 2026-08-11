@@ -11,6 +11,9 @@ notebooks/
   data_compile/         data-processing pipelines — data/raw/ -> data/processed/
   feature_experiments/  small, sample-sized viability checks for candidate features —
                         read-only, not the Week-3 modelling pipeline itself
+  feature_engineering/  assembles validated feature blocks into one model-ready
+                        dataset — data/processed/papers_combined.parquet ->
+                        data/processed/papers_fe.parquet
   modelling/            Week-3 classifier-prep — fold/CV design, feature stacking; read-only
   pipelines/            config-driven fold + preprocessing pipelines, built to keep working
                         once feature engineering lands a differently-shaped dataset; read-only
@@ -22,7 +25,7 @@ notebooks/
 
 | Notebook | What it does |
 |---|---|
-| `eda_quickstart.ipynb` | **Start here.** Loads `data/processed/papers_combined.parquet` and runs a basic, deliberately simple first pass — shape, dtypes, missing values, `.describe()`, key value counts, and a handful of plain charts. A launching-off point for anyone new to the project, not a deep dive. |
+| `eda_quickstart.ipynb` | **Start here.** Loads `data/processed/papers_combined.parquet` and runs a basic shape/dtypes first pass, then builds a set of presentation-ready slides — total corpus by label, each use case's brief + label breakdown, missingness by feature x label, citation/age/author-count skew by use case, and a PCA embedding map by use case + by label — each exported to `reports/eda_quickstart_*.{png,csv}` with 1-3 printed takeaways, for dropping straight into a slide deck. |
 | `explore_use_cases.ipynb` | Compares structure and volume across the 6 labelled JSONL exports in `data/raw/` — schema, nulls, label balance, duplicates, citation/abstract-length distributions. Read-only. |
 | `explore_usecase_definitions.ipynb` | Compares the 6 `usecase.json` search-brief definitions (problem statement, objective, terms, TRL constraints, decision criteria) against their matching JSONL export — structure, and a table joining each definition against its resulting corpus. Read-only. |
 | `wf_data_enrich.ipynb` | Descriptive EDA on `data/processed/papers_combined.parquet`: `notes` content, author/citation/venue breakdowns by use case and `triage_label`, an outlier review (author/citation extremes, long venue names), author frequency per use case, and an interactive citations-vs-age scatter (plotly) plus a citations-by-label-by-use-case boxplot. Read-only. |
@@ -52,6 +55,12 @@ notebooks/
 | `venue_quality.ipynb` | Viability check for a candidate feature: looks up the 10 known-clean `venue` values (and a few known-dirty ones, as a negative-result check) against the OpenAlex `/sources` API, then joins the resulting venue-quality metrics (`works_count`, `2yr_mean_citedness`, `h_index`) onto their actual papers in `data/processed/papers_combined.parquet` to see whether external venue prestige diverges usefully from raw `citation_count` as a relevance signal, or just tracks it — it doesn't (r≈-0.04 with `triage_label`, r≈0.78 with the venue's own mean `citation_count`). Not viable. Read-only. |
 | `sftestdropusecase.ipynb` | Ablation, not a feature check: combines both `notebooks/pipelines/` workflows (pooled and LOGO) into one notebook and drops `use_case_key` from every fold-stratification key (label-only stratification), to test whether use-case-aware stratification was helping or hurting — the classifier never saw `use_case_key` as a feature either way. **Finding:** no meaningful effect. LOGO's holdout AUC is bit-for-bit identical (0.536) since it never depended on inner-fold stratification; the pooled workflow's validation AUC barely moves (0.746 → 0.744) — the one place a bigger gap shows up (`final_holdout` AUC 0.753 → 0.793) is one single 20%-of-data holdout draw changing which specific rows landed in it, not a reproducible effect. Reuses `scripts/fold_pipeline_utils.py` unchanged. |
 
+## feature_engineering/
+
+| Notebook | What it does |
+|---|---|
+| `wf_build_fe_dataset.ipynb` | Assembles every already-validated, row-local feature block into one model-ready table: reads `data/processed/papers_combined.parquet` + the three cached embeddings in `data/processed/embeddings_cache/` (Jasper-Token-Compression-600M, Qwen3-Embedding-4B, Qwen3-Embedding-8B), filters to labelled rows, dedupes within each use case, adds the Tier 1b lexical block (`scripts/lexical_features.py`, `lex_*`), joins the three embeddings separately (`emb_jasper_*`/`emb_qwen4b_*`/`emb_qwen8b_*`, no concatenation, no PCA), adds cosine-similarity-to-brief + its within-use-case percentile rank per model, and admissible raw metadata (`year`, `paper_age`, `has_abstract`, `n_authors`, `citation_count`). Only row-local facts — nothing fitted (PCA/scalers/imputers) — so the output is safe to split into folds downstream. Writes `data/processed/papers_fe.parquet` (1,848 rows × 8,742 cols), the file `sf_*_fold_pipeline.ipynb` are meant to consume once their `CONFIG` is pointed at it. |
+
 ## modelling/
 
 | Notebook | What it does |
@@ -78,6 +87,7 @@ self-contained on purpose.
 | `sf_logo_fold_pipeline.ipynb` | The Leave-One-Use-Case-Out strategy from `sf_logo_fold_strategy.ipynb`, rebuilt on `scripts/fold_pipeline_utils.py`'s config-driven `Pipeline` architecture, scoped to `LogisticRegression` alone. **Not yet updated to `papers_fe.parquet`** — still runs against `papers_combined.parquet`/the embedding+`citation_velocity` feature set; updating it to the same `PCA(50)`+non-embedding-features setup as `notebooks/modelling/sf-LogRegbaseline.ipynb` is the natural next step, since LOGO is the notebook that actually tests generalization to a new use case, which that one explicitly doesn't. **Hard finding (on the old feature set):** reproduces `sf_logo_fold_strategy.ipynb`'s `LogisticRegression` numbers almost exactly (mean holdout AUC 0.536 ± 0.078, vs. mean validation AUC 0.760) — confirming the domain-shift gap (0.224) exceeds the overfitting gap (0.167) for this model alone, not just as an average across 3 models. Mean holdout Recall (0.196, down from 0.730 validation) is propped up almost entirely by one rotation (`cement_binders`, 0.606); the other five sit at 0.011–0.238. |
 | `sf_catboost_fold_pipeline.ipynb` | **Template — `CONFIG["run_training"] = False`, not executed.** The pooled/generalized and Leave-One-Use-Case-Out fold strategies, rebuilt around `CatBoostClassifier` via `scripts/fold_pipeline_utils.py`'s `build_tree_pipeline`/`build_tree_preprocessor` (no scaling/imputation — native missing-value + `category`-dtype categorical handling instead; `boosting_type="Ordered"` and `cat_features` pinned explicitly). Every cell that would fit a model is gated and prints a skip message; safe to Run All today. Picked over LightGBM/XGBoost specifically because ordered boosting targets the target-leakage-during-training already observed on this dataset (`RandomForestClassifier`/`HistGradientBoostingClassifier` both hit train AUC 1.000 under LOGO) — not assumed to close the domain-shift gap on its own; see this session's model-recommendation writeup for the full reasoning. |
 | `sf_llm_fold_pipeline.ipynb` | **Template — `CONFIG["run_training"] = False`, and `call_llm_stub` raises `NotImplementedError` regardless.** A prompted-LLM classifier that reads each use case's own broadcast brief (`objective`, `terms_must_include/nice_to_have/exclude`, `decision_rules`, ...) plus the paper's title/abstract — no embedding, no scaling, no training data required for a genuinely new use case. Uses the new `scripts/llm_pipeline_utils.py` for prompt construction, leakage-safe few-shot example selection (drawn from the training fold only, never validation/holdout), and response parsing; reuses `fold_pipeline_utils.py`'s split/metric helpers unchanged. §3 builds and prints one real prompt end-to-end with no model call, so the template is verifiably functional without training or testing anything. |
+| `wf_ensemble_fold_pipeline.ipynb` | Phase 2 of the ensemble-modelling plan (Phase 1: `scripts/modal_ensemble_candidate.py` → `reports/wf_ensemble_v1_candidate.md`). Runs `data/processed/papers_fe.parquet` **per use case, never pooled** (`CONTEXT.md` §1) — CatBoost + LogisticRegression on Tier-1b lexical + cosine-to-brief + metadata + the winning raw embedding (picked programmatically from Phase 1's numbers), 50/50-averaged, walked through 7 reviewable stages: ablation, branch comparison, branch-disagreement correlation, ensemble-vs-branches, calibration, Recall@k/WSS@95, and a closing cold-start decision rule. CatBoost fits call the deployed `tiri-ensemble-ablation` Modal app rather than fitting locally — CatBoost's default `thread_count=-1` hits a confirmed severe slowdown on this development machine's Apple Silicon. **Finding:** the two embedding treatments (Qwen3-8B vs. Jasper+Qwen3-4B concat) are a near-tie as expected, both branches clear the Tier1b+embedding LogisticRegression baseline by ~0.03-0.18 ROC-AUC across use cases, and calibration is close to the diagonal on 4/6 use cases (2/6 show real, quantified underconfidence, not just visual bowing). |
 
 ## comparisons/
 
@@ -89,8 +99,8 @@ self-contained on purpose.
 
 Each notebook assumes it's run with its own folder as the working directory (so its
 `../../data/raw`-style relative paths resolve) — open it from inside `notebooks/eda/`,
-`notebooks/data_compile/`, `notebooks/feature_experiments/`, `notebooks/modelling/`, or
-`notebooks/pipelines/`, not from `notebooks/` itself.
+`notebooks/data_compile/`, `notebooks/feature_experiments/`, `notebooks/feature_engineering/`,
+`notebooks/modelling/`, or `notebooks/pipelines/`, not from `notebooks/` itself.
 
 ## Conventions
 

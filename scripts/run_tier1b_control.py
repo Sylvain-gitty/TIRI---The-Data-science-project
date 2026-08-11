@@ -30,12 +30,11 @@ import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import average_precision_score, fbeta_score, roc_auc_score
-from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ensemble_eval_utils import logo, scores, to_md, within_silo  # noqa: E402
 from lexical_features import BRIEF_KEYS, build_lexical_features, derangements  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
@@ -55,23 +54,6 @@ GROUPS = {
 }
 
 
-def to_md(frame: pd.DataFrame, index_name: str = "") -> str:
-    """Minimal markdown table. Hand-rolled rather than pulling in `tabulate` for one
-    call — the repo has no test/build tooling and this is not worth a dependency."""
-    frame = frame.reset_index()
-    frame.columns = [index_name if i == 0 and not str(c).strip() else str(c)
-                     for i, c in enumerate(frame.columns)]
-    cells = [[f"{v:.3f}" if isinstance(v, (float, np.floating)) else str(v) for v in row]
-             for row in frame.itertuples(index=False)]
-    header = list(frame.columns)
-    widths = [max(len(header[i]), *(len(r[i]) for r in cells)) if cells else len(header[i])
-              for i in range(len(header))]
-    lines = ["| " + " | ".join(h.ljust(w) for h, w in zip(header, widths)) + " |",
-             "|" + "|".join("-" * (w + 2) for w in widths) + "|"]
-    lines += ["| " + " | ".join(c.ljust(w) for c, w in zip(row, widths)) + " |" for row in cells]
-    return "\n".join(lines)
-
-
 def model() -> Pipeline:
     """Deliberately plain and deterministic: a difference in score is then about the
     features, not about which block got a fancier learner. `keep_empty_features` matters
@@ -82,58 +64,6 @@ def model() -> Pipeline:
         ("scale", StandardScaler()),
         ("clf", LogisticRegression(max_iter=5000, class_weight="balanced")),
     ])
-
-
-def scores(y_true: np.ndarray, y_score: np.ndarray) -> dict[str, float]:
-    """ROC-AUC and PR-AUC for ranking; Recall@10% because that is the operational
-    question (how much does the reviewer find in the first tenth of the pile); F2 at the
-    default threshold as a reminder that raw probabilities are uncalibrated out-of-domain."""
-    k = max(1, int(round(0.10 * len(y_true))))
-    top_k = np.argsort(-y_score)[:k]
-    n_pos = int(y_true.sum())
-    return {
-        "roc_auc": roc_auc_score(y_true, y_score),
-        "pr_auc": average_precision_score(y_true, y_score),
-        "recall_at_10pct": float(y_true[top_k].sum() / n_pos) if n_pos else np.nan,
-        "f2_at_0.5": fbeta_score(y_true, (y_score >= 0.5).astype(int), beta=2, zero_division=0),
-    }
-
-
-def logo(X: pd.DataFrame, y: np.ndarray, use_case: pd.Series) -> pd.DataFrame:
-    """Leave-one-use-case-out. Everything is fitted inside the fold."""
-    rows = []
-    for uc in sorted(use_case.unique()):
-        test = (use_case == uc).to_numpy()
-        pipe = model().fit(X[~test], y[~test])
-        proba = pipe.predict_proba(X[test])[:, 1]
-        rows.append({"use_case": uc, **scores(y[test], proba)})
-    return pd.DataFrame(rows).set_index("use_case")
-
-
-def within_silo(
-    X: pd.DataFrame, y: np.ndarray, use_case: pd.Series, groups: pd.Series, seeds: int
-) -> pd.DataFrame:
-    """Grouped, stratified k-fold inside each use case — the production shape.
-
-    Grouped by first author so the same author's papers never straddle the split, and
-    repeated across seeds because 260-360 rows per silo makes any single split noisy.
-    """
-    rows = []
-    for uc in sorted(use_case.unique()):
-        mask = (use_case == uc).to_numpy()
-        Xu, yu, gu = X[mask], y[mask], groups[mask].to_numpy()
-        per_seed = []
-        for seed in range(seeds):
-            oof = np.full(len(yu), np.nan)
-            splitter = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=seed)
-            for train_idx, test_idx in splitter.split(Xu, yu, groups=gu):
-                pipe = model().fit(Xu.iloc[train_idx], yu[train_idx])
-                oof[test_idx] = pipe.predict_proba(Xu.iloc[test_idx])[:, 1]
-            per_seed.append(scores(yu, oof))
-        mean = pd.DataFrame(per_seed).mean().to_dict()
-        mean["roc_auc_sd"] = float(pd.DataFrame(per_seed)["roc_auc"].std())
-        rows.append({"use_case": uc, **mean})
-    return pd.DataFrame(rows).set_index("use_case")
 
 
 def warm_start(
@@ -235,9 +165,9 @@ def main() -> None:
         "Tier 1b lexical — real briefs": real,
         "Tier 1b + embedding": pd.concat([real, embeddings], axis=1),
     }
-    logo_results = {name: logo(X, y, use_case) for name, X in variants.items()}
+    logo_results = {name: logo(X, y, use_case, model) for name, X in variants.items()}
 
-    shuffled_runs = [logo(feats, y, use_case) for _, feats in shuffled]
+    shuffled_runs = [logo(feats, y, use_case, model) for _, feats in shuffled]
     shuffled_mean = pd.concat(shuffled_runs).groupby(level=0).mean()
     logo_results["Tier 1b lexical — SHUFFLED briefs (control)"] = shuffled_mean
 
@@ -266,12 +196,12 @@ def main() -> None:
     emit("## 2. Within-silo, author-grouped 5-fold (this is the production shape)")
     emit()
     silo = {
-        "paper embedding": within_silo(embeddings, y, use_case, groups, args.seeds),
-        "Tier 1b lexical": within_silo(real, y, use_case, groups, args.seeds),
+        "paper embedding": within_silo(embeddings, y, use_case, groups, args.seeds, model),
+        "Tier 1b lexical": within_silo(real, y, use_case, groups, args.seeds, model),
         "Tier 1b + embedding": within_silo(
-            pd.concat([real, embeddings], axis=1), y, use_case, groups, args.seeds),
+            pd.concat([real, embeddings], axis=1), y, use_case, groups, args.seeds, model),
         "Tier 1b — SHUFFLED (control)": within_silo(
-            shuffled[0][1], y, use_case, groups, args.seeds),
+            shuffled[0][1], y, use_case, groups, args.seeds, model),
     }
     emit(to_md(pd.DataFrame({n: r["roc_auc"] for n, r in silo.items()}).round(3), "use_case"))
     emit()
@@ -282,11 +212,11 @@ def main() -> None:
     # ---- 3. Ablation: what inside the block is doing the work -------------------------
     emit("## 3. Which part of the block carries it (LOGO mean ROC-AUC)")
     emit()
-    ablation = {name: logo(real[cols], y, use_case)["roc_auc"].mean()
+    ablation = {name: logo(real[cols], y, use_case, model)["roc_auc"].mean()
                 for name, cols in GROUPS.items()}
     ablation["all"] = real_auc.mean()
     ablation["all minus length_normalised"] = logo(
-        real.drop(columns=GROUPS["length_normalised"]), y, use_case)["roc_auc"].mean()
+        real.drop(columns=GROUPS["length_normalised"]), y, use_case, model)["roc_auc"].mean()
     emit(to_md(pd.Series(ablation).round(3).to_frame("mean LOGO ROC-AUC"), "feature group"))
     emit()
 

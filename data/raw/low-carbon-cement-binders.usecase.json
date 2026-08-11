@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "name": "Low-carbon cement binders",
+  "problem_statement": "Reduce CO2 from clinker in structural concrete.",
+  "objective": "Find alternative binder chemistries at TRL 4–8 cutting embodied carbon >50%.",
+  "domain": {
+    "industry": "Cement & construction materials",
+    "application": "Structural concrete",
+    "technology_focus": [
+      "alternative binders",
+      "SCMs",
+      "carbon capture in cement"
+    ]
+  },
+  "terms": {
+    "must_include": [
+      "geopolymer",
+      "calcined clay",
+      "LC3",
+      "alkali-activated"
+    ],
+    "nice_to_have": [
+      "supplementary cementitious",
+      "limestone calcined clay"
+    ],
+    "exclude": [
+      "dental cement",
+      "bone cement"
+    ]
+  },
+  "performance_criteria": [
+    {
+      "metric": "embodied CO2 reduction",
+      "target": ">50% vs OPC"
+    },
+    {
+      "metric": "compressive strength",
+      "target": ">=40 MPa @ 28d"
+    }
+  ],
+  "constraints": {
+    "trl": {
+      "min": 1,
+      "max": 4
+    },
+    "scale": "",
+    "cost": ""
+  },
+  "decision_criteria": {
+    "must_have": [],
+    "nice_to_have": [],
+    "exclusions": [],
+    "decision_rules": []
+  },
+  "notes": "Prioritise bigger impact potential over readiness and maturity"
+}

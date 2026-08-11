@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 CLAUDE.md
 .env
+.DS_Store
 
 # Data files don't belong in git — keep the folders, ignore their contents.
 data/raw/*
@@ -19,3 +20,6 @@ data/processed/*
 .cache/
 
 .ipynb_checkpoints/
+
+# CatBoost's own per-fit training-log directory, written wherever a fit runs locally
+catboost_info/

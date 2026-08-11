@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "name": "Carbon Capture",
+  "problem_statement": "Amine-based carbon capture technologies currently require high temperatures and incur high input chemical costs and high clean-up costs.",
+  "objective": "Find amine-based carbon capture approaches that operate at lower temperatures without high chemical input or clean-up costs.",
+  "domain": {
+    "industry": "",
+    "application": "Carbon capture",
+    "technology_focus": [
+      "Amine scrubbing",
+      "Post-combustion carbon capture",
+      "Solvent regeneration"
+    ]
+  },
+  "terms": {
+    "must_include": [
+      "amine",
+      "carbon capture",
+      "low temperature",
+      "solvent regeneration"
+    ],
+    "nice_to_have": [
+      "absorption",
+      "CO2 capture",
+      "energy penalty",
+      "degradation"
+    ],
+    "exclude": []
+  },
+  "performance_criteria": [],
+  "constraints": {
+    "trl": null,
+    "scale": "",
+    "cost": "Low input chemical costs and low clean-up costs"
+  },
+  "decision_criteria": {
+    "must_have": [
+      "Uses a liquid amine solvent system (e.g. MEA or similar amine scrubbing solution)"
+    ],
+    "nice_to_have": [],
+    "exclusions": [
+      "Solid-supported or solid sorbent amine systems (no liquid solvent phase)",
+      "Process optimization or simulation studies that do not report a novel solvent, material, or regeneration method (optimization-only focus)",
+      "Physisorption-based CO2 capture where amine is incidental (e.g. amine-modified activated carbon with primary physisorption mechanism)"
+    ],
+    "decision_rules": []
+  },
+  "notes": ""
+}
