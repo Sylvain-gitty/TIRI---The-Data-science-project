@@ -47,16 +47,10 @@ modal>=1.0.0
 # item #2. CC0-licensed, no auth needed; Dataset(name).to_frame() downloads on demand.
 synergy-dataset>=1.2
 
-# Advanced tree ensemble candidate — ordered boosting specifically targets the
-# target-leakage-during-training already observed on this dataset
+# Advanced tree ensemble candidate (notebooks/pipelines/sf_catboost_fold_pipeline.ipynb,
+# notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb) — ordered boosting specifically
+# targets the target-leakage-during-training that's already been observed on this dataset
 # (RandomForestClassifier/HistGradientBoostingClassifier both hit train AUC 1.000 under
 # LOGO); native missing-value/categorical handling, monotonic constraints, mature SHAP
-# tooling; CPU-only, no GPU required. Originally scoped as a template in
-# notebooks/pipelines/sf_catboost_fold_pipeline.ipynb (CONFIG["run_training"] = False);
-# now actually trained and tuned in notebooks/modelling/sf-catboost-model.ipynb and
-# notebooks/modelling/sf-ensemble.ipynb.
+# tooling; CPU-only, no GPU required.
 catboost>=1.2.0
-
-# Bayesian hyperparameter search (TPE sampler) — one of the three search strategies
-# compared in notebooks/modelling/sf-catboost-model.ipynb/sf-ensemble.ipynb.
-optuna>=3.6.0

@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "name": "Named Entity Recognition",
+  "problem_statement": "We operate a market intelligence platform and need NER and entity disambiguation tools, models, and techniques that work well on news-like text for entity types including companies, places, people, and products.",
+  "objective": "Improve Precision, Recall, and F1 scores for named entity recognition and disambiguation on news-style content across entity types such as companies, places, people, and products.",
+  "domain": {
+    "industry": "Market intelligence / information extraction",
+    "application": "News content processing and entity extraction",
+    "technology_focus": [
+      "Named Entity Recognition (NER)",
+      "Entity disambiguation",
+      "Entity linking",
+      "News text processing"
+    ]
+  },
+  "terms": {
+    "must_include": [
+      "Named Entity Recognition",
+      "NER",
+      "entity linking",
+      "disambiguation"
+    ],
+    "nice_to_have": [
+      "fine-grained entity typing",
+      "coreference resolution",
+      "knowledge base linking",
+      "transformer-based NER",
+      "spacy",
+      "synthetic data"
+    ],
+    "exclude": [
+      "medical NER",
+      "clinical NER",
+      "biomedical entity recognition",
+      "gene entity recognition"
+    ]
+  },
+  "performance_criteria": [
+    {
+      "metric": "Precision",
+      "target": "improvement over baseline on news-like content"
+    },
+    {
+      "metric": "Recall",
+      "target": "improvement over baseline on news-like content"
+    },
+    {
+      "metric": "F1 score",
+      "target": "improvement over baseline on news-like content"
+    }
+  ],
+  "constraints": {
+    "trl": {
+      "min": 6,
+      "max": 9
+    },
+    "scale": "",
+    "cost": ""
+  },
+  "decision_criteria": {
+    "must_have": [
+      "Paper addresses NER or entity disambiguation on news or newswire-style text",
+      "Paper reports Precision, Recall, or F1 metrics",
+      "Paper presents or evaluates an NER or entity disambiguation method (includes cross-lingual, low-resource, or domain-transfer settings where the technique is applicable to news-style text)"
+    ],
+    "nice_to_have": [
+      "Covers multiple entity types (companies, people, places, products)",
+      "Benchmarks on standard news NER datasets (e.g. CoNLL, OntoNotes)"
+    ],
+    "exclusions": [
+      "Purely biomedical or clinical NER with no transferable technique (e.g. gene/protein entity recognition only, no general NER method)",
+      "Papers that do not address NER or entity disambiguation as a primary task (e.g. general NLP fine-tuning surveys that only mention NER in passing)"
+    ],
+    "decision_rules": []
+  },
+  "notes": ""
+}

@@ -1,0 +1,7 @@
+use_case_key,use_case_label,objective,n_papers,positive,negative,pass,never_triaged
+carbon_capture,Carbon Capture,Find amine-based carbon capture approaches that operate at lower temperatures without high chemical input or clean-up costs.,323,147,150,26,0
+cement_binders,Low-Carbon Cement,Find alternative binder chemistries at TRL 4–8 cutting embodied carbon >50%.,690,170,92,105,323
+ner,Named Entity Recognition,"Improve Precision, Recall, and F1 scores for named entity recognition and disambiguation on news-style content across entity types such as companies, places, people, and products.",541,223,89,74,155
+soil_microbiome,Soil Microbiome,"Identify research on microbial and fungal community management strategies that enhance soil health, crop productivity, and resistance to extreme heat and flooding stress.",602,94,263,245,0
+solar_leo,Solar Cells for Satellites,"Scout perovskite solar cells and silicon-based solar cells — as well as the broader review literature on solar cells for low earth orbit satellites — to identify approaches that improve conversion efficiency and long-term stability beyond what incumbent technologies currently deliver, across maturity levels from early proof of concept through to flight-ready systems.",427,276,84,67,0
+tech_forecasting,Technology Prediction,"Explore methods for predicting technological breakthroughs — in readiness, capability, or cost — by reasoning over heterogeneous, decorated technology knowledge graphs.",290,157,107,26,0

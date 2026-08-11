@@ -1,235 +1,187 @@
-# Project context — read this first
+# CONTEXT.md — what a new agent needs to know before touching this repo
 
-One primer for starting a new chat on either repo without re-explaining the project.
-Built from a full read of every `.md` file in both `academic_research_agent` and
-`TIRI---The-Data-science-project` (as of 2026-08-06). Scoped to **current state and the
-reasoning behind it** — deep historical detail (an abandoned SaaS pivot, superseded
-design revisions, ~7 not-yet-started spikes) is deliberately left out here; each section
-below points at the source doc for anyone who needs that depth.
+`CLAUDE.md` says how to work here. This file says **what is true here**, and it exists
+because several of the facts below are not derivable from the code, the data, or the git
+history — they came out of a working session and would otherwise have to be rediscovered
+(expensively, and in at least two cases wrongly).
 
-**People:** Sylvain (git `Sylvain-gitty`, initials `SF`/`sf`) and Warren (initials `wf`)
-work across both repos. Warren owns/drives `academic_research_agent`; TIRI is their joint
-data-science project on top of its exports — specifically, **TIRI is the "ensemble
-project"** that repo's own `ONBOARDING.md` and `docs/ENSEMBLE_BRIEF.md` are written for.
+Read this before proposing modelling work. Most bad suggestions in this project are bad
+for one of the reasons listed here.
 
 ---
 
-## The two repos, in one sentence each
+## 1. What TIRI is actually for
 
-- **`academic_research_agent`** — a local-first tool that turns an analyst's use case
-  into an active-learning literature-scouting loop: draft queries → retrieve across 7
-  academic sources → embed + rank → keyboard-first triage → summarise → export.
-- **`TIRI---The-Data-science-project`** — consumes that tool's labelled exports to build
-  a classifier that predicts "is this paper interesting," so a future use case's
-  screening queue can be prioritized and its accepted papers used to drive citation
-  harvesting. **TIRI-only rule: never modify `academic_research_agent` from a TIRI
-  session** — read it for reference, that's all.
+TIRI is one part of a larger product, not a standalone bootcamp exercise. The product goal:
 
----
+- A **high-recall (F2) ensemble** that can be fine-tuned for a new use case, run over
+  **100k+ papers**, at **low cost**, **100% deterministically**, on **sovereign
+  infrastructure**.
+- **Precision optimisation comes later.** Users incrementally label and prune toward a
+  higher F1. Do not trade recall for precision in this phase.
+- **Every new use case arrives with labelled data and a written brief.** How much data,
+  and what brief format, are being settled by two separate experiments. Zero-label cold
+  start is therefore a *transient*, not the operating regime — but see §4, because at
+  realistic prevalence "arrives with labels" is a stronger assumption than it sounds.
 
-## `academic_research_agent` — current state
+### The constraint that decides most architecture questions
 
-**Stack & architecture:** React (Mantine) + FastAPI + Postgres/pgvector, local-first.
-One `STEPS` constant drives navigation through 5 screens: Use case → Search → Triage →
-Review → Data Analytics (Export is a header-action modal, not a spine step). The
-marimo/DuckDB v1 app was deleted outright in the "v1 retirement" (2026-07-16) — Postgres
-is the only engine now. `docs/ROADMAP.md` is the single live plan; `CLAUDE.md` is the
-operational guide (DB safety, schema, conventions) — both are the sources of truth,
-everything else is historical record or feeds into one of these two.
+**Use cases are per-customer and siloed. There is no shared pool of papers — only shared
+tooling.** Each customer's model is trained on their own labels, in their own silo.
 
-**Where it is on its own roadmap:** v1.3 (local-first, Warren + colleagues each on their
-own clone). A hard gate blocks anyone from depending on a *hosted* instance (v1.4) until
-durable jobs, rate limiting, and an LLM spend cap exist — deliberate, not an oversight.
-An earlier attempt at a hosted multi-tenant SaaS (V2) was explored in depth (spiked,
-priced, mostly de-risked technically) and then not pursued — free-API rate limits would
-cap real multi-user concurrency without a paid tier that was never budgeted, and a
-2026-07-11 decision to build locally first (v1.2, what exists today) made the hosted
-track moot rather than formally killed. Full trail: `docs/archive/V2_SPIKE_RETRO.md`.
+Consequences that are easy to get wrong:
 
-**Non-negotiable product principles** (load-bearing across every doc, including TIRI's):
-- **`pass` is never a class.** It doesn't train anything, isn't a rejection — always
-  exclude it from a binary target, never fold it into negatives.
-- **Labels are append-only**, one label = one immutable fact; "undo" is relabelling, not
-  deleting.
-- **No model score reaches the pre-label triage deck** ("blindness before labelling") —
-  a shadow LLM assessment (`paper_assessments`, shipped 2026-07-19) exists but is shown
-  strictly post-label in Review, never before.
-- **Scores are ranks, not probabilities.** Both the agent's own `relevance_score` and any
-  LLM assessment need per-use-case calibration before a raw number means anything —
-  TIRI's own work independently re-derived and hardened this into a hard rule (see below).
-- **Retrieval has no LLM in it** — deterministic fan-out across sources, so
-  precision@query and the query-performance ledger stay honest and reproducible.
-- **NULL ≠ 0** everywhere — "never looked it up" and "looked, found zero" are different
-  facts, never conflated.
+- **No pooled/global model ever ships.** What crosses the silo boundary is a *configuration*
+  — feature definitions, model class, default hyperparameters, filter rules — never weights
+  and never data.
+- **Leave-one-use-case-out (LOGO) is a defaults-selection instrument, not a production
+  estimate.** It answers "which feature families should we ship to a customer we have no
+  labels for". Never quote a LOGO score as "how well TIRI works".
+- **Within-silo (grouped k-fold inside one use case) is the production surface.** That is
+  the number that means something.
+- Hyperparameter search happens **once, centrally, in the LOGO loop**, where six use cases
+  of evidence exist. Each silo then just fits weights. Per-customer grid search at a few
+  hundred labels would overfit (see `reports/wf_ensemble_report.md` §4).
+- Confounds that encode *use-case identity* (source provenance, `has_venue`, `year`) only
+  hurt when pooling. **Inside a silo they are admissible** — several warnings in the older
+  reports are pooling-specific and dissolve here.
 
-**What Warren has identified as the two highest-leverage next moves** (his own
-prioritization, `docs/STRATEGIC_REVIEW_2026-07.md`): (1) build a recall instrument —
-today the app measures precision everywhere and recall nowhere, despite the product's
-whole pitch ("scout earlier and more consistently") being fundamentally a recall claim;
-(2) citation expansion for corpus growth — spiked and validated (10% seed recovers
-~29% of held-out references, 5.6–18× over a matched null), schema drafted but not yet
-applied to production. Both are framed as prerequisites for the ensemble project (TIRI),
-not a detour from it.
+Use cases are uniformly **technology / hard science / industry** — never social science.
+That is why a shared non-topical axis (applied-vs-foundational maturity) is plausible at
+all, and it is the one paper-only feature family worth testing for portability.
 
-**A separate, genuinely exploratory track** (concept/technology extraction — pulling a
-technology graph out of the corpus) exists but nothing about it is committed; its own
-framing is "get things wrong cheaply, nothing ships until a backtest gate passes," and
-that backtest hasn't run yet. Don't treat any of its interim findings as production fact.
-
-**Database safety (operational, not historical — carries over to any session touching
-that repo):** `acagent` is Warren's real data — never point tests/seeds/UI at it, never
-run destructive SQL on it. `acagent_smoke`/`acagent_test`/`acagent_e2e`/`acagent_firstrun`
-are the safe databases for testing/QA. `make qa` is the one safe way to look at the real
-app running against real-ish data.
-
-**What TIRI needs FROM that repo that doesn't exist yet:** a `use_case_version` column on
-exported rows (currently absent from both the JSONL header and `usecase.json`'s schema —
-`usecase_schema_version` there is the *file format* version, not a spec-content version)
-— needed so a future export where a use case's brief was refined mid-collection can be
-told apart from one that wasn't. Currently a non-issue in practice (one embedding model
-is constant across the whole combined dataset) but the pipeline should be built assuming
-this will matter, not re-built once it does (`reports/wf_ensemble_report.md` §1).
-
-**Deeper reading, only if needed:** `docs/decisions/` (10 ADRs, each with real reasoning
-and rejected alternatives — 0004 append-only labels, 0007 "learn techniques not customer
-terms," 0009 "validate the instrument before the verdict" are the three most likely to be
-relevant to TIRI's own methodology); `spikes/README.md` (experiment registry — most
-listed as "in progress" are actually unstarted paper-plans, only review_seeding,
-query_tree, and citation-expansion have real completed findings).
+Pools are built from queries derived from the use case and the labelled set, plus citation
+harvesting from the labelled set, then narrowed by **deterministic filtering** (not more
+queries). Drift, retraining cadence and multi-labeller questions are **deliberately out of
+scope right now**: the current target is a versioned model, high recall, a pinned use case,
+one labeller.
 
 ---
 
-## TIRI — current state
+## 2. The central technical finding
 
-**The data:** `data/processed/papers_combined.parquet` — 2,873 papers across 6 real
-research questions (`cement_binders` 690, `soil_microbiome` 602, `ner` 541, `solar_leo`
-427, `carbon_capture` 323, `tech_forecasting` 290), each carrying its own real
-objective/search-term brief, a `triage_label` (positive/negative/pass/never-reviewed),
-and a precomputed 384-dim embedding (`paraphrase-multilingual-MiniLM-L12-v2`, constant
-across every row today). Full data card: `data/processed/README.md`. Built by
-`notebooks/data_compile/combine_use_cases.ipynb` from 6 raw JSONL exports +
-`usecase.json` briefs in `data/raw/`.
+**Relevance is a property of the (brief, paper) pair, not of the paper.**
 
-**Target definition (resolved, not open):** binary `positive` vs. `negative` only.
-`pass` is ~85% just "no abstract to triage," not a relevance judgement, and including it
-as a 3rd class would let the model learn "text is missing" instead of "this paper is
-relevant." `review_label` is unusable (99.97% null). The 478 never-triaged rows are the
-eventual scoring pool, not training data.
+Every feature in this repo before mid-2026 described the paper alone. Measured
+consequences, all reproducible:
 
-**Three diagnostic scripts, explicitly NOT a model-selection pipeline** (`scripts/`,
-each backed by a `reports/*_notes.md` decision trail): `compare_embeddings.py`,
-`compare_ner_models.py`, `compare_combined_features.py` — test how a representation
-relates to an already-labelled corpus (latent-space dispersion, use-case centrality,
-classifier AUC, and a *query-conditioned* ranking AUC added later after a methodology
-review found the classifier AUC alone can miss real problems — see
-`reports/metrics_rework_and_rerun.md`). An earlier framing that treated one script's
-"winner" as *the* Week-3 baseline model was deliberately retired — that coupling was
-judged wrong, and the plumbing survives only as parked code in
-`future_work/train_baseline_classifier.py`. Run `notebooks/comparisons/run_comparisons.ipynb`
-to see any of this live; the CLI scripts write nothing to disk by default now.
+- A LogisticRegression predicts **`use_case_key` from the paper embedding at 96.2%
+  accuracy** (majority class 19%). The embedding is not noisy — it is a use-case
+  fingerprint.
+- So a model trained across use cases learns *which use case this is*, which is
+  definitionally non-transferable. LOGO collapses to ~0.54 ROC-AUC for that reason.
+- **This is not "overfitting from too many features."** Ten brief-relative scalars beat a
+  384-dimension embedding on LOGO (0.642 vs 0.537). It was never the feature count; it was
+  the feature *kind*.
+- Strongest form: at zero labels, **unsupervised cosine-to-brief beats every supervised
+  cross-domain model** (LOGO WSS@95 0.082 vs 0.042 best supervised; ROC-AUC 0.693 vs 0.610).
+  A model trained on other customers is worse than no model at all.
+- The corroborating clue was already in the repo: of eleven metadata features tested, the
+  only one that worked was term overlap — the only one that read the brief.
 
-**What real Week-2/3 investigation has actually found** (this is the substantive,
-load-bearing work — full trails in `reports/wf_*.md`, `reports/sf_*.md`):
+**Operating rule this implies:** cosine-to-brief below ~25 in-silo labels, supervised
+in-silo model above. Never a model trained on other customers' data.
 
-- **Feature engineering:** almost none of an 11-feature metadata punch list works
-  (+0.002 AUC combined). Two are actively dangerous: `has_venue`/`citation_count_missing`
-  turned out to be near-perfect proxies for *which search API found the paper*, not the
-  paper's relevance — a model trained on them looks great in-distribution and worse on a
-  genuinely new use case. **Term overlap** (does the paper contain the analyst's own
-  must-include/nice-to-have words) is the one metadata feature with a real, measured
-  effect, on 3 of 6 use cases. **The biggest lever isn't a new feature at all — it's
-  compressing the 384-dim embedding to ~32 components (PCA) before concatenating
-  anything to it.** This took held-out-use-case AUC from 0.520 (coin flip) to 0.714 and
-  retroactively explains an earlier "combining features doesn't help" finding as an
-  artifact of concatenating onto the *full-width* embedding, not a real verdict on the
-  features themselves.
-- **Two use cases resist every feature tried** (`solar_leo`, `soil_microbiome`) because
-  their relevant/irrelevant papers are topically interleaved — no topical feature
-  (embedding, TF-IDF, term overlap) can separate them. `solar_leo`'s real dividing line is
-  publication year (a labelling-design artifact — the corpus was seeded from "canon,"
-  then asked to reward papers that go beyond it). `soil_microbiome`'s real axis
-  (applied-intervention vs. descriptive-ecology framing) lives in the use case's
-  `objective` field, which no current feature reads.
-- **Generalization is the headline problem, not in-distribution fit.** Leave-one-use-
-  case-out testing (multiple independent notebooks, converging on the same result) shows
-  every model tried — logistic regression, random forest, gradient boosting, stacking —
-  collapses to ~0.50–0.59 AUC on a genuinely new use case, regardless of in-distribution
-  score (which reaches 0.80+). **Recall/F2 collapse far more violently than AUC** on a
-  held-out use case (73–84% in-distribution recall → as low as 8–17% held-out at a
-  default threshold) — a calibration failure AUC alone hides.
-- **`relevance_score` is disqualified as a model feature or baseline** — it's not a
-  probability, not comparable across use cases (two different embedding models are live
-  across the export), and drifts as the agent's own live refinement loop updates it. An
-  earlier report crediting it with "generalizing better than embeddings" was a comparison
-  error (apples-to-oranges) and has been retracted (`reports/wf_ensemble_report.md` §0).
-- **Embedding model bake-off:** tested 11 candidate models (7 hosted via OpenRouter, 4
-  GPU-hosted via Modal) against the current local baseline, with proper leave-one-use-
-  case-out testing and external validation against the public SYNERGY benchmark
-  (`github.com/asreview/synergy-dataset` — the same public dataset
-  `academic_research_agent`'s own `evals/` also uses). **Recommendation: switch the
-  corpus embedding to `Jasper-Token-Compression-600M` + `Qwen3-Embedding-4B`, concatenated**
-  — real, validated improvement (0.585 → 0.63 mean AUC across all 6 use cases,
-  confirmed on SYNERGY too), but **not adopted yet** and **not universal** —
-  `carbon_capture` and `soil_microbiome` specifically didn't benefit. Isotonic
-  calibration (not Platt — too unstable at small sample sizes) reliably fixes the
-  out-of-domain score-meaning problem using ~50 labels from a new use case.
-- **Baseline classifier shortlist** (not yet wired into an actual pipeline):
-  `HistGradientBoostingClassifier` first (native missing-value handling, best raw score),
-  `RandomForestClassifier` close second, `LogisticRegression` third but kept for
-  calibration/interpretability — the gap between the top two is within one fold's own
-  noise, don't over-read the ordering.
-- **Fold discipline that's now standard across every notebook:** `StratifiedGroupKFold`,
-  grouped by first author (prevents a prolific author's papers from straddling
-  train/test), stratified on `use_case_key + label`. A real methodological trap was
-  caught and documented: an early "grouping helps" reading was mostly a `shuffle=False`
-  contiguous-block artifact, not a real grouping effect — always isolate one variable at
-  a time when comparing CV schemes.
-
-**Genuinely unstarted, per TIRI's own README:** the actual Week-3 modelling
-pipeline — which features, which model, how to validate it — is a real, open decision,
-deliberately not pre-decided by any of the diagnostic work above.
-
-**Shared conventions across every script/notebook in TIRI** (all traceable to
-`academic_research_agent`'s `CLAUDE.md`): NULL ≠ 0; cross-validated, never
-train-then-score; "label which critic is speaking" (a hard number vs. a judgement call
-must be visually/textually distinguishable); report honest negative results, not just
-flattering ones — this repo's own trail includes several retracted or reframed earlier
-claims, kept visible rather than quietly corrected.
+Things that do **not** fix the transfer problem (both tested, both negative): per-use-case
+mean-centring the embedding (0.532 → 0.529), and adding metadata.
 
 ---
 
-## Open items a new session should know are still open
+## 3. Data facts that will bite you
 
-- **Whether to pool one model across all 6 use cases, or go per-use-case** —
-  `academic_research_agent`'s `ENSEMBLE_BRIEF.md` posed this and TIRI hasn't settled it;
-  the label-count-aware "adaptation ladder" in `reports/wf_ensemble_report.md` §4
-  (unsupervised at 0 labels → calibration-only at ~50 → light adaptation at low hundreds
-  → full retraining only at large stable pools) is the current best answer, untested.
-- **Whether `solar_leo` should be excluded from a pooled training build** — its own brief
-  admits the corpus is citation-biased canon; treating its numbers as evidence the system
-  "finds relevant work" is explicitly flagged as a misuse.
-- **Whether to adopt the embedding bake-off's recommendation** (switch + re-embed the
-  whole corpus) — validated, priced (a few dollars), but not acted on yet.
-- **The recall instrument** (`academic_research_agent` side) — flagged by Warren as the
-  prerequisite for everything, including TIRI's own work; status of whether it's been
-  built is not confirmed in any doc read.
-- A "field guide" cross-referencing "11 open-source paper-scoring tools" is mentioned in
-  `reports/combined_features_notes.md` as motivation for testing combined features, but
-  that artifact itself wasn't found in either repo — likely exists elsewhere; flagging
-  so a new session doesn't assume it's missing/lost, just not in scope of this read.
-
----
-
-## Where to actually look for depth
-
-| Question | Read |
+| Fact | Why it matters |
 |---|---|
-| Why is TIRI structured this way, what happened before this file | `HANDOFF.md` (older, narrower — TIRI-internal branch history) |
-| Embedding model choice reasoning | `reports/model_shortlist.md`, `reports/wf_embedding_bakeoff.md` |
-| Feature engineering reasoning | `reports/wf_eda_fe_report.md`, `reports/wf_feature_plan.md`, `reports/wf_featureengineering_review.md` |
-| Fold/generalization findings | `notebooks/modelling/`, `notebooks/pipelines/` |
-| Baseline model choice | `reports/sf_baseline_classifier_shortlist.md` |
-| What every notebook does | `notebooks/README.md` |
-| Agent's architecture/conventions | `academic_research_agent/CLAUDE.md`, `AGENTS.md` |
-| Agent's live plan | `academic_research_agent/docs/ROADMAP.md` |
-| What TIRI needs from the agent's data-science colleagues | `academic_research_agent/docs/ENSEMBLE_BRIEF.md` |
+| The live label is **`triage_label`**, not `review_label` (which is empty but for one row). Values: `positive` 1067, `negative` 785, `pass` 543, null 478. | 1,852 usable labelled rows. |
+| **`pass` is 84.7% missing-abstract** (vs 5–7% for decided rows). Only 83 `pass` rows have an abstract. | It is a data-completeness artefact, not analyst hesitation. Dropping it is correct and keeps the model binary. Do not build an ordinal target on it. |
+| `year` ranges differ wildly by use case (`ner` 2023–26, `tech_forecasting` 2025–26, `solar_leo` 1974–2026). Some rows are dated 2027. | Year is a use-case fingerprint when pooling; fine within a silo. |
+| **`from_*` columns are attribution, not capability** — retrieval de-duplicates, so a paper is credited to whichever arm recorded it first. | Any analysis of "which retrieval arm could find this" using these columns is measuring the storage convention. This mistake has already been made once. |
+| `terms_exclude` is **empty for 3 of 6** use cases; `performance_criteria`, `decision_*`, `trl_*` are sparse; `constraints_scale` is empty everywhere. | Features over these must emit NaN + an indicator. **NULL is not 0.** Feed the brief-format experiment: `constraints_scale` never got filled. |
+| Pools run **26–77% positive**. Production will be low single digits. | Every F2 number and every calibrated threshold in the older reports was measured at ~20x production prevalence. SYNERGY (1.7–14.8%) is the only prevalence-realistic surface available. |
+| `scripts/embedding_utils.py:get_use_case_text` claims the export lacks the brief and falls back to the use-case **name**. That was true once; the brief columns exist now. | The `scripts/*.py` path scores against a 2–4 word name. The notebooks build a proper brief. Do not assume they agree. |
+
+---
+
+## 4. Open risks nobody has closed
+
+- **At production prevalence, a random 25-label bootstrap contains almost no positives.**
+  Measured on SYNERGY's 1.7% review: **57% of random 25-label draws contain no positive at
+  all** and cannot train anything (28% at n=50, 22% at n=100). "Use cases arrive with
+  labels" is safe only if those labels were *actively selected* — e.g. by labelling the top
+  of a cosine-to-brief ranking — not randomly sampled. Confirm how the labelling project
+  sources them.
+- **The query-conditioned advantage is contingent on brief format, not automatic.** The
+  shuffled-brief control passes decisively on TIRI (5/6 use cases, +0.155) and **fails on
+  SYNERGY** (1/3, −0.012). SYNERGY briefs are a published review's title and abstract —
+  a description of what a review did, not a statement of what to include — and carry no
+  curated term lists. Curated inclusion terminology looks load-bearing. Feed this to the
+  brief-format experiment; re-validate the block against any new brief format.
+- **Model ranking is not stable across prevalence regimes.** Qwen3-4B is mid-pack in-repo
+  and *last* on SYNERGY; Qwen3-8B wins at realistic prevalence. Recall metrics only
+  discriminate where there is room to skip — our 26–77% pools are a poor surface for
+  judging a recall-oriented system.
+- **Selection-on-holdout.** Many decisions (11 embedding models, combination methods,
+  calibration methods, PCA on/off) were made against LOGO scores, so LOGO is no longer
+  unbiased. **23 unused SYNERGY reviews** are the only clean surface left — ring-fence them.
+- **Label recall is unmeasured.** With one labeller there is no inter-annotator agreement,
+  and a labeller's false negative is indistinguishable from a true negative — it silently
+  inflates measured recall. Same problem applies to the deterministic filter's discards.
+  One fix covers both: sample the negatives (and the filter's rejects) and re-label blind.
+- **No causal account of `solar_leo`'s labels.** They track publication year because the
+  pool was seeded from citation-ranked canon. Treat it as a corpus defect: never cite it as
+  evidence the system finds relevant work.
+
+---
+
+## 5. Statistical discipline this repo requires
+
+Six use cases, 260–360 labelled rows each, per-use-case scores spanning 0.26–0.85. That is
+a small, heterogeneous sample and it has already produced at least one decision made on
+noise.
+
+- **Measured noise floors:** seed-to-seed sd is ~0.010 on within-silo ROC-AUC and
+  **0.015–0.027 on WSS@95**. The entire spread between the three candidate embedding models
+  is 0.027 — one sd. Treat any gap below ~0.03 as *not established*.
+- Report **per-use-case win counts** alongside means. A mean over six heterogeneous use
+  cases can be won by being good at the easy ones.
+- Repeat across seeds and report the spread next to every number.
+- Never make an architecture decision from a single held-out use case. Several numbers in
+  `reports/wf_embedding_bakeoff.md` Rounds 1–2 rest on `tech_forecasting` alone.
+
+---
+
+## 6. The negative-results register
+
+The most valuable asset here. Measured and rejected, so nobody re-runs them:
+
+| Rejected | Evidence |
+|---|---|
+| The 11-feature metadata punch list (citation velocity, author count, has_venue, is_english, venue cleaning…) | `reports/wf_featureengineering_review.md` — all together worth +0.002 AUC, and they *hurt* out-of-domain |
+| TRL keyword estimate, OpenAlex venue quality, author ORCID | earlier notebooks in `notebooks/feature_experiments/` |
+| `relevance_score` as a feature or baseline | `reports/wf_ensemble_report.md` §0 — unversioned, moving, not comparable across use cases |
+| Prediction-level stacking / learned blending | tied with plain averaging, twice (`wf_ensemble_report.md`, `wf_embedding_bakeoff.md` §5) |
+| spaCy over plain regex for term matching | no gain, more cost |
+| SPECTER2 | query mode mismatched to paragraph-length briefs |
+| Per-use-case mean-centring of embeddings | 0.532 → 0.529 LOGO, no effect |
+| **PCA-64 within a silo** | −0.008 to −0.014 WSS on all three models; §6.2's compress-then-concat win was a *transfer* phenomenon and does not carry to production folds |
+| Term overlap as an abstract-length proxy (a suspicion, now closed) | length features alone reach 0.550; removing them costs 0.004 |
+
+---
+
+## 7. Where the current work lives
+
+| What | Where |
+|---|---|
+| Query-conditioned lexical features (Tier 1b) + falsification control | `scripts/lexical_features.py`, `scripts/run_tier1b_control.py` |
+| Jasper / Qwen3-4B / Qwen3-8B on WSS@95, both fold surfaces | `scripts/run_embedding_recall_comparison.py` |
+| SYNERGY validation at realistic prevalence | `scripts/run_synergy_recall_validation.py` |
+| Shared fold/metric helpers (use these, do not re-implement) | `scripts/fold_pipeline_utils.py`, `scripts/embedding_utils.py` |
+| Full narrative of the above | `reports/wf_query_conditioned_findings.md` |
+| Ensemble v1 — per-silo CatBoost + LogisticRegression, feature/embedding ablation, and what was cut from the original proposal | `reports/wf_ensemble_v1_candidate.md`, `reports/wf_ensemble_v1_results.md`, `notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb` |
+| CatBoost fitting on this machine — route through Modal (`scripts/modal_ensemble_candidate.py`), do not fit locally | `scripts/ensemble_eval_utils.py`'s consumers; see that file's module docstring for the confirmed Apple Silicon thread-oversubscription pathology |
+| Ensemble v2 — hyperparameter tuning, nested combiner-weight selection, the Qwen3-8B SYNERGY swap, a 3-lever diversity sweep (SVM/lexical-only/k-NN as a third branch, all rejected, each for a documented reason), and a LOGO-based central hyperparameter search (LogReg `C=1.0` found under-regularizing; not adopted for the 6 shipped use cases but recommended as the starting default for new ones) | `reports/wf_ensemble_v2_experiments.md` (the full running log, §1-16); Modal functions consolidated in `scripts/modal_ensemble_experiments.py` — **do not split Modal functions across files**, see that file's docstring |
+| Final, synthesized architecture recommendation — one decision doc pulling together v1 + v2, confidence-graded, with explicit rejects and caveats | `reports/wf_ensemble_final_recommendations.md` |
+
+**The shuffled-brief control is the pattern to copy.** Any feature claiming to read the
+brief must be rebuildable against deliberately wrong briefs. If it still scores well, it is
+measuring something generic and should be thrown away. `build_lexical_features(df,
+brief_map=...)` exists for exactly this reason — keep that seam in anything you add.

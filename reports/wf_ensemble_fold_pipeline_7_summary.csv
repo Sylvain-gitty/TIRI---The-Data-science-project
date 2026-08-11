@@ -1,0 +1,7 @@
+use_case,n_labelled,prevalence,ensemble_roc_auc,recall_at_20pct,branch_correlation,f2_at_t_star
+Carbon Capture,295,0.495,0.887,0.39,0.833,0.888
+Low-Carbon Cement,262,0.649,0.906,0.294,0.88,0.948
+Named Entity Recognition,312,0.715,0.836,0.274,0.698,0.932
+Soil Microbiome,357,0.263,0.816,0.511,0.681,0.716
+Solar Cells for Satellites,358,0.768,0.846,0.258,0.608,0.948
+Technology Prediction,264,0.595,0.841,0.318,0.75,0.896
