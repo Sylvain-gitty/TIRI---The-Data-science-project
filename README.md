@@ -141,7 +141,12 @@ step. Notebooks assume they're run with their own folder as the working director
 | `main/01_data_compile` — rebuilds the cleaned corpus from raw | `main/04_feature_engineering` — needs `embeddings_cache/` (~295 MB) |
 | `main/02_eda_quickstart`, `main/03_eda_full` | `main/06`–`08` — need the full `papers_fe.parquet` (106 MB) |
 | `main/05_validation_design` — where the collapse is measured | `main/09_ensemble_per_silo` — same, plus Modal |
-| `notebooks/experiments/` — the negative-results evidence | |
+| both `notebooks/future_work/` templates (gated, safe to Run All) | |
+
+The left-hand column is **verified, not asserted**: `git clone` into an empty directory,
+`pip install -r requirements.txt`, Run All on each — 01 (3s), 02 (5s), 03 (37s),
+05 (125s), all clean. `01` reproduces the committed `papers_combined.parquet`
+frame-for-frame, so the cleaning step is checkable rather than trusted.
 
 Everything in the right-hand column is **committed with its outputs intact**, so the
 results are readable without re-running. See [Data](#data) for exactly what ships and
