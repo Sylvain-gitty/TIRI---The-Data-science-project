@@ -176,6 +176,8 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | SYNERGY validation at realistic prevalence | `scripts/run_synergy_recall_validation.py` |
 | Shared fold/metric helpers (use these, do not re-implement) | `scripts/fold_pipeline_utils.py`, `scripts/embedding_utils.py` |
 | Full narrative of the above | `reports/wf_query_conditioned_findings.md` |
+| Ensemble v1 — per-silo CatBoost + LogisticRegression, feature/embedding ablation, and what was cut from the original proposal | `reports/wf_ensemble_v1_candidate.md`, `reports/wf_ensemble_v1_results.md`, `notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb` |
+| CatBoost fitting on this machine — route through Modal (`scripts/modal_ensemble_candidate.py`), do not fit locally | `scripts/ensemble_eval_utils.py`'s consumers; see that file's module docstring for the confirmed Apple Silicon thread-oversubscription pathology |
 
 **The shuffled-brief control is the pattern to copy.** Any feature claiming to read the
 brief must be rebuildable against deliberately wrong briefs. If it still scores well, it is
