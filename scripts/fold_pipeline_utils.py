@@ -1,12 +1,17 @@
 """Shared, config-driven building blocks for notebooks/pipelines/*.ipynb.
 
-Both sf_generalized_fold_pipeline.ipynb (pooled, whole-dataset splits) and
-sf_logo_fold_pipeline.ipynb (leave-one-use-case-out) import this module instead of
-redefining the same preprocessing/metrics code twice. The point: the two notebooks' fold
-*structure* differs (random grouped/stratified split vs. rotating use-case holdout), but
-"how do we turn a row into something a LogisticRegression can use, without leaking" should
-live in exactly one place, so it can't drift between them as the upstream feature-engineering
-dataset changes shape.
+sf_generalized_fold_pipeline.ipynb (pooled, whole-dataset splits), sf_logo_fold_pipeline.ipynb
+(leave-one-use-case-out), and sf_catboost_fold_pipeline.ipynb all import this module instead
+of redefining the same preprocessing/metrics code twice - the point: each notebook's fold
+*structure* differs (random grouped/stratified split vs. rotating use-case holdout) and
+model differs (LogisticRegression, LogisticRegression-on-PCA-reduced-embeddings, CatBoost),
+but "how do we turn a row into something the model can use, without leaking" should live in
+exactly one place per model family, so it can't drift between notebooks as the upstream
+feature-engineering dataset changes shape. `build_pipeline` (plain LogisticRegression),
+`build_pca_pipeline` (LogisticRegression on a PCA-reduced embedding block, for datasets
+whose embedding is too wide to feed a linear model directly), and `build_tree_pipeline`
+(gradient-boosted trees) are the three model-family entry points; `validate_schema`,
+`prepare_dataset`, and the metrics functions are model-agnostic and used by all of them.
 
 Nothing in this module reads data/ or fits anything at import time - every function here is
 called explicitly by the notebooks, at the point in their own fold logic where it's safe to
@@ -18,6 +23,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, fbeta_score, recall_score, roc_auc_score
@@ -38,11 +44,16 @@ def validate_schema(df: pd.DataFrame, config: dict) -> None:
     `config.get("expand_embedding", True)` gates whether `embedding_col` is required at
     all - a text-driven model (e.g. a prompted LLM, see `notebooks/pipelines/
     sf_llm_fold_pipeline.ipynb`) has no use for the embedding column and can set this to
-    False rather than being forced to point CONFIG at a column it never reads.
+    False rather than being forced to point CONFIG at a column it never reads. When it's
+    False AND `config["embedding_feature_cols"]` is set instead (a dataset that already
+    ships its embedding(s) as separate wide scalar columns, e.g. `emb_jasper_0000...`,
+    rather than one array-valued column), those columns are required instead.
     """
     required = [config["target_col"], config["use_case_col"]]
     if config.get("expand_embedding", True):
         required.append(config["embedding_col"])
+    else:
+        required += config.get("embedding_feature_cols", [])
     required += config["numeric_feature_cols"] + config["categorical_feature_cols"]
     if config["group_col"] not in df.columns:
         required.append(config["group_source_col"])
@@ -86,9 +97,12 @@ def prepare_dataset(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     2. If `config.get("expand_embedding", True)`: expand the embedding column into named
        `emb_0..emb_{d-1}` scalar columns, inferring the dimensionality at runtime rather
        than hardcoding it - a differently-sized embedding in a future dataset needs no
-       code change here. Set this to False for a model that doesn't consume the embedding
-       at all (e.g. a prompted LLM working off raw title/abstract text) - `embedding_col`
-       is then never even read, and `_embedding_feature_cols` comes back `[]`.
+       code change here. If `False`, `_embedding_feature_cols` is set from
+       `config.get("embedding_feature_cols", [])` instead - either `[]` for a model that
+       doesn't consume the embedding at all (e.g. a prompted LLM working off raw text), or
+       an explicit list of already-wide embedding columns a dataset ships directly (e.g.
+       several concatenated embedding models' `emb_<model>_####` columns) - either way,
+       nothing here re-derives or reshapes those columns, they're used as-is.
     3. Derive the grouping key (`config["group_col"]`) from `config["group_source_col"]`
        if the incoming dataset doesn't already provide it directly.
 
@@ -115,7 +129,7 @@ def prepare_dataset(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         df = pd.concat([df, emb_df], axis=1)
         config["_embedding_feature_cols"] = emb_cols
     else:
-        config["_embedding_feature_cols"] = []
+        config["_embedding_feature_cols"] = config.get("embedding_feature_cols", [])
 
     group_col = config["group_col"]
     if group_col not in df.columns:
@@ -175,6 +189,77 @@ def build_pipeline(config: dict, model=None) -> Pipeline:
     return Pipeline([
         ("preprocess", build_preprocessor(config)),
         ("clf", model),
+    ])
+
+
+def build_pca_preprocessor(config: dict) -> ColumnTransformer:
+    """The PCA-reduced-embedding counterpart to `build_preprocessor`, for a dataset whose
+    embedding block is too wide to feed a linear model directly (e.g.
+    `notebooks/pipelines/sf_generalized_fold_pipeline.ipynb` against `papers_fe.parquet`'s
+    8,704 concatenated embedding columns). Two independently-fit branches:
+
+    - **`config["_embedding_feature_cols"]`** -> `StandardScaler` -> `PCA(n_components=
+      config["pca_n_components"], whiten=True)`. Scaling *before* PCA is not optional
+      here: several embedding models are concatenated into one block, each with its own
+      raw scale/variance convention, and PCA finds directions of maximum *variance* - fit
+      it on the raw concatenation and the top components would just be "whichever model
+      happens to have the largest raw magnitudes," not whichever directions are actually
+      most informative. `whiten=True` rescales each retained component to unit variance
+      afterward (sklearn's `PCA` only centers by default, it doesn't equalize component
+      scale) - without it, an L2-regularized `LogisticRegression`'s uniform coefficient
+      penalty would implicitly shrink the lower-variance (later) components harder than
+      the higher-variance (earlier) ones, for a reason that has nothing to do with which
+      components actually carry predictive signal.
+    - **`config["numeric_feature_cols"]`** (+ `categorical_feature_cols`, one-hot encoded,
+      if any) -> median-impute + scale, unchanged from `build_preprocessor` - these are
+      ordinary engineered features, not part of the embedding block, and don't go through
+      PCA at all.
+
+    Both branches - and every fitted statistic inside them (scaler mean/std, PCA
+    components/explained variance, imputer medians) - are fit together inside a single
+    `ColumnTransformer`, so calling the `Pipeline` `build_pca_pipeline` returns with
+    `.fit(X_train, y_train)` fits all of it on the training rows alone, in one call. The
+    same discipline applies here as everywhere else in this module: this function cannot
+    enforce *which* rows those are - the caller (the pipeline notebook) still has to call
+    `.fit()` only on the current fold/split's training rows, never on pooled data.
+    """
+    embedding_cols = config["_embedding_feature_cols"]
+    other_numeric_cols = config["numeric_feature_cols"]
+    categorical_cols = config["categorical_feature_cols"]
+
+    transformers = [
+        ("embedding_pca", Pipeline([
+            ("scale", StandardScaler()),
+            ("pca", PCA(n_components=config["pca_n_components"], whiten=True,
+                         random_state=config.get("random_state", 0))),
+        ]), embedding_cols),
+        ("numeric", Pipeline([
+            ("impute", SimpleImputer(strategy="median")),
+            ("scale", StandardScaler()),
+        ]), other_numeric_cols),
+    ]
+    if categorical_cols:
+        transformers.append((
+            "categorical", Pipeline([
+                ("impute", SimpleImputer(strategy="most_frequent")),
+                ("encode", OneHotEncoder(handle_unknown="ignore")),
+            ]), categorical_cols,
+        ))
+    return ColumnTransformer(transformers)
+
+
+def build_pca_pipeline(config: dict) -> Pipeline:
+    """PCA-reduced-embedding preprocessing (see `build_pca_preprocessor`) +
+    `LogisticRegression`, as one fit-once object - same calling convention as
+    `build_pipeline`/`build_tree_pipeline`, so a fold loop written against any of the
+    three works against the others unchanged. Requires `config["pca_n_components"]` and
+    `config["_embedding_feature_cols"]` to be set (the latter via `prepare_dataset`, from
+    either `embedding_col` expansion or a pre-existing `embedding_feature_cols` list - see
+    that function's docstring).
+    """
+    return Pipeline([
+        ("preprocess", build_pca_preprocessor(config)),
+        ("clf", LogisticRegression(max_iter=1000, class_weight="balanced")),
     ])
 
 
