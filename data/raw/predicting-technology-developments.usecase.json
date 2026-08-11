@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "name": "Predicting Technology Developments",
+  "problem_statement": "Reasoning across a graph of technologies where nodes are technologies, edges are typed relationships, and the graph is decorated with extracted attributes such as technology readiness, costs, regulations, papers, and citations. The challenge is to predict where breakthroughs in technology readiness and cost will occur.",
+  "objective": "Explore methods for predicting technological breakthroughs — in readiness, capability, or cost — by reasoning over heterogeneous, decorated technology knowledge graphs.",
+  "domain": {
+    "industry": "Heavy Industries",
+    "application": "Decarbonisation",
+    "technology_focus": [
+      "knowledge graph reasoning",
+      "technology forecasting",
+      "breakthrough prediction",
+      "first of a kind (foak)",
+      "tech intelligence"
+    ]
+  },
+  "terms": {
+    "must_include": [
+      "knowledge graph",
+      "technology graph",
+      "graph reasoning",
+      "technology readiness level",
+      "breakthrough prediction",
+      "technology forecasting"
+    ],
+    "nice_to_have": [
+      "graph neural network",
+      "link prediction",
+      "heterogeneous graph",
+      "citation graph",
+      "patent graph",
+      "technology emergence"
+    ],
+    "exclude": []
+  },
+  "performance_criteria": [],
+  "constraints": {
+    "trl": null,
+    "scale": "",
+    "cost": ""
+  },
+  "decision_criteria": {
+    "must_have": [
+      "graph",
+      "database"
+    ],
+    "nice_to_have": [
+      "technology",
+      "intelligence"
+    ],
+    "exclusions": [
+      "Temporal knowledge graph reasoning (event sequence / timestamp prediction over general-purpose KGs, not technology forecasting)"
+    ],
+    "decision_rules": [
+      "Accept graph methods from non-technology domains (social, medical, biological) if the technique — e.g. link prediction, graph completion, GNN architecture — is directly transferable to technology knowledge graphs"
+    ]
+  },
+  "notes": "The graph is heterogeneous and decorated with varied content: TRL, costs, regulations, papers, citations. Methods should handle typed edges and mixed node/edge attributes. Interest is in predictive/forecasting capability, not just graph construction."
+}

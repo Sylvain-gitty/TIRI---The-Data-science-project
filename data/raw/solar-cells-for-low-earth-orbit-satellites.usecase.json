@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "name": "solar cells for low earth orbit satellites",
+  "problem_statement": "Solar cells for low earth orbit satellites must sustain high conversion efficiency under the radiation and thermal cycling conditions of that environment, and current incumbents leave room for improvement on both counts. Perovskite solar cells and silicon-based solar cells represent distinct paths toward that goal, but neither has yet displaced the other, and relevant advances continue to appear across the wider field.",
+  "objective": "Scout perovskite solar cells and silicon-based solar cells — as well as the broader review literature on solar cells for low earth orbit satellites — to identify approaches that improve conversion efficiency and long-term stability beyond what incumbent technologies currently deliver, across maturity levels from early proof of concept through to flight-ready systems.",
+  "domain": {
+    "industry": "solar cells for low earth orbit satellites",
+    "application": "",
+    "technology_focus": [
+      "perovskite solar cells",
+      "silicon-based solar cells"
+    ]
+  },
+  "terms": {
+    "must_include": [
+      "perovskite solar cells",
+      "silicon-based solar cells"
+    ],
+    "nice_to_have": [
+      "solar cells for low earth orbit satellites"
+    ],
+    "exclude": []
+  },
+  "performance_criteria": [
+    {
+      "metric": "conversion efficiency",
+      "target": "better than the incumbent"
+    },
+    {
+      "metric": "long-term stability",
+      "target": "better than the incumbent"
+    }
+  ],
+  "constraints": {
+    "trl": {
+      "min": 3,
+      "max": 9
+    },
+    "scale": "",
+    "cost": ""
+  },
+  "decision_criteria": {
+    "must_have": [
+      "Must address solar cell performance, stability, or suitability in a space or LEO radiation/thermal environment (not terrestrial-only focus)",
+      "Must be about perovskite solar cells, silicon-based solar cells, or tandem cells combining these technologies"
+    ],
+    "nice_to_have": [],
+    "exclusions": [
+      "Papers focused solely on terrestrial commercialization, market analysis, or policy without reporting efficiency or stability data relevant to space",
+      "Papers whose primary contribution is defect spectroscopy methods, ML prediction models, or other characterization/optimization tools not reporting cell-level efficiency or stability results"
+    ],
+    "decision_rules": []
+  },
+  "notes": "The analyst's own words for this area: “solar cells for low earth orbit satellites”.\n\nSeeded from the reference lists of this field's review papers, so the starting pool is CANON — well-cited, established work. That is a fine way to start, and it must not be used as evidence that this tool surfaces work early: the papers were chosen because reviews already cite them."
+}
