@@ -4,6 +4,11 @@ This document describes a dataset of academic papers, each evaluated for relevan
 to one of six specific research questions. It's written to stand on its own — no
 other files, code, or context should be needed to understand what's in it.
 
+> Two processed datasets ship in this repo. This document covers
+> **`papers_combined.parquet`** (the cleaned corpus, the input to feature
+> engineering). The second, **`papers_fe_slim.parquet`** (the model-ready feature
+> table minus its embedding blocks), is described in the final section below.
+
 ## Summary
 
 Each of six research teams defined a research question they wanted the academic
@@ -163,3 +168,67 @@ decision_exclusions:   [Solid-supported or solid sorbent amine systems (no liqui
 - **This is a point-in-time snapshot.** Different research questions were
   collected on different dates (see `exported_at`), and a small number of papers
   carry a `year` after the current year (legitimate in-press records).
+
+---
+
+## The other shipped dataset: `papers_fe_slim.parquet`
+
+`papers_combined.parquet` above is the *cleaned corpus*. `papers_fe_slim.parquet`
+is what feature engineering makes of it: one row per **labelled, deduplicated**
+paper, with every engineered feature except the embedding blocks.
+
+| | |
+|---|---|
+| Rows | 1,848 (labelled papers only; `pass` and unlabelled rows dropped) |
+| Columns | 38 |
+| File size | ~0.3 MB |
+| Produced by | `scripts/export_slim_fe.py` from `papers_fe.parquet` |
+
+### Why a "slim" copy exists
+
+The full feature table, `papers_fe.parquet`, is 1,848 x 8,742 and **106 MB** —
+101 MB of which is three raw embedding blocks (`emb_qwen8b_*` 57 MB,
+`emb_jasper_*` 29 MB, `emb_qwen4b_*` 15 MB). It cannot go in git. The other 38
+columns weigh 0.3 MB, so they can.
+
+That is not just a convenience. Those 38 columns are enough to reproduce this
+project's **central finding** — that relevance is a property of the
+(brief, paper) *pair*, and that a handful of brief-relative scalars beat a
+384-dimension embedding when generalising to an unseen research question
+(0.642 vs 0.537 ROC-AUC; see `CONTEXT.md` §2). A reader who clones this repo can
+re-run that result, and the whole fold/validation design, with no embedding
+model, no API key and no GPU.
+
+### What's in the 38 columns
+
+| Group | Columns | What it is |
+|---|---|---|
+| Identity & grouping | `paper_id`, `use_case_key`, `first_author` | `first_author` is the **grouping key** for cross-validation (papers by the same first author must not straddle a fold boundary) |
+| Target | `triage_label`, `y` | `y` is the binary target (`positive` = 1, `negative` = 0) |
+| Lexical block (Tier 1b) | 22 `lex_*` | Query-conditioned features — BM25 and term-overlap scores of the paper against **its own research question's brief**, plus within-question rank transforms. These are the brief-relative features the central finding rests on. Built by `scripts/lexical_features.py` |
+| Brief similarity | 6 `cos_brief_*` / `rank_cos_brief_*` | Cosine similarity between the paper and its brief, per embedding model, plus the within-question percentile rank. The *only* trace of the embeddings that survives into the slim file |
+| Metadata | `year`, `paper_age`, `has_abstract`, `n_authors`, `citation_count` | Row-local facts only |
+
+Everything here is **row-local** — nothing fitted (no PCA, scaler or imputer has
+been applied), so the file is safe to split into folds downstream without leakage.
+
+### What you cannot do with it
+
+Anything that needs the embedding block itself — which is the `PCA(50)` pipeline
+shared by the baseline, CatBoost and ensemble notebooks (06-08). To run those,
+regenerate the full `papers_fe.parquet` with
+`notebooks/04_feature_engineering.ipynb`; that needs
+`data/processed/embeddings_cache/` (~295 MB, not in git) and, if the cache is
+cold, paid API and Modal GPU calls. The notebooks are committed **with their
+outputs intact**, so their results are readable without re-running them.
+
+### Caveats specific to this file
+
+- **`lex_overlap_excl_*` is ~50% missing, and that is not random.** It is exactly
+  explained by `lex_has_exclude_terms = False` — three of the six research
+  questions defined no exclusion terms at all. This is a case where 0-filling is
+  correct *because the indicator column carries the "we never found out" fact*
+  (see `NULL is not 0` in the root `README.md`). Do not generalise that to the
+  other columns.
+- **Rank columns are computed within a research question**, so they are
+  meaningless when pooled across questions without re-ranking.
