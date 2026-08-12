@@ -1,5 +1,7 @@
 # Query-conditioned features, embedding choice, and the recall lens
 
+> **Status: current.** `CONTEXT.md` §7 names this the full narrative of the query-conditioned track — the work behind this project's central finding, that relevance is a property of the (brief, paper) pair rather than of the paper.
+
 **Audience:** anyone picking up TIRI's feature-engineering or modelling work. Assumes
 `README.md` and `CONTEXT.md`. Every number below is reproducible from the three scripts
 listed in §8.

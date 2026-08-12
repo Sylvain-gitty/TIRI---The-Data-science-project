@@ -1,14 +1,16 @@
 # Baseline classifier shortlist — decision trail
 
+> **Status: superseded.** A write-up of `sf_eda_firstrun.ipynb` §13–14 — itself the v1 EDA, superseded by `notebooks/main/03_eda_full.ipynb`. The baseline that actually shipped is `notebooks/main/06_baseline_logreg.ipynb`, on a different feature set. Kept for the reasoning trail.
+
 Standalone write-up of `notebooks/experiments/sf_eda_firstrun.ipynb` §13–14's baseline-model
 comparison, kept here as a decision-trail document per this repo's `reports/` convention
-(see `HANDOFF.md`). The notebook is the source of truth — every number below is copied
+(see `reports/README.md`). The notebook is the source of truth — every number below is copied
 from its own executed output, not recomputed separately here — this file exists so the
 recommendation survives as a quick reference without re-opening the notebook.
 
 **Scope note:** this is a **baseline-model shortlist**, not a model-selection pipeline —
 same distinction this repo already draws for `scripts/compare_embeddings.py` et al.
-(`README.md`'s scope note, `HANDOFF.md`). Nothing here is wired to any script; whoever
+(`README.md`'s scope note). Nothing here is wired to any script; whoever
 starts the actual Week-3 modelling work should re-run the comparison in
 `sf_eda_firstrun.ipynb` §13 once the additional features flagged in §11 (term overlap,
 cleaned `venue`, `author_count`) are actually built, rather than trusting these numbers
@@ -33,7 +35,7 @@ All three real candidates clear the dummy floor comfortably in both framings.
 `HistGradientBoostingClassifier` ranks first, `RandomForestClassifier` a close second,
 `LogisticRegression` a further step behind both — the gap between the top two is smaller
 than one fold's own standard deviation, so don't over-read that ordering as decisive
-(`HANDOFF.md`'s own convention: "a fold-count difference is a claim, not a given").
+(this repo's own convention: "a fold-count difference is a claim, not a given").
 
 ## 2. The shortlist
 

@@ -1,5 +1,7 @@
 # Ensemble v2 — improvement ideas, and three tested
 
+> **Status: exploratory — single-seed, as its own note below says.** Where each idea landed is recorded in [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md); the multi-seed re-check is [`wf_ensemble_v2_multiseed_verification.md`](wf_ensemble_v2_multiseed_verification.md). Do not quote a number from here without checking both.
+
 **Status: exploratory.** Everything in this report uses single-seed within-silo OOF
 predictions (like `wf_ensemble_fold_pipeline.ipynb`'s diagnostics), not Phase 1's proper
 5-seed CV. Treat directions as directions, not final numbers — a real improvement found

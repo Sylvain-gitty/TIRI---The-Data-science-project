@@ -1,5 +1,7 @@
 # Ensemble strategy recommendations
 
+> **Status: historical** — written before Ensemble v1 existed. Superseded on architecture by [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md). Still the source of record for two entries in `CONTEXT.md`'s negative-results register: §0 (why `relevance_score` is unusable as a feature or a baseline) and §4 (why per-customer hyperparameter search overfits at a few hundred labels).
+
 Recommendations for Week-3 modelling, assuming the feature engineering in
 `reports/wf_eda_fe_report.md` gets built. Written after new facts about `relevance_score`
 changed one of that report's recommendations — see §0 before reading anything else here

@@ -1,5 +1,7 @@
 # Embedding model bake-off — findings and recommendations
 
+> **Status: historical.** Superseded on embedding choice by [`wf_embedding_recall_comparison.md`](wf_embedding_recall_comparison.md) and [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md) #4. **Caveat carried from `CONTEXT.md` §5:** several Round 1–2 numbers here rest on `tech_forecasting` alone — never make an architecture decision from a single held-out use case.
+
 This is the decision trail behind testing whether a better embedding model would help
 TIRI's downstream "is this paper interesting" classifier. The corpus currently embeds
 every paper with one small, free, local model

@@ -1,5 +1,7 @@
 # Embedding model shortlist — properties, ranking, and what we're actually testing
 
+> **Status: current** as the decision trail for `compare_embeddings.py`'s default model set — a *diagnostic* against the labelled corpus, not the production embedding choice. For the models actually shipped (Jasper + Qwen3-8B) see [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md) #4. AUC readings here predate [`metrics_rework_and_rerun.md`](metrics_rework_and_rerun.md).
+
 This is the decision trail behind `scripts/compare_embeddings.py`'s default model set,
 in three parts: the properties we're optimising for, the full ranked candidate list they
 came from, and the models we selected to actually run — with the concrete config
@@ -9,7 +11,7 @@ came from, and the models we selected to actually run — with the concrete conf
 dataset — latent-space sanity, cosine similarity, use-case centrality (see
 `scripts/compare_embeddings.py`'s docstring) — not a pipeline for selecting a future
 classifier's model. §5 below used to frame its pick as "the Week-3 baseline"; that framing
-has been retired (see `HANDOFF.md`) — nothing downstream in this repo is wired to whatever
+has been retired — nothing downstream in this repo is wired to whatever
 "wins" a run of this script. See `reports/ner_model_notes.md` for the same kind of
 exercise applied to NER-derived representations instead of embeddings.
 

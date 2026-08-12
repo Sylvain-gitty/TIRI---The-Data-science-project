@@ -1,5 +1,7 @@
 # Ensemble — final recommendations
 
+> **Status: current — start here.** The single decision doc for the modelling architecture, synthesising Ensemble v1, v2 and the external validation. Every other ensemble report in this folder is its evidence.
+
 **What this is:** the single decision doc pulling together everything from the
 ensemble-modelling plan, Phase 1-3 (`reports/wf_ensemble_v1_candidate.md`, `wf_ensemble_v1_results.md`,
 `notebooks/main/09_ensemble_per_silo.ipynb`), and the v2 exploratory round

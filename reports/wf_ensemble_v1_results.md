@@ -1,5 +1,7 @@
 # Ensemble v1 — what shipped, what was cut, and why
 
+> **Status: superseded** by [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md), which carries the same decisions updated with the v2 round. This was Ensemble v1's Phase 3 write-up; kept for the reasoning trail.
+
 **Audience:** anyone picking up TIRI's modelling work next. Companion to the approved
 ensemble-modelling plan (a per-silo CatBoost + LogisticRegression ensemble on
 `data/processed/papers_fe.parquet`) and its two artefacts: `reports/wf_ensemble_v1_candidate.md`

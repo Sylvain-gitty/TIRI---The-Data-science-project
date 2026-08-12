@@ -1,5 +1,7 @@
 # Feature engineering plan — the 11-feature punch list, after measurement
 
+> **Status: current.** The per-feature verdicts on the 11-feature punch list that [`wf_eda_fe_report.md`](wf_eda_fe_report.md) §4 proposed from EDA alone. This is the result; that report is the hypothesis.
+
 **Status:** decision document. Every number here is reproducible from
 `notebooks/experiments/wf_feature_validation.ipynb`, which builds all 11 proposed
 features and measures them.

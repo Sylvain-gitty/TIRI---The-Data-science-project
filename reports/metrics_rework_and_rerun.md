@@ -1,5 +1,7 @@
 # Evaluation-metrics rework, and what changed when we re-ran everything
 
+> **Status: current** for the three `compare_*.py` diagnostic scripts. **Read this before trusting any ROC-AUC quoted in a report older than it** — it reworked the evaluation metrics and re-ran everything, and several of this repo's older "X beats Y" claims did not survive the paired significance test.
+
 A methodology review of `compare_embeddings.py`, `compare_ner_models.py`, and
 `compare_combined_features.py` found that the two metrics behind every "model X beats
 model Y" claim in this repo — `roc_auc` and the use-case centroid percentile — had a

@@ -1,5 +1,7 @@
 # Feature engineering review — what we proposed, what we measured, what to build
 
+> **Status: current.** The measurement behind `CONTEXT.md` §6's first negative result: the 11-feature metadata punch list is worth +0.002 AUC in total, and hurts out-of-domain.
+
 **Audience:** anyone picking up TIRI's Week-2/3 work. Assumes no context beyond
 `README.md`. Every number is reproducible from the two notebooks listed in §9.
 

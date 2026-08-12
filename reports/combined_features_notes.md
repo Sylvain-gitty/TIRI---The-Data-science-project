@@ -1,5 +1,7 @@
 # Combined features notes — does concatenating NER onto an embedding help?
 
+> **Status: historical.** Its headline — that concatenating NER features onto an embedding made results *worse* — did not survive re-testing: [`metrics_rework_and_rerun.md`](metrics_rework_and_rerun.md) found the difference statistically indistinguishable from fold-to-fold noise (p=0.475–0.673). Read it as "no measurable effect", not "actively harmful".
+
 The decision trail behind `scripts/compare_combined_features.py`: why it exists, what it
 tested, and what came back — including the parts that didn't confirm the hypothesis that
 motivated building it.

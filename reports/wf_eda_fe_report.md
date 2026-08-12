@@ -1,5 +1,7 @@
 # Feature engineering recommendations — EDA decision trail
 
+> **Status: historical.** §4 proposed an 11-feature metadata punch list *from EDA alone* — descriptive reads of means, missingness and correlations. Those features were later built and measured, and mostly rejected: see [`wf_feature_plan.md`](wf_feature_plan.md) for the verdicts and [`wf_featureengineering_review.md`](wf_featureengineering_review.md) for the measurement.
+
 This is the decision trail behind Week-3 feature engineering on
 `data/processed/papers_combined.parquet` (2,873 papers, 6 use cases, 50 columns): what
 the EDA and feature-viability experiments actually found, what to do about each finding,
@@ -7,7 +9,7 @@ and why. Written for anyone picking up this work who wasn't in the room for the
 experiments — every recommendation below points at the notebook that earned it, so you
 can re-run and check rather than take it on faith.
 
-**Scope note**, same as `HANDOFF.md`: this is genuinely Week-3 classifier-prep work, not
+**Scope note:** this is genuinely Week-3 classifier-prep work, not
 another latent-space diagnostic like `scripts/compare_*.py`. Nothing here modifies those
 scripts.
 
@@ -161,7 +163,7 @@ Four feature ideas were built as small, sample-sized viability notebooks in
 `notebooks/experiments/`, plus one follow-up. All four ideas were plausible
 going in; two came back negative, one came back weak, one came back genuinely useful
 (conditionally). Reporting the negative ones plainly is deliberate — this repo's
-convention (see `HANDOFF.md`, `reports/combined_features_notes.md`) is to keep honest
+convention (see `reports/combined_features_notes.md`) is to keep honest
 negative results in the trail, not just the flattering ones.
 
 ### 5.1 TRL (Technology Readiness Level) estimate — not viable as a keyword heuristic
@@ -402,4 +404,4 @@ no mixed-embedding-space problem to solve first.
 | Descriptive EDA (all the §2/§4 findings) | `notebooks/experiments/wf_data_enrich.ipynb` |
 | Feature viability experiments (§5) | `notebooks/experiments/` — `trl_estimate.ipynb`, `terms_overlap.ipynb`, `terms_overlap_spacy.ipynb`, `venue_quality.ipynb`, `author_orcid.ipynb` |
 | Fold design + stacked PCA ensemble (§6, §8) | `notebooks/experiments/wf_fold_pca_test.ipynb` |
-| Diagnostic-only embedding/NER comparisons (separate scope — see `HANDOFF.md`) | `scripts/compare_embeddings.py`, `compare_ner_models.py`, `compare_combined_features.py`, and their `reports/*_notes.md` write-ups |
+| Diagnostic-only embedding/NER comparisons (separate scope — see `reports/model_shortlist.md`) | `scripts/compare_embeddings.py`, `compare_ner_models.py`, `compare_combined_features.py`, and their `reports/*_notes.md` write-ups |
