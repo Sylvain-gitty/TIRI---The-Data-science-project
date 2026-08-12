@@ -145,12 +145,13 @@ def summarise(res: pd.DataFrame) -> dict:
 
 
 def run_cells(df: pd.DataFrame, models: list[str], variants: list[str], concurrency: int,
-              out_stem: str) -> pd.DataFrame:
+              out_stem: str, brief_map: dict | None = None) -> pd.DataFrame:
     all_res, summary = [], []
     for model in models:
         for variant in variants:
             print(f"\n>>> {model}  {variant}  ({len(df)} rows)", flush=True)
-            res = score_frame(df, model=model, variant=variant, concurrency=concurrency)
+            res = score_frame(df, model=model, variant=variant, concurrency=concurrency,
+                              brief_map=brief_map)
             all_res.append(res)
             row = {"model": model, "variant": variant, **summarise(res)}
             summary.append(row)
@@ -165,10 +166,36 @@ def run_cells(df: pd.DataFrame, models: list[str], variants: list[str], concurre
     return sum_df
 
 
+def shuffled_brief_map(df: pd.DataFrame, seed: int = 0) -> dict[str, str]:
+    """Every use case gets a DIFFERENT use case's brief - a derangement, never a fixed point.
+
+    This is the falsification control the rest of the repo already runs on anything that
+    claims to read the brief (`build_lexical_features(df, brief_map=...)` exists for exactly
+    this). The logic: an LLM scoring papers against deliberately wrong criteria should
+    collapse. If it does not, it is scoring "is this a good paper" rather than "does this
+    paper match this brief", and every number in the grid is measuring the wrong thing.
+
+    Worth remembering that this control is not a formality here - it passes decisively on
+    TIRI's six use cases for the lexical block (5/6, +0.155) and *fails* on SYNERGY, so it
+    genuinely discriminates.
+    """
+    from llm_pipeline_utils import render_brief
+
+    keys = sorted(df["use_case_key"].unique())
+    briefs = {k: render_brief(dict(zip(df.columns, df[df.use_case_key == k].iloc[0])))
+              for k in keys}
+    rng = np.random.RandomState(seed)
+    for _ in range(100):
+        perm = rng.permutation(len(keys))
+        if all(i != j for i, j in enumerate(perm)):  # derangement: no key keeps its own
+            return {keys[i]: briefs[keys[perm[i]]] for i in range(len(keys))}
+    raise RuntimeError("could not find a derangement")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--smoke", action="store_true", help="5 rows/use case, all cells")
-    ap.add_argument("--stage", default="grid", choices=["grid"])
+    ap.add_argument("--stage", default="grid", choices=["grid", "control"])
     ap.add_argument("--models", nargs="+", default=PILOT_MODELS)
     ap.add_argument("--variants", nargs="+", default=PILOT_VARIANTS)
     ap.add_argument("--concurrency", type=int, default=12)
@@ -187,6 +214,15 @@ def main() -> None:
         total = sum_df["cost_usd"].sum()
         print(f"\ntotal spend this run: ${total:.4f}")
         print(f"projected per full 1,848-row cell: ${total / len(sum_df) * (1848 / len(sample)):.3f}")
+        return
+
+    if args.stage == "control":
+        bm = shuffled_brief_map(df, seed=0)
+        print("shuffled-brief control - each use case scored against another's criteria")
+        sum_df = run_cells(df, args.models, args.variants, args.concurrency,
+                           "wf_llm_control", brief_map=bm)
+        print("\n=== CONTROL SUMMARY ===")
+        print(sum_df.to_string(index=False))
         return
 
     sum_df = run_cells(df, args.models, args.variants, args.concurrency, "wf_llm_grid")
