@@ -229,6 +229,14 @@ def embed_collection(model_key: str, model_name: str, use_case_key: str,
         print(f"      {len(done)}/{len(df)} papers  "
               f"({n_this_run / elapsed if elapsed else 0:.0f}/s this process)", flush=True)
 
+    # Re-read _partial before deciding. `done` only reflects what existed when this
+    # process STARTED plus what it embedded itself, so concurrent shards would each finish
+    # holding their own slice and none would ever see a complete collection — nothing
+    # would consolidate and the run would end with the work done but no output file.
+    for part in sorted(PARTIAL.glob(f"{stem}.part*.parquet")):
+        chunk = pd.read_parquet(part)
+        done.update(zip(chunk["paper_id"], chunk["embedding"]))
+
     # Only the process that can see every id may consolidate. With shards running
     # concurrently the others simply stop here and leave _partial alone.
     if len(done) < len(df):
