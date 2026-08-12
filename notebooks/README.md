@@ -38,6 +38,31 @@ results table.
 
 ---
 
+## `main/*_benchset_v1` — the same pass, at realistic prevalence
+
+A parallel line of three notebooks over `data/benchsets_v1/` — 28 published
+systematic-review screening collections, 181,199 papers, **1.86% relevant**. The six
+questions above run 26–77% positive, so every threshold and F2 number measured on them was
+measured ~20× away from production prevalence (`CONTEXT.md` §3). This is the corrective
+surface.
+
+They are numbered to match their TIRI counterparts but are **not ports** — the corpora
+differ enough (28 silos not 6, no `embedding`/`relevance_score`/`venue` columns, a binary
+label with no `pass`, NULL rather than empty-string abstracts, and a hard prohibition on
+pooling) that several sections had to be replaced rather than adapted.
+
+| # | Notebook | What it does |
+|---|---|---|
+| 01 | `01_data_compile_benchset_v1.ipynb` | **Verification, not cleaning** — the corpus arrives de-duplicated with briefs broadcast, so instead of showing its own cleaning this notebook checks someone else's: 364 count/prevalence/per-column-coverage assertions against the corpus's `manifest.json`, plus its three headline figures re-derived rather than quoted. Adds `has_abstract` and `label_positive`, and writes **`data/processed/papers_benchset_v1.parquet`**. **Hard findings:** 3,137 papers were screened under more than one question and **130 come out `positive` under one and `negative` under another** — the first direct measurement of `CONTEXT.md` §2's central claim on external data; and a missing abstract here is a genuine NULL, the exact reverse of `papers_combined.parquet`, so carried-over `abstract == ""` code silently finds nothing. |
+| 02 | `02_eda_quickstart_benchset_v1.ipynb` | The 5-minute tour, same five slides and palette as `02_eda_quickstart`, exported to `reports/eda_quickstart_benchset_v1_*`. Slide 1 shows the pooled bar **beside** the per-collection spread, because at 98% negative the pooled bar describes no collection in the corpus; the stacked per-question bar is replaced by log-scale size/positive-count panels for the same reason. **Hard findings:** prevalence spans 0.16%–78% (a 480× spread) and abstract coverage 0%–23% *by collection* — both invisible in any pooled view. |
+| 03 | `03_eda_full_benchset_v1.ipynb` | The full pass, **every label-conditional statistic per collection**, win counts beside means, `roadfreight_metareview` out of every headline average. Embedding sections use Jasper + Qwen3-4B from `scripts/embed_benchsets.py`; the pooled O(n²) silhouette and pairwise-cosine of `03_eda_full` become per-collection and subsampled. §12 fits within-collection baselines on the 16 collections with ≥40 positives. **Hard findings:** citation count separates the classes in 24/27 collections and **23 point the same way — relevant papers are the *less* cited ones**, which is *not* what `03_eda_full` §7.1 found on TIRI and is best explained by reviews excluding the heavily-cited reviews and guidelines their search returns; and in 5 collections **publication year alone ranks above 0.70 ROC-AUC** (0.875 on `synergy_moran_2021`), a temporal artefact of the same kind `CONTEXT.md` §4 records for `solar_leo` — so §12 fits a year-only arm to keep it visible. |
+
+**Run `scripts/embed_benchsets.py` before 02 or 03.** It computes and caches the
+Jasper-600M + Qwen3-Embedding-4B vectors both notebooks join, resumably, per collection.
+`data/benchsets_v1/` itself is not tracked in git — see the root README's **Data** section.
+
+---
+
 ## `experiments/` — supporting evidence
 
 Read-only. This is where most of the project's measured **negative results** live, which

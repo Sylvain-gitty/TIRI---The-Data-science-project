@@ -143,6 +143,7 @@ step. Notebooks assume they're run with their own folder as the working director
 | `main/05_validation_design` — where the collapse is measured | `main/09_ensemble_per_silo` — same, plus Modal |
 | **16 of the 18** `notebooks/experiments/` — the evidence | `experiments/wf_synergy_validation` — needs an OpenRouter key in `.env` |
 | both `notebooks/future_work/` templates (gated, safe to Run All) | `experiments/wf_top_embeddings_generalization` — needs `embeddings_cache/` |
+| | the three `*_benchset_v1` notebooks — need `data/benchsets_v1/` (92 MB, not tracked; see **Data** below), and 02/03 also need `scripts/embed_benchsets.py` to have run |
 
 The left-hand column is **verified, not asserted**. `git clone` into an empty directory,
 `pip install -r requirements.txt`, Run All on every notebook: the main line passes — 01
@@ -239,6 +240,23 @@ the bulk that's regenerable (~600 MB).
 | `papers_fe.parquet` | 106 MB | `notebooks/main/04_feature_engineering.ipynb` |
 | `papers_fe_synergy*.parquet` | 173 MB | `scripts/run_synergy_recall_validation.py` |
 | `embeddings_cache/` | 295 MB | `scripts/modal_embeddings.py` (GPU) + OpenRouter (paid) |
+| `data/benchsets_v1/` | 92 MB | re-download from the sources in its own `README.md` (all CC0 / CC BY) |
+| `papers_benchset_v1.parquet` | 157 MB | `notebooks/main/01_data_compile_benchset_v1.ipynb` |
+
+### The benchmark corpus
+
+`data/benchsets_v1/` is a second, externally-sourced corpus: **28 published
+systematic-review screening collections, 181,199 papers, 1.86% relevant**, with real
+expert labels and LLM-drafted (label-blind) briefs. It exists because the six questions
+above run **26–77% positive** — roughly 20× production prevalence — so every F2 number and
+calibrated threshold measured on them was measured in the wrong regime (`CONTEXT.md` §3).
+This corpus is the prevalence-realistic surface.
+
+It is not tracked in git: 92 MB is four times everything else here, and it isn't ours to
+redistribute. It has its own `README.md` naming each source. Three notebooks consume it —
+`01_data_compile_benchset_v1`, `02_eda_quickstart_benchset_v1`, `03_eda_full_benchset_v1` —
+and `scripts/embed_benchsets.py` computes the Jasper + Qwen3-4B vectors that 02 and 03
+join. **Run the script before either notebook.**
 
 **Why a "slim" feature table.** `papers_fe.parquet` is 1,848 × 8,742 and 106 MB — 101 MB
 of it three raw embedding blocks. Drop those and 38 columns weighing 0.3 MB remain: the
