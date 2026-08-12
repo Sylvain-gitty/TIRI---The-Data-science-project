@@ -62,6 +62,12 @@ Usage:
     python scripts/embed_benchsets.py --collections roadfreight_metareview   # smoke test
     python scripts/embed_benchsets.py --models jasper      # one model
     python scripts/embed_benchsets.py --dry-run            # what's missing, embed nothing
+    python scripts/embed_benchsets.py --verify             # check what's written, exit 1 on any problem
+
+The job parallelises by running several invocations over disjoint --collections at once;
+Modal scales out a container per concurrent call, and the skip/resume logic keeps them
+from treading on each other. Keep the sets disjoint — two processes on one collection
+duplicate the work and race on consolidation.
 """
 
 from __future__ import annotations
@@ -86,6 +92,10 @@ MODELS = {
     "jasper": "infgrad/Jasper-Token-Compression-600M",
     "qwen4b": "Qwen/Qwen3-Embedding-4B",
 }
+# Asserted by --verify rather than assumed. These are the widths papers_fe.parquet
+# already carries (04_feature_engineering.ipynb's own expected_widths check), so a
+# mismatch means the model changed under us, not that this constant is stale.
+EXPECTED_DIMS = {"jasper": 2048, "qwen4b": 2560}
 
 # The bake-off's own use-case query text, field-for-field — see this module's docstring.
 USE_CASE_COLS = ["use_case_name", "problem_statement", "objective",
@@ -248,6 +258,72 @@ def embed_briefs(model_key: str, model_name: str, briefs: pd.DataFrame, dry_run:
     return f"embedded {len(missing)} briefs"
 
 
+def verify(files: dict[str, Path], model_keys: list[str]) -> int:
+    """Check every written cache file against the source collection it claims to cover.
+
+    Worth its own pass rather than trusting the run's exit code: a half-written parquet
+    from a killed process, a silently truncated collection, or an all-zero vector from a
+    model that loaded but did not run are all things a green run can leave behind, and all
+    of them would surface much later as a confusing notebook error.
+    """
+    problems: list[str] = []
+    n_checked = n_missing = 0
+
+    for model_key in model_keys:
+        model_name = MODELS[model_key]
+        expected_dim = EXPECTED_DIMS[model_key]
+
+        briefs_path = usecases_path(model_name)
+        if not briefs_path.exists():
+            n_missing += 1
+        else:
+            briefs = pd.read_parquet(briefs_path)
+            vectors = np.vstack(briefs["embedding"].to_numpy())
+            if len(briefs) != len(files):
+                problems.append(f"{briefs_path.name}: {len(briefs)} briefs, expected {len(files)}")
+            if vectors.shape[1] != expected_dim:
+                problems.append(f"{briefs_path.name}: dim {vectors.shape[1]} != {expected_dim}")
+            if not briefs["use_case_key"].is_unique:
+                problems.append(f"{briefs_path.name}: duplicate use_case_key")
+
+        for use_case_key, source_path in files.items():
+            path = papers_path(use_case_key, model_name)
+            if not path.exists():
+                n_missing += 1
+                continue
+            n_checked += 1
+            cached = pd.read_parquet(path)
+            vectors = np.vstack(cached["embedding"].to_numpy())
+            source_ids = pd.read_parquet(source_path, columns=["paper_id"])["paper_id"]
+
+            if vectors.shape[1] != expected_dim:
+                problems.append(f"{path.name}: dim {vectors.shape[1]} != {expected_dim}")
+            if vectors.dtype != np.float32:
+                problems.append(f"{path.name}: dtype {vectors.dtype} != float32")
+            if not cached["paper_id"].is_unique:
+                problems.append(f"{path.name}: paper_id is not unique")
+            if not np.isfinite(vectors).all():
+                problems.append(f"{path.name}: contains NaN or inf")
+            n_zero = int((np.linalg.norm(vectors, axis=1) == 0).sum())
+            if n_zero:
+                problems.append(f"{path.name}: {n_zero} all-zero vectors")
+            if set(source_ids) != set(cached["paper_id"]):
+                problems.append(
+                    f"{path.name}: paper_id set differs from {source_path.name} "
+                    f"({len(cached)} cached vs {len(source_ids)} source rows)"
+                )
+
+    print(f"Checked {n_checked} collection files; {n_missing} not yet written.")
+    if problems:
+        print(f"\n{len(problems)} PROBLEM(S):")
+        for problem in problems:
+            print(f"  {problem}")
+        return 1
+    print("All checked files pass: dims, float32, unique and complete paper_id sets, "
+          "finite, no zero vectors.")
+    return 0
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--models", default=",".join(MODELS),
@@ -256,6 +332,8 @@ def main() -> None:
                         help="comma-separated use_case_keys (default: all 28)")
     parser.add_argument("--dry-run", action="store_true",
                         help="report what is missing without embedding anything")
+    parser.add_argument("--verify", action="store_true",
+                        help="check already-written cache files and exit non-zero on any problem")
     args = parser.parse_args()
 
     model_keys = [m.strip() for m in args.models.split(",") if m.strip()]
@@ -270,6 +348,9 @@ def main() -> None:
         if missing:
             parser.error(f"no such collection(s): {sorted(missing)}")
         files = {k: files[k] for k in wanted}
+
+    if args.verify:
+        raise SystemExit(verify(files, model_keys))
 
     briefs = pd.read_parquet(BENCHSETS / "briefs.parquet")
     CACHE.mkdir(parents=True, exist_ok=True)
