@@ -101,6 +101,26 @@ EXPECTED_DIMS = {"jasper": 2048, "qwen4b": 2560}
 USE_CASE_COLS = ["use_case_name", "problem_statement", "objective",
                  "domain_industry", "domain_application"]
 
+# Brief variants, for the provenance ablation in 03_eda_full_benchset_v1.ipynb §8.4.
+#
+# The worry these answer: cosine-to-brief scores far higher on this corpus than on TIRI,
+# and one obvious explanation is that `objective` holds the review's ABSTRACT — written
+# after screening finished, describing the studies that got included. Every other field is
+# a title, a name, a scope descriptor or a term list, all of which a customer genuinely has
+# before screening starts. Dropping `objective` and re-scoring measures how much of the
+# advantage depends on text that could not exist at t=0.
+#
+# `pre_screening` is the one that matters operationally: it is the closest thing here to a
+# brief someone could actually write on day one.
+BRIEF_VARIANTS = {
+    "full": USE_CASE_COLS,
+    "no_objective": ["use_case_name", "problem_statement",
+                     "domain_industry", "domain_application"],
+    "pre_screening": ["use_case_name", "problem_statement",
+                      "domain_industry", "domain_application",
+                      "terms_must_include", "terms_nice_to_have", "terms_exclude"],
+}
+
 # Big enough that per-call overhead is amortised, small enough that one lost chunk is a
 # minute of work and the return payload stays well clear of Modal's limits (500 x 2560
 # float64 ~ 10 MB).
@@ -253,35 +273,40 @@ def embed_collection(model_key: str, model_name: str, use_case_key: str,
 
 
 def embed_briefs(model_key: str, model_name: str, briefs: pd.DataFrame, dry_run: bool) -> str:
-    """One vector per use case, for cosine-to-brief. Same schema and same query text as
-    the existing <safe_model>_usecases.parquet files."""
-    out = usecases_path(model_name)
-    cached: dict[str, list] = {}
-    if out.exists():
-        prev = pd.read_parquet(out)
-        cached = dict(zip(prev["use_case_key"], prev["embedding"]))
+    """One vector per (use case, brief variant), for cosine-to-brief and the §8.4 ablation.
 
-    texts = {
-        row["use_case_key"]: " ".join(
-            str(row[c]) for c in USE_CASE_COLS if pd.notna(row[c]) and str(row[c]).strip()
-        )
-        for _, row in briefs.iterrows()
-    }
-    missing = [uc for uc in texts if uc not in cached]
-    if not missing:
-        return f"cached ({len(cached)} briefs)"
+    The `variant` column is an addition to the TIRI cache's <safe_model>_usecases.parquet
+    schema; readers wanting the production brief filter `variant == "full"`.
+    """
+    out = usecases_path(model_name)
+    if out.exists() and "variant" in pd.read_parquet(out).columns:
+        return f"cached ({len(BRIEF_VARIANTS)} variants x {len(briefs)} briefs)"
     if dry_run:
-        return f"WOULD EMBED {len(missing)} briefs"
+        return f"WOULD EMBED {len(BRIEF_VARIANTS) * len(briefs)} brief variants"
+
+    def field_text(row, column):
+        value = row[column]
+        if isinstance(value, (list, np.ndarray)):
+            return " ; ".join(str(v) for v in value if str(v).strip())
+        return str(value) if pd.notna(value) and str(value).strip() else ""
 
     cfg = MODEL_CONFIGS[model_name]
-    vectors = embed_texts(
-        model_name, [texts[uc] for uc in missing],
-        prefix=cfg["query_prefix"], is_query=True,
-    )
-    cached.update(zip(missing, [v.astype(np.float32) for v in vectors]))
-    keys = list(cached)
-    _write_vectors(out, keys, np.vstack([np.asarray(cached[k]) for k in keys]), "use_case_key")
-    return f"embedded {len(missing)} briefs"
+    keys, variants, vectors = [], [], []
+    for variant, columns in BRIEF_VARIANTS.items():
+        texts = [
+            " ".join(t for t in (field_text(row, c) for c in columns) if t)
+            for _, row in briefs.iterrows()
+        ]
+        embedded = embed_texts(model_name, texts, prefix=cfg["query_prefix"], is_query=True)
+        keys.extend(briefs["use_case_key"].tolist())
+        variants.extend([variant] * len(briefs))
+        vectors.extend(v.astype(np.float32) for v in embedded)
+
+    frame = pd.DataFrame({"use_case_key": keys, "variant": variants,
+                          "embedding": list(np.vstack(vectors).astype(np.float32))})
+    out.parent.mkdir(parents=True, exist_ok=True)
+    frame.to_parquet(out, index=False)
+    return f"embedded {len(BRIEF_VARIANTS)} variants x {len(briefs)} briefs"
 
 
 def verify(files: dict[str, Path], model_keys: list[str]) -> int:
@@ -305,12 +330,17 @@ def verify(files: dict[str, Path], model_keys: list[str]) -> int:
         else:
             briefs = pd.read_parquet(briefs_path)
             vectors = np.vstack(briefs["embedding"].to_numpy())
-            if len(briefs) != len(files):
-                problems.append(f"{briefs_path.name}: {len(briefs)} briefs, expected {len(files)}")
+            expected_rows = len(files) * len(BRIEF_VARIANTS)
+            if len(briefs) != expected_rows:
+                problems.append(f"{briefs_path.name}: {len(briefs)} rows, expected "
+                                f"{expected_rows} ({len(BRIEF_VARIANTS)} variants x {len(files)})")
             if vectors.shape[1] != expected_dim:
                 problems.append(f"{briefs_path.name}: dim {vectors.shape[1]} != {expected_dim}")
-            if not briefs["use_case_key"].is_unique:
-                problems.append(f"{briefs_path.name}: duplicate use_case_key")
+            if set(briefs["variant"]) != set(BRIEF_VARIANTS):
+                problems.append(f"{briefs_path.name}: variants {sorted(set(briefs['variant']))} "
+                                f"!= {sorted(BRIEF_VARIANTS)}")
+            if briefs.duplicated(subset=["use_case_key", "variant"]).any():
+                problems.append(f"{briefs_path.name}: duplicate (use_case_key, variant)")
 
         for use_case_key, source_path in files.items():
             path = papers_path(use_case_key, model_name)
