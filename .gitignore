@@ -1,3 +1,4 @@
+.venv
 .venv/
 __pycache__/
 *.pyc
@@ -24,9 +25,16 @@ CLAUDE.md
 #   papers_fe.parquet (106 MB)          rebuild: notebooks/04_feature_engineering
 #   papers_fe_synergy*.parquet (173 MB) external-validation artifacts
 #   embeddings_cache/ (295 MB)          paid API / Modal GPU output
+#   data/benchsets_v1/ (92 MB)          not ours to ship — 28 externally-published
+#                                       screening collections (SYNERGY CC0, Nykvist
+#                                       CC BY, Mendeley CC BY). Re-downloadable from
+#                                       the sources its own README lists, so it's
+#                                       bulk-and-regenerable like the rest of this
+#                                       block, not a 5th tracked file.
 # ---------------------------------------------------------------------------
 data/raw/*
 data/processed/*
+data/benchsets_v1
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/processed/README.md

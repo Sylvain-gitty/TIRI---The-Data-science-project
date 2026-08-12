@@ -1,0 +1,76 @@
+{
+  "source": "papers_benchset_v1.parquet",
+  "row_reconciliation": {
+    "start": 181199,
+    "after_abstract_drop": 176466,
+    "after_within_collection_dedupe": 175319
+  },
+  "positive_reconciliation": {
+    "start": 3374,
+    "after_abstract_drop": 3270,
+    "after_within_collection_dedupe": 3261
+  },
+  "rules": {
+    "abstract": "rows with no abstract dropped, uniformly and with no exceptions",
+    "min_positives": 40,
+    "min_positives_per_test_fold": 5,
+    "n_folds": 5,
+    "quarantined": {
+      "roadfreight_metareview": "review-of-reviews at 78% prevalence over 132 rows: the screening decision is 'is this a review?', not 'is this relevant?'. Already out of every headline average in 02/03_eda_*_benchset_v1."
+    }
+  },
+  "partition_search": {
+    "collections_searched": 15,
+    "partitions_enumerated": 16384,
+    "partitions_meeting_balance": 792,
+    "max_collection_count_diff": 1,
+    "max_positive_imbalance": 0.12,
+    "max_row_imbalance": 0.15,
+    "objective": "minimise shared papers crossing A/B, tie-break on brief cosine",
+    "shared_paper_links_total": 2112.0,
+    "shared_paper_links_crossing": 159.0,
+    "cross_boundary_brief_cosine": 16.28481674194336,
+    "positive_imbalance": 0.06198347107438017,
+    "row_imbalance": 0.13916958894445253
+  },
+  "assignment": {
+    "nykvist_evcharging": "large_set_b",
+    "roadfreight_metareview": "small_test",
+    "synergy_appenzeller-herzog_2019": "small_test",
+    "synergy_bos_2018": "small_test",
+    "synergy_brouwer_2019": "large_set_a",
+    "synergy_chou_2003": "small_test",
+    "synergy_chou_2004": "small_test",
+    "synergy_donners_2021": "small_test",
+    "synergy_hall_2012": "large_set_b",
+    "synergy_jeyaraman_2020": "large_set_b",
+    "synergy_leenaars_2019": "small_test",
+    "synergy_leenaars_2020": "large_set_a",
+    "synergy_meijboom_2021": "small_test",
+    "synergy_menon_2022": "large_set_b",
+    "synergy_moran_2021": "large_set_a",
+    "synergy_muthu_2021": "large_set_a",
+    "synergy_nelson_2002": "large_set_a",
+    "synergy_oud_2018": "small_test",
+    "synergy_radjenovic_2013": "large_set_b",
+    "synergy_sep_2021": "large_set_a",
+    "synergy_smid_2020": "small_test",
+    "synergy_van_de_schoot_2018": "small_test",
+    "synergy_van_der_valk_2021": "large_set_a",
+    "synergy_van_der_waal_2022": "small_test",
+    "synergy_van_dis_2020": "large_set_a",
+    "synergy_walker_2018": "large_set_b",
+    "synergy_wassenaar_2017": "large_set_b",
+    "synergy_wolters_2018": "small_test"
+  },
+  "crossing_papers": {
+    "distinct_papers": 154,
+    "rows": 313,
+    "file": "benchset_v1_ab_crossing_papers.csv"
+  },
+  "caveats": {
+    "synergy_walker_2018": "81 of its positives were dropped with their abstract-less rows, which were 3.7x enriched for positives. Scores on this collection are optimistic relative to the real screening task.",
+    "embeddings": "carried as emb_jasper_* / emb_qwen4b_* scalar columns, matching papers_fe.parquet, so prefix-slicing downstream code works unchanged. Rebuildable from data/processed/embeddings_cache via embed_benchsets.load_paper_vectors(df, model_key)",
+    "paper_age": "affine in year (single export timestamp); not an independent feature"
+  }
+}

@@ -59,6 +59,29 @@ were when measured; what these labels tell you is whether a later document revis
 
 ---
 
+## `benchset_v1` — the benchmark corpus, kept separate on purpose
+
+Everything below comes from `data/benchsets_v1/` — 28 published systematic-review
+screening collections, 181,199 papers, **1.86% positive** — *not* from the six TIRI
+questions the rest of this folder is about. The two corpora are never averaged together
+and a number from one does not transfer to the other, which is why every filename here
+carries a `benchset_v1` prefix and why they sit in their own section.
+
+The distinction that matters: the TIRI pools run **26–77% positive**, roughly 20×
+production prevalence (`CONTEXT.md` §3). These files are the prevalence-realistic
+counterpart. A threshold, an F2 or a WSS@95 measured on one is not comparable to the
+same statistic measured on the other.
+
+| Artifact | What it is |
+|---|---|
+| [`benchset_v1_split_manifest.json`](benchset_v1_split_manifest.json) | **The decision record for the three benchmark sets.** Row and positive reconciliation at each filtering step, both derived thresholds, the A/B partition search and what it cost, and the caveats that must travel with the data — including that `synergy_walker_2018` is easier here than its real screening task. Written by `notebooks/main/04_feature_engineering_benchset_v1.ipynb`. |
+| [`benchset_v1_ab_crossing_papers.csv`](benchset_v1_ab_crossing_papers.csv) | The 154 papers (313 rows) that sit in both `large_set_a` and `large_set_b` because no balanced partition could separate them. Filter `set_b` on `row_key` for a strict held-out read — the residual leak as a switch, not a caveat. |
+| `eda_quickstart_benchset_v1_*.{png,csv}` | The five quickstart slides for this corpus, counterparts to `eda_quickstart_*`. Same slides, different corpus — do not read them side by side as a before/after. |
+
+The narrative for all of it is in the four `*_benchset_v1` notebooks, not in a write-up
+here: this corpus arrived after the reports above were written, and its findings live
+in the notebooks that measured them.
+
 ## Why nothing was deleted
 
 The negative results are the point. `CONTEXT.md` §6 keeps a register of everything
@@ -72,4 +95,6 @@ which is what the `Status:` lines are for.
 
 `reports/` also holds the `.png` / `.csv` / `.json` artifacts the notebooks and scripts
 write. They are named after whatever produced them (`wf_ensemble_fold_pipeline_*`,
-`eda_quickstart_*`), so each one traces back to its source.
+`eda_quickstart_*`), so each one traces back to its source. Anything carrying a
+**`benchset_v1`** prefix belongs to the benchmark corpus, not the six TIRI questions —
+see the section above before comparing it with anything else here.
