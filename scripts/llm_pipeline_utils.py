@@ -516,7 +516,13 @@ DROPPABLE_PARAMS = ("seed", "reasoning", "logprobs", "top_logprobs")
 # endpoint health and pricing both move.
 PINNED_PROVIDERS: dict[str, list[str]] = {
     "openai/gpt-oss-20b": ["CoreWeave"],                 # $0.030/$0.130, seed+logprobs
-    "google/gemma-4-31b-it": ["Chutes"],                 # $0.120/$0.370, single endpoint
+    # Friendli, not the cheaper Chutes: chosen on a measured 6-provider probe, not on
+    # price. Chutes served the first gemma run at 28.7s median and produced 586 HTTP 504s
+    # on the P4 checklist variant (68% coverage) - its failure mode is the slow tail, and
+    # the probe puts that tail at 57s. Friendli's *worst* call (9.3s) is faster than
+    # Chutes' median, for a few cents more across the whole grid. Latency spread across
+    # providers for one model is ~5x, far wider than the price spread.
+    "google/gemma-4-31b-it": ["Friendli"],               # $0.140/$0.400, p50 7.6s, max 9.3s
     # DeepInfra, not Nebius, despite Nebius being the "healthy + claims seed" pick: BOTH
     # providers reject `seed` as `extra_forbidden` at the endpoint while OpenRouter's table
     # advertises support, so there is no seed-honouring option to buy. Given that, take the

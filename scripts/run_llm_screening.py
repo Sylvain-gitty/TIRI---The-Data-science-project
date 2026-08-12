@@ -49,7 +49,13 @@ from llm_pipeline_utils import PROMPT_VARIANTS, score_frame  # noqa: E402
 try:  # optional: repo convention is a gitignored .env at the root
     from dotenv import load_dotenv
 
-    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+    # override=True is load-bearing, not tidiness. `load_dotenv` defaults to leaving an
+    # already-set environment variable alone, so a stale OPENROUTER_API_KEY exported from
+    # a shell profile silently wins over the .env file - which is where requirements.txt
+    # says the key lives. That failure mode is near-undiagnosable from the symptom: after
+    # a key rotation, .env holds the new key, every request 401s with "User not found",
+    # and the file you are staring at looks correct. It cost most of a grid run once.
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=True)
 except ImportError:  # pragma: no cover
     pass
 
