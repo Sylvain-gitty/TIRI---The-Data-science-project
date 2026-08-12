@@ -143,7 +143,7 @@ step. Notebooks assume they're run with their own folder as the working director
 | `main/05_validation_design` — where the collapse is measured | `main/09_ensemble_per_silo` — same, plus Modal |
 | **16 of the 18** `notebooks/experiments/` — the evidence | `experiments/wf_synergy_validation` — needs an OpenRouter key in `.env` |
 | both `notebooks/future_work/` templates (gated, safe to Run All) | `experiments/wf_top_embeddings_generalization` — needs `embeddings_cache/` |
-| | the three `*_benchset_v1` notebooks — need `data/benchsets_v1/` (92 MB, not tracked; see **Data** below), and 02/03 also need `scripts/embed_benchsets.py` to have run |
+| | the four `*_benchset_v1` notebooks — need `data/benchsets_v1/` (92 MB, not tracked; see **Data** below), and 02/03/04 also need `scripts/embed_benchsets.py` to have run |
 
 The left-hand column is **verified, not asserted**. `git clone` into an empty directory,
 `pip install -r requirements.txt`, Run All on every notebook: the main line passes — 01
@@ -242,6 +242,7 @@ the bulk that's regenerable (~600 MB).
 | `embeddings_cache/` | 295 MB | `scripts/modal_embeddings.py` (GPU) + OpenRouter (paid) |
 | `data/benchsets_v1/` | 92 MB | re-download from the sources in its own `README.md` (all CC0 / CC BY) |
 | `papers_benchset_v1.parquet` | 157 MB | `notebooks/main/01_data_compile_benchset_v1.ipynb` |
+| `benchset_v1_{small_test,large_set_a,large_set_b}.parquet` | 36 MB total | `notebooks/main/04_feature_engineering_benchset_v1.ipynb` |
 
 ### The benchmark corpus
 
@@ -253,10 +254,18 @@ calibrated threshold measured on them was measured in the wrong regime (`CONTEXT
 This corpus is the prevalence-realistic surface.
 
 It is not tracked in git: 92 MB is four times everything else here, and it isn't ours to
-redistribute. It has its own `README.md` naming each source. Three notebooks consume it —
-`01_data_compile_benchset_v1`, `02_eda_quickstart_benchset_v1`, `03_eda_full_benchset_v1` —
-and `scripts/embed_benchsets.py` computes the Jasper + Qwen3-4B vectors that 02 and 03
-join. **Run the script before either notebook.**
+redistribute. It has its own `README.md` naming each source. Four notebooks consume it —
+`01_data_compile_benchset_v1`, `02_eda_quickstart_benchset_v1`, `03_eda_full_benchset_v1`,
+`04_feature_engineering_benchset_v1` — and `scripts/embed_benchsets.py` computes the
+Jasper + Qwen3-4B vectors they join. **Run the script first.**
+
+**The three benchmark sets.** 04 turns the corpus into `benchset_v1_small_test.parquet`
+(13 collections, evaluation only — too few positives to cross-validate, or not a screening
+task) plus `benchset_v1_large_set_a` / `_set_b` (8 and 7 collections, 62k and 82k rows).
+A and B are **development vs held-out, both used within-silo** — not a cross-silo
+train/test split, which `CONTEXT.md` §1 rules out. The partition is the exact minimum-leak
+balanced split of all 16,384 possibilities; `reports/benchset_v1_split_manifest.json`
+records how it was chosen and what it costs.
 
 **Why a "slim" feature table.** `papers_fe.parquet` is 1,848 × 8,742 and 106 MB — 101 MB
 of it three raw embedding blocks. Drop those and 38 columns weighing 0.3 MB remain: the

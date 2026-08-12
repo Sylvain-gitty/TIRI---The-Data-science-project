@@ -166,6 +166,86 @@ def collection_files() -> dict[str, Path]:
     return {p.stem: p for p in sorted(BENCHSETS.glob("*.parquet")) if p.stem != "briefs"}
 
 
+def load_paper_vectors(df: pd.DataFrame, model_key: str, *,
+                       id_col: str = "paper_id",
+                       use_case_col: str = "use_case_key") -> np.ndarray:
+    """Cached paper vectors for `df`'s rows, as one (len(df), dim) float32 matrix in df's
+    own row order.
+
+    This is the read side of the per-collection cache layout described at the top of this
+    module, and it exists so that no downstream notebook has to know that layout. It is
+    also the reason 04_feature_engineering_benchset_v1.ipynb does NOT explode embeddings
+    into columns the way 04_feature_engineering.ipynb does: at 175k rows x 4,608 combined
+    dimensions that would be ~3.2 GB written three times over, duplicating vectors this
+    cache already holds. The feature tables stay small and join here at fit time instead.
+
+    `paper_id` is unique only WITHIN a collection, so the lookup is keyed on the
+    (use_case_key, paper_id) pair — a global paper_id -> vector dict would silently
+    collide across the 2,102 papers that appear in more than one collection.
+
+    Raises rather than filling if any row has no cached vector: a missing embedding means
+    the cache is stale for this input, and a zero row would quietly poison every cosine
+    computed from it.
+    """
+    model_name = MODELS[model_key]
+    matrix, filled = None, np.zeros(len(df), dtype=bool)
+    positions = np.arange(len(df))
+
+    for use_case_key, rows in df.groupby(use_case_col, sort=False):
+        path = papers_path(use_case_key, model_name)
+        if not path.exists():
+            raise FileNotFoundError(
+                f"{model_key}: no cached vectors for collection {use_case_key!r} at "
+                f"{path}. Run `python scripts/embed_benchsets.py --models {model_key} "
+                f"--collections {use_case_key}` first."
+            )
+        cached = pd.read_parquet(path).set_index("paper_id")["embedding"]
+        wanted = rows[id_col]
+        missing = wanted[~wanted.isin(cached.index)]
+        if len(missing):
+            raise KeyError(
+                f"{model_key}/{use_case_key}: {len(missing)} paper_id(s) have no cached "
+                f"vector, e.g. {sorted(missing)[:5]} — the cache is stale for this input."
+            )
+        block = np.vstack(cached.loc[wanted].to_numpy()).astype(np.float32)
+        if matrix is None:
+            matrix = np.empty((len(df), block.shape[1]), dtype=np.float32)
+        elif block.shape[1] != matrix.shape[1]:
+            raise ValueError(
+                f"{model_key}: {use_case_key} cached at {block.shape[1]} dims but an "
+                f"earlier collection cached at {matrix.shape[1]} — mixed model versions."
+            )
+        where = positions[df[use_case_col].to_numpy() == use_case_key]
+        matrix[where] = block
+        filled[where] = True
+
+    if matrix is None:
+        raise ValueError("empty frame — nothing to load vectors for")
+    assert filled.all(), f"{(~filled).sum()} rows never filled — groupby missed them"
+    return matrix
+
+
+def load_brief_vectors(model_key: str, variant: str = "full") -> dict[str, np.ndarray]:
+    """use_case_key -> brief vector, for one of BRIEF_VARIANTS.
+
+    `full` is what the bake-off scored and what cosine-to-brief has always meant here.
+    `pre_screening` is the variant a customer could actually write at t=0; §8.4 of
+    03_eda_full_benchset_v1.ipynb measured the gap between them at ~0.005 ROC-AUC against
+    a ~0.03 noise floor, which is why both are worth carrying downstream.
+    """
+    if variant not in BRIEF_VARIANTS:
+        raise ValueError(f"unknown variant {variant!r}; have {sorted(BRIEF_VARIANTS)}")
+    frame = pd.read_parquet(usecases_path(MODELS[model_key]))
+    frame = frame[frame["variant"] == variant]
+    if frame.empty:
+        raise ValueError(
+            f"{model_key}: no {variant!r} briefs cached in "
+            f"{usecases_path(MODELS[model_key])} — re-run the runner to add them."
+        )
+    return {k: np.asarray(v, dtype=np.float32)
+            for k, v in zip(frame["use_case_key"], frame["embedding"])}
+
+
 def _write_vectors(path: Path, ids: list[str], vectors: np.ndarray, id_col: str) -> None:
     """One row per id, `embedding` as float32.
 
