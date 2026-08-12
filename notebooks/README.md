@@ -43,6 +43,29 @@ results table.
 Read-only. This is where most of the project's measured **negative results** live, which
 is why none of it was deleted.
 
+**All 18 were executed from a fresh clone; 16 pass.** The two that don't fail for
+different reasons, both about things deliberately kept out of git:
+
+| Notebook | Blocker |
+|---|---|
+| `wf_synergy_validation` | `RuntimeError: OPENROUTER_API_KEY not set` — needs a key in `.env` (gitignored) |
+| `wf_top_embeddings_generalization` | `FileNotFoundError` on `data/processed/embeddings_cache/` (~295 MB, gitignored) |
+
+Both are committed with their outputs intact. `wf_embedding_model_bakeoff` **does** run —
+it degrades gracefully, using the export's own embeddings and skipping the hosted and
+GPU-side models it can't reach, rather than failing.
+
+Three caveats on the 16 that pass:
+
+- `author_orcid` (Crossref/ORCID) and `venue_quality` (OpenAlex) call **live APIs**, so
+  they need network and their numbers can drift as those records change.
+- `run_comparisons` and `wf_embedding_model_bakeoff` embed text from scratch, so they
+  need `fastembed` **and** `sentence-transformers` actually installed — both are in
+  `requirements.txt`, but they are its two heaviest entries (`sentence-transformers`
+  pulls PyTorch) and are the easiest to skip on a partial install. First run also
+  downloads the embedding models.
+- `run_comparisons` is the slowest notebook in the repo for that reason.
+
 ### Feature viability checks
 
 | Notebook | What it found |
@@ -72,7 +95,7 @@ is why none of it was deleted.
 | `wf_embedding_model_bakeoff.ipynb` | 11 candidate embedding models against the corpus's own local embedding — 7 hosted via OpenRouter, 4 heavier HF models run GPU-side via Modal — on one fold design, with a full metric bundle plus a check on whether combining embedding sources beats the best single one. |
 | `wf_top_embeddings_generalization.ipynb` | Repeats the held-out test for the top 3 with **each** of the 6 questions held out in turn, tests prediction-level combination vs vector concatenation, and tests isotonic/Platt calibration under a simulated ~50-label budget. |
 | `wf_synergy_validation.ipynb` | External validation against 3 [SYNERGY](https://github.com/asreview/synergy-dataset) systematic reviews — an independent benchmark this project had no hand in labelling, at realistic prevalence (1.7–14.8% positive vs our 26–77%). **Model ranking is not stable across prevalence regimes:** Qwen3-4B is mid-pack in-repo and *last* on SYNERGY. |
-| `run_comparisons.ipynb` | Runs `scripts/compare_*.py`'s own functions with every table and plot inline, plus a paired significance check across representations. **Note:** its `CORPUS_KEY` paths point at two `.parquet` files that no longer exist — needs repointing at `data/raw/*.jsonl` before it will run. |
+| `run_comparisons.ipynb` | Runs `scripts/compare_*.py`'s own functions with every table and plot inline, plus a paired significance check across representations. Set `USE_CASE_KEY` to analyse a different research question. Embeds the corpus from scratch, so it is the slowest notebook here and needs `fastembed` + `sentence-transformers`. |
 
 ### Fold and pipeline design
 
