@@ -96,6 +96,25 @@ USE_CASE_COLS = ["use_case_name", "problem_statement", "objective",
 # float64 ~ 10 MB).
 CHUNK_SIZE = 500
 
+# Abstract character budget. MEASURED, not guessed: title+abstract across this corpus has
+# a median of 1,450 characters and a 99.9th percentile of 5,871 — but a 301-row tail runs
+# to 30,177, which is a full-text dump that escaped into an abstract field, not an
+# abstract. Those rows are what make the GPU run out of memory: Jasper batches 32
+# documents at a time server-side, and 32 x 30k characters of attention does not fit on an
+# L4 (confirmed by a torch.OutOfMemoryError on synergy_walker_2018 and three others).
+#
+# 4,000 characters keeps 99.8% of the corpus completely untouched and costs the rest a
+# tail that a screening decision does not depend on. This is a truncation that would
+# happen anyway — sentence-transformers silently truncates at the model's max_seq_length —
+# so the choice here is only whether it is visible and reproducible. The TITLE is never
+# truncated, only the abstract.
+MAX_ABSTRACT_CHARS = 4000
+
+# When a chunk fails anyway, retry it in pieces this size. Below the models' server-side
+# batch_size (32 for Jasper, 16 for Qwen3-4B), a chunk IS the batch, so a smaller chunk is
+# the one lever a client has over peak GPU memory.
+OOM_RETRY_CHUNK = 8
+
 
 def safe_name(model_name: str) -> str:
     """The cache-filename form of a model name — identical to the one
@@ -161,11 +180,23 @@ def embed_collection(model_key: str, model_name: str, use_case_key: str,
     started = time.monotonic()
     for offset in range(0, len(todo), CHUNK_SIZE):
         chunk = todo.iloc[offset:offset + CHUNK_SIZE]
-        vectors, _ = embed_papers(
-            model_name,
-            chunk["title"].fillna("").tolist(),
-            chunk["abstract"].fillna("").tolist(),
-        )
+        titles = chunk["title"].fillna("").tolist()
+        abstracts = chunk["abstract"].fillna("").str.slice(0, MAX_ABSTRACT_CHARS).tolist()
+        try:
+            vectors, _ = embed_papers(model_name, titles, abstracts)
+        except Exception as exc:  # noqa: BLE001 — see MAX_ABSTRACT_CHARS
+            # Almost always a GPU OOM on an unusually long batch. Retrying the same chunk
+            # unchanged would fail identically, so retry it in pieces small enough to be
+            # the server-side batch themselves. Re-raised if that fails too: an embedding
+            # that cannot be produced is a finding, not a row to quietly skip.
+            print(f"      chunk at {offset} failed ({type(exc).__name__}), "
+                  f"retrying in {OOM_RETRY_CHUNK}-row pieces", flush=True)
+            pieces = [
+                embed_papers(model_name, titles[i:i + OOM_RETRY_CHUNK],
+                             abstracts[i:i + OOM_RETRY_CHUNK])[0]
+                for i in range(0, len(titles), OOM_RETRY_CHUNK)
+            ]
+            vectors = np.vstack(pieces)
         # Sequence number keyed to position in the collection, so a resumed run's parts
         # never collide with an earlier run's.
         part = PARTIAL / f"{stem}.part{len(done):07d}.parquet"
