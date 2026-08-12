@@ -5,16 +5,35 @@ CLAUDE.md
 .env
 .DS_Store
 
-# Data files don't belong in git — keep the folders, ignore their contents.
+# ---------------------------------------------------------------------------
+# The data contract (see README.md § Data)
+#
+# Default is still "data doesn't belong in git", but a repo whose every notebook
+# dies on cell 1 with FileNotFoundError can't be read, reviewed or assessed. So
+# the rule is now: track whatever is small enough to ship AND is needed to run
+# the main-line notebooks; ignore the bulk that is regenerable.
+#
+# Tracked (~22 MB total):
+#   data/raw/*.jsonl                    the 6 labelled exports — source of truth,
+#                                       12.5 MB compressed, makes 01 runnable
+#   data/raw/*.usecase.json             the per-corpus briefs (a few KB each)
+#   data/processed/papers_combined.parquet   9.3 MB, cleaned corpus + embedding col
+#   data/processed/papers_fe_slim.parquet    0.3 MB, the FE table minus emb_* blocks
+#
+# Ignored (regenerable, ~600 MB):
+#   papers_fe.parquet (106 MB)          rebuild: notebooks/04_feature_engineering
+#   papers_fe_synergy*.parquet (173 MB) external-validation artifacts
+#   embeddings_cache/ (295 MB)          paid API / Modal GPU output
+# ---------------------------------------------------------------------------
 data/raw/*
 data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/processed/README.md
-
-# Use-case JSON files are small, non-bulky config (the agent's real objective/key-terms
-# definition for a corpus), not bulk export data — track them, unlike the parquet exports.
+!data/raw/*.jsonl
 !data/raw/*.usecase.json
+!data/processed/papers_combined.parquet
+!data/processed/papers_fe_slim.parquet
 
 # Local fastembed model cache, if pointed here
 .cache/

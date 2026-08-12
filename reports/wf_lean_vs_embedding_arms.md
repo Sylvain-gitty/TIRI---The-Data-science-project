@@ -1,5 +1,7 @@
 # Does the ensemble need the raw embeddings?
 
+> **Status: current, supporting.** A v2 experiment — does the ensemble actually need the raw embedding block? Feeds the `cement_binders` exception in [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md).
+
 Within-silo, author-grouped 5-fold, 5 seeds, plain LogisticRegression. Embedding arm uses qwen3-8b alone (4096 cols); the lean arm is 33 cols.
 
 ## 1. Standing alone, and combined

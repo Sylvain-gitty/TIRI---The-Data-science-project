@@ -1,12 +1,14 @@
 # NER model notes — properties, choice, and what testing it actually found
 
+> **Status: current** as the decision trail for `compare_ner_models.py` — and note where it ended: **no NER-derived feature is in the shipped model.** This documents why the avenue was tested and dropped, including the negative result that a short use-case name often yields zero recognisable entities.
+
 The decision trail behind `scripts/compare_ner_models.py`, in the same spirit as
 `reports/model_shortlist.md` for embeddings: why this NER tool, what it was tested
 against, and what came back — including the unflattering parts.
 
 ## 1. Scope of this comparison
 
-Same goal as the embedding comparison (see `HANDOFF.md` and `scripts/compare_embeddings.py`'s
+Same goal as the embedding comparison (see `scripts/compare_embeddings.py`'s
 docstring): test how a use-case representation relates to an already-labelled dataset —
 latent-space sanity (dense/disperse), cosine similarity structure, use-case centrality —
 **not** select a model for a future classifier baseline. Nothing downstream is wired to
@@ -19,7 +21,7 @@ whatever "wins" a run of this script.
 > observations to trust a comparison drawn from it. The numbers below are kept as
 > historical record and can no longer be reproduced by re-running against that file. New
 > comparisons should use the soil-microbiome corpus or `data/processed/papers_combined.parquet`'s
-> 6 real research questions — see `notebooks/comparisons/run_comparisons.ipynb`.
+> 6 real research questions — see `notebooks/experiments/run_comparisons.ipynb`.
 
 ## 2. Why spaCy, over GLiNER / scispaCy
 
@@ -110,7 +112,7 @@ parts):**
   (0.65-0.80 range). As a diagnostic reading (not a baseline-selection signal — see
   scope note above), this says generic NER-derived features alone don't separate these
   labels as well as sentence embeddings do on either corpus tested. Whether NER features
-  add anything WHEN COMBINED with an embedding (concatenated, per `HANDOFF.md`'s "likely
+  add anything WHEN COMBINED with an embedding (concatenated, per the original proposal's "likely
   intersects with the existing baseline" note) is untested here — this script only tests
   each representation standalone.
 
@@ -124,7 +126,7 @@ both improve on scientific text, and (b) test `entity_type_counts`/`entity_text_
 concatenated onto an embedding vector rather than standalone, since standalone
 performance being weaker than embeddings doesn't rule out an additive contribution.
 
-**Run it yourself, with output inline:** `notebooks/comparisons/run_comparisons.ipynb`
+**Run it yourself, with output inline:** `notebooks/experiments/run_comparisons.ipynb`
 §2 — see `notebooks/README.md`.
 
 `scripts/compare_ner_models.py` still works as a CLI (`python scripts/compare_ner_models.py

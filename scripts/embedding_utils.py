@@ -78,7 +78,7 @@ MODEL_CONFIGS = {
     },
     # Hosted models accessed via OpenRouter's OpenAI-compatible /embeddings endpoint
     # (needs OPENROUTER_API_KEY — see embed_via_openrouter below), evaluated in
-    # notebooks/eda/wf_embedding_model_bakeoff.ipynb against the local baseline above.
+    # notebooks/experiments/wf_embedding_model_bakeoff.ipynb against the local baseline above.
     # None of these have a documented asymmetric query/passage usage convention for
     # their OpenRouter-hosted form (unlike BAAI/bge-small-en-v1.5's local fastembed
     # build above), so prefixes are left empty rather than guessed — flagged in the

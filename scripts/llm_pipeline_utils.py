@@ -1,4 +1,4 @@
-"""Shared building blocks for notebooks/pipelines/sf_llm_fold_pipeline.ipynb.
+"""Shared building blocks for notebooks/future_work/sf_llm_fold_pipeline.ipynb.
 
 A prompted LLM doesn't consume a numeric feature matrix, so none of
 `fold_pipeline_utils.py`'s `ColumnTransformer`/`Pipeline` machinery applies here - the
@@ -10,7 +10,7 @@ same reason `StandardScaler` must be fit on the training fold only. `select_few_
 below is where that rule is enforced.
 
 Nothing in this module calls a real LLM - `call_llm_stub` deliberately raises
-`NotImplementedError`. Wire it to a real provider only once `notebooks/pipelines/
+`NotImplementedError`. Wire it to a real provider only once `notebooks/future_work/
 sf_llm_fold_pipeline.ipynb`'s CONFIG["run_training"] is flipped to True.
 """
 

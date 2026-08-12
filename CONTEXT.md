@@ -156,7 +156,7 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | Rejected | Evidence |
 |---|---|
 | The 11-feature metadata punch list (citation velocity, author count, has_venue, is_english, venue cleaning…) | `reports/wf_featureengineering_review.md` — all together worth +0.002 AUC, and they *hurt* out-of-domain |
-| TRL keyword estimate, OpenAlex venue quality, author ORCID | earlier notebooks in `notebooks/feature_experiments/` |
+| TRL keyword estimate, OpenAlex venue quality, author ORCID | earlier notebooks in `notebooks/experiments/` |
 | `relevance_score` as a feature or baseline | `reports/wf_ensemble_report.md` §0 — unversioned, moving, not comparable across use cases |
 | Prediction-level stacking / learned blending | tied with plain averaging, twice (`wf_ensemble_report.md`, `wf_embedding_bakeoff.md` §5) |
 | spaCy over plain regex for term matching | no gain, more cost |
@@ -176,7 +176,7 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | SYNERGY validation at realistic prevalence | `scripts/run_synergy_recall_validation.py` |
 | Shared fold/metric helpers (use these, do not re-implement) | `scripts/fold_pipeline_utils.py`, `scripts/embedding_utils.py` |
 | Full narrative of the above | `reports/wf_query_conditioned_findings.md` |
-| Ensemble v1 — per-silo CatBoost + LogisticRegression, feature/embedding ablation, and what was cut from the original proposal | `reports/wf_ensemble_v1_candidate.md`, `reports/wf_ensemble_v1_results.md`, `notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb` |
+| Ensemble v1 — per-silo CatBoost + LogisticRegression, feature/embedding ablation, and what was cut from the original proposal | `reports/wf_ensemble_v1_candidate.md`, `reports/wf_ensemble_v1_results.md`, `notebooks/main/09_ensemble_per_silo.ipynb` |
 | CatBoost fitting on this machine — route through Modal (`scripts/modal_ensemble_candidate.py`), do not fit locally | `scripts/ensemble_eval_utils.py`'s consumers; see that file's module docstring for the confirmed Apple Silicon thread-oversubscription pathology |
 | Ensemble v2 — hyperparameter tuning, nested combiner-weight selection, the Qwen3-8B SYNERGY swap, a 3-lever diversity sweep (SVM/lexical-only/k-NN as a third branch, all rejected, each for a documented reason), and a LOGO-based central hyperparameter search (LogReg `C=1.0` found under-regularizing; not adopted for the 6 shipped use cases but recommended as the starting default for new ones) | `reports/wf_ensemble_v2_experiments.md` (the full running log, §1-16); Modal functions consolidated in `scripts/modal_ensemble_experiments.py` — **do not split Modal functions across files**, see that file's docstring |
 | Final, synthesized architecture recommendation — one decision doc pulling together v1 + v2, confidence-graded, with explicit rejects and caveats | `reports/wf_ensemble_final_recommendations.md` |

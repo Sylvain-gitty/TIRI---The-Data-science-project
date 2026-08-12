@@ -1,5 +1,7 @@
 # Feature engineering review — what we proposed, what we measured, what to build
 
+> **Status: current.** The measurement behind `CONTEXT.md` §6's first negative result: the 11-feature metadata punch list is worth +0.002 AUC in total, and hurts out-of-domain.
+
 **Audience:** anyone picking up TIRI's Week-2/3 work. Assumes no context beyond
 `README.md`. Every number is reproducible from the two notebooks listed in §9.
 
@@ -349,11 +351,11 @@ brief nobody reads yet (action 3).
 
 | What | Where |
 |---|---|
-| The 11 features built and measured | `notebooks/feature_experiments/wf_feature_validation.ipynb` |
-| Why the two use cases resist; the compression finding | `notebooks/feature_experiments/wf_hard_use_cases.ipynb` |
+| The 11 features built and measured | `notebooks/experiments/wf_feature_validation.ipynb` |
+| Why the two use cases resist; the compression finding | `notebooks/experiments/wf_hard_use_cases.ipynb` |
 | Decisions in checklist form | `reports/wf_feature_plan.md` |
-| Term-overlap evidence (carried over, not retested) | `notebooks/feature_experiments/terms_overlap.ipynb`, `terms_overlap_spacy.ipynb` |
-| Fold design reused throughout | `notebooks/modelling/wf_fold_pca_test.ipynb` |
+| Term-overlap evidence (carried over, not retested) | `notebooks/experiments/terms_overlap.ipynb`, `terms_overlap_spacy.ipynb` |
+| Fold design reused throughout | `notebooks/experiments/wf_fold_pca_test.ipynb` |
 | The punch list this review supersedes | `reports/wf_eda_fe_report.md` §4 |
 | `relevance_score` disqualification; cold-start ladder | `reports/wf_ensemble_report.md` §0, §4 |
 | "Combined features don't help" — reframed by §6.2 | `reports/combined_features_notes.md` |

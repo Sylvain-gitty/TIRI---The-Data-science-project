@@ -122,7 +122,7 @@ def collect_briefs(df: pd.DataFrame, use_case_col: str = "use_case_key") -> dict
     """use_case_key -> {texts: {key: str}, terms: {must/nice/exclude: [str]}}.
 
     One row per use case is enough: the brief columns are broadcast across every paper
-    in a pool by notebooks/data_compile/combine_use_cases.ipynb.
+    in a pool by notebooks/main/01_data_compile.ipynb.
     """
     briefs: dict[str, dict] = {}
     for uc, group in df.groupby(use_case_col):

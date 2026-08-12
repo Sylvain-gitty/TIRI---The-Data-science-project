@@ -184,8 +184,8 @@ still try any fastembed model ad hoc via --models without editing this file), an
 
 HOW TO RUN IT
 --------------
-Preferred: open notebooks/comparisons/run_comparisons.ipynb (from inside
-notebooks/comparisons/) and run all cells — every table and plot renders inline, nothing
+Preferred: open notebooks/experiments/run_comparisons.ipynb (from inside
+notebooks/experiments/) and run all cells — every table and plot renders inline, nothing
 is written to disk. This script is the library that notebook imports, not a separate
 tool; run it directly only for scripting/automation, or to sanity-check a change:
 
@@ -283,7 +283,7 @@ def main() -> None:
     parser.add_argument("--models", default=None, help="Comma-separated model names/types (default: the 4 shortlisted models, see --list-models)")
     parser.add_argument("--projection", choices=["pca", "tsne"], default="pca", help="2D projection method for the corpus map (default: pca)")
     parser.add_argument("--out", type=Path, default=None, help="Save the scalar metrics table to this CSV path (default: not saved — printed to the console only)")
-    parser.add_argument("--out-plot", type=Path, default=None, help="Save the comparison figure to this PNG path (default: not built/saved at all — see notebooks/comparisons/ for an inline alternative)")
+    parser.add_argument("--out-plot", type=Path, default=None, help="Save the comparison figure to this PNG path (default: not built/saved at all — see notebooks/experiments/ for an inline alternative)")
     parser.add_argument("--list-models", action="store_true", help="Print every model fastembed supports, then exit")
     args = parser.parse_args()
 
@@ -304,7 +304,7 @@ def main() -> None:
 
     # Nothing is written to disk unless explicitly asked (--out/--out-plot) — reports/
     # holds this repo's decision-trail .md files, not a per-run CSV/PNG pile. See
-    # notebooks/comparisons/run_comparisons.ipynb for the inline-output equivalent.
+    # notebooks/experiments/run_comparisons.ipynb for the inline-output equivalent.
     make_plot = args.out_plot is not None
 
     model_names = [m.strip() for m in args.models.split(",")] if args.models else DEFAULT_MODELS
