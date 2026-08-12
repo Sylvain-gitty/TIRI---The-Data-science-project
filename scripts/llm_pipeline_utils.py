@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import random
 import re
@@ -309,6 +310,107 @@ PROMPT_VARIANTS: dict[str, dict] = {
 }
 
 
+# P2lp - P2's framing, but the answer is elicited as a SINGLE TOKEN so the decision can be
+# read from the token distribution instead of from a number the model writes down.
+#
+# Why: asked for a 0-100 score, every model in the grid answered in round numbers - 9-16
+# distinct values across 1,848 rows, a tie fraction above 0.99. ROC-AUC over ~10 buckets is
+# a measurement of the elicitation method as much as of the model, and ties are scored at
+# half credit, so the LLM was handicapped in precisely the comparison it lost (0.821 vs the
+# ensemble's 0.865 on continuous probabilities). P(YES) from the logprobs is continuous by
+# construction and costs nothing extra to obtain.
+#
+# YES/NO rather than RELEVANT/IRRELEVANT deliberately: they are single tokens in every
+# vocabulary here, whereas "IRRELEVANT" fragments and its probability mass would be split
+# across several first-token continuations.
+PROMPT_VARIANTS["P2lp"] = {
+    "version": "P2lp-v1",
+    "system": PROMPT_VARIANTS["P2"]["system"],
+    "instruction": (
+        "Decide whether this paper is relevant to the brief, using the brief's own "
+        "inclusion and exclusion criteria - not your general sense of paper quality.\n\n"
+        "This is a HIGH-RECALL first-pass screen. A human expert will read everything "
+        "you mark relevant, but will never see anything you mark not relevant. Missing "
+        "a genuinely relevant paper is therefore about five times as costly as passing "
+        "through an irrelevant one. When you are genuinely uncertain, include the paper.\n\n"
+        "Answer with exactly one word and nothing else: YES if the paper is relevant to "
+        "this brief, NO if it is not."
+    ),
+    "logprobs": True,
+}
+
+# Token-first-character prefixes that decide which side of the answer a candidate token is
+# on. Checked against the uppercased, whitespace-stripped token.
+_YES_PREFIXES = ("YES", "Y", "REL", "INCL", "TRUE")
+_NO_PREFIXES = ("NO", "N", "IRR", "EXCL", "FALSE", "NOT")
+
+
+def parse_logprob_screening(logprobs: dict | None) -> dict:
+    """Turn a token logprob payload into a continuous P(YES) in [0, 1].
+
+    Walks forward to the first token position that actually carries a decision (a model may
+    emit a leading newline or space first), then softmaxes the YES-side mass against the
+    NO-side mass among that position's alternatives. Returns the renormalised P(YES), which
+    is a genuine probability over the binary decision rather than over the whole vocabulary -
+    so leftover mass on unrelated tokens does not drag every score toward zero.
+
+    Returns parsed=False when no position carries a recognisable decision, rather than
+    guessing. Same rule as everywhere else here: NULL is not 0.
+    """
+    if not logprobs or not logprobs.get("content"):
+        return {"score": None, "pred": None, "insufficient": None, "parsed": False, "notes": None}
+
+    for position in logprobs["content"][:6]:
+        alts = position.get("top_logprobs") or []
+        lp_yes = lp_no = None
+        floor = 0.0
+        for alt in alts:
+            tok = str(alt.get("token", "")).strip().upper()
+            lp = float(alt["logprob"])
+            floor = min(floor, lp)
+            if not tok:
+                continue
+            if tok.startswith(_NO_PREFIXES):      # checked first: "NOT" must not match "N"
+                lp_no = lp if lp_no is None else max(lp_no, lp)
+            elif tok.startswith(_YES_PREFIXES):
+                lp_yes = lp if lp_yes is None else max(lp_yes, lp)
+        if lp_yes is None and lp_no is None:
+            continue
+
+        # A side missing from the top-k is censored, not absent: bound it just below the
+        # least likely token we were actually shown.
+        censored = lp_yes is None or lp_no is None
+        y = lp_yes if lp_yes is not None else floor - 1.0
+        n = lp_no if lp_no is not None else floor - 1.0
+
+        # TWO scores, because they answer different questions.
+        #
+        # `score` renormalises to a probability over the binary decision - the right thing
+        # for thresholding, but at temperature 0 these models are extremely peaked (a
+        # measured example: NO at -0.0 with the runner-up at -14.5), so it saturates to a
+        # near-binary 0/1 and destroys exactly the ranking granularity logprobs were meant
+        # to recover. Measured on the smoke subset: only 3 of 36 rows landed strictly
+        # between 0.01 and 0.99.
+        #
+        # `score_logodds` keeps the raw margin instead. A row where YES beats NO by 2 nats
+        # and one where it wins by 25 are genuinely different confidences, and the sigmoid
+        # flattens both to 1.0. Ranking metrics only need an ordering, so the unsquashed
+        # margin is the better ranking signal - and recovering ranking is the entire point
+        # of this variant.
+        odds = y - n
+        return {
+            "score": 1.0 / (1.0 + math.exp(-max(min(odds, 700.0), -700.0))),
+            "score_logodds": odds,
+            "logprob_censored": censored,
+            "pred": int(odds >= 0.0),
+            "insufficient": False,
+            "parsed": True,
+            "notes": None,
+        }
+    return {"score": None, "score_logodds": None, "logprob_censored": None,
+            "pred": None, "insufficient": None, "parsed": False, "notes": None}
+
+
 def build_screening_prompt(row, variant: str, brief_text: str | None = None) -> tuple[str, str]:
     """Return (system, user) for one paper under one prompt variant.
 
@@ -534,6 +636,33 @@ PINNED_PROVIDERS: dict[str, list[str]] = {
     "qwen/qwen3.5-397b-a17b": ["Alibaba"],               # $0.390/$2.340, seed+logprobs
 }
 
+# Separate table for logprob-scored variants, because not every provider returns logprobs
+# and the ones that do are not always the fastest (which is what PINNED_PROVIDERS optimises).
+#
+# gpt-oss and qwen keep their normal pin, so their verbalised-vs-logprob comparison is
+# within-provider and clean. gemma cannot: its normal pin (Friendli) returns no logprobs at
+# all, so the logprob run moves to CoreWeave — and to keep the comparison paired rather than
+# confounded by provider, gemma's verbalised P2 should be re-run on CoreWeave too before the
+# two are compared for that model.
+#
+# nvidia/nemotron-3-super is absent deliberately: it has NO endpoint offering logprobs and
+# seed together, so it cannot take part. That is its second capability strike, after the
+# `seed` rejection above — both matter for a system specified as 100% deterministic.
+LOGPROB_PROVIDERS: dict[str, list[str]] = {
+    "openai/gpt-oss-20b": ["CoreWeave"],
+    "google/gemma-4-31b-it": ["CoreWeave"],
+    # NOT Alibaba, despite it advertising logprobs and serving qwen fine for the grid: it
+    # rejects the parameter at the endpoint, the retry ladder drops it, and the call then
+    # returns a bare "YES" with no distribution at all. Third provider in this pilot whose
+    # advertised capability does not survive contact. Parasail costs more and answers.
+    "qwen/qwen3.5-397b-a17b": ["Parasail"],
+}
+
+# Reasoning-mandatory models need room to think before the answer token appears; a 6-token
+# budget is entirely consumed by the reasoning trace and `content` comes back empty with
+# finish_reason="length" and no logprobs at all (measured on gpt-oss).
+LOGPROB_MAX_TOKENS = {"openai/gpt-oss-20b": 1400, "openai/gpt-oss-120b": 1400}
+
 
 class OpenRouterClient:
     """Cached, retrying, thread-pooled chat client.
@@ -563,7 +692,11 @@ class OpenRouterClient:
         max_retries: int = 7,
         api_key: str | None = None,
         provider_order: list[str] | None = None,
+        logprobs: bool = False,
+        top_logprobs: int = 20,
     ):
+        self.logprobs = logprobs
+        self.top_logprobs = top_logprobs
         quirks = {**DEFAULT_QUIRKS, **MODEL_QUIRKS.get(model, {})}
         self.model = model
         self.temperature = temperature
@@ -606,6 +739,9 @@ class OpenRouterClient:
             "provider": provider,
             "usage": {"include": True},
         }
+        if self.logprobs:
+            params["logprobs"] = True
+            params["top_logprobs"] = self.top_logprobs
         for name in drop:
             params.pop(name, None)
         if drop:
@@ -681,6 +817,12 @@ class OpenRouterClient:
                         "params_dropped": ",".join(dropped),
                         "error": None,
                     }
+                    if self.logprobs:
+                        # Keep only the first few positions: the decision is in the first
+                        # real token, and storing the whole payload for 1,848 rows x N cells
+                        # would bloat the cache for no analytical gain.
+                        lp = data["choices"][0].get("logprobs") or {}
+                        rec["logprobs"] = {"content": (lp.get("content") or [])[:4]}
                     self._write(rec)
                     return {**rec, "cached": False}
 
@@ -738,9 +880,22 @@ def score_frame(
     """
     import pandas as pd
 
-    client = OpenRouterClient(model=model, cache_dir=cache_dir, **client_kwargs)
     spec = PROMPT_VARIANTS[variant]
+    wants_logprobs = bool(spec.get("logprobs"))
+    if wants_logprobs:
+        client_kwargs.setdefault("logprobs", True)
+        client_kwargs.setdefault("max_tokens", LOGPROB_MAX_TOKENS.get(model, 6))
+        if model in LOGPROB_PROVIDERS:
+            client_kwargs.setdefault("provider_order", LOGPROB_PROVIDERS[model])
+    client = OpenRouterClient(model=model, cache_dir=cache_dir, **client_kwargs)
+    # A shuffled-brief run gets a marker so it is distinguishable in the cache after the
+    # fact, rather than merely non-colliding with the real-brief run. The own-brief tag is
+    # left EXACTLY as it was: `tag` is part of the cache key, so appending anything to the
+    # default case invalidates every response already paid for. (Adding "|own" here did
+    # exactly that and started silently re-buying the whole 12-cell grid.)
     tag = f"{variant}|{spec['version']}|{BRIEF_RENDER_VERSION}"
+    if brief_map is not None:
+        tag += "|shuffled"
     rows = list(df.itertuples(index=False))
     cols = list(df.columns)
 
@@ -752,7 +907,8 @@ def score_frame(
             brief_text = brief_map.get(row.get("use_case_key"))
         system, user = build_screening_prompt(row, variant, brief_text=brief_text)
         res = client.call(system, user, tag=tag)
-        parsed = parse_screening(res["content"])
+        parsed = (parse_logprob_screening(res.get("logprobs")) if wants_logprobs
+                  else parse_screening(res["content"]))
         return {
             "paper_id": row.get("paper_id"),
             "use_case_key": row.get("use_case_key"),

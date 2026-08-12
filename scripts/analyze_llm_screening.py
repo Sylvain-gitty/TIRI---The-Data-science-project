@@ -116,6 +116,39 @@ def metrics(y: np.ndarray, score: np.ndarray, pred: np.ndarray | None = None) ->
     return out
 
 
+def elicitation_compare(res: pd.DataFrame) -> pd.DataFrame:
+    """P2 (verbalised 0-100) vs P2lp (token log-odds), per model and use case.
+
+    The one comparison the pilot's ranking result hinged on. Asked for a number, every model
+    answered in round figures - 9-16 distinct values across 1,848 rows, tie fraction >0.99 -
+    and ROC-AUC scores ties at half credit, so the LLM was penalised for how the score was
+    *elicited* rather than for how well it judged. Log-odds are continuous by construction.
+
+    `score_logodds` is used for the P2lp ranking, not `score`: renormalising to a probability
+    saturates at temperature 0 and throws the granularity away again (see
+    `parse_logprob_screening`).
+    """
+    rows = []
+    for (model, variant), g in res.groupby(["model", "variant"]):
+        if variant not in ("P2", "P2lp"):
+            continue
+        col = "score_logodds" if variant == "P2lp" and "score_logodds" in g else "score"
+        for uc, sub in g.groupby("use_case_key"):
+            ok = sub[sub[col].notna()]
+            y = ok["y"].to_numpy().astype(int)
+            if len(np.unique(y)) < 2 or len(ok) < 10:
+                continue
+            s = ok[col].to_numpy()
+            _, counts = np.unique(s, return_counts=True)
+            rows.append({
+                "model": model.split("/")[-1], "variant": variant, "use_case": uc,
+                "roc_auc": roc_auc_score(y, s),
+                "n_distinct": len(np.unique(s)),
+                "tie_frac": float(counts[counts > 1].sum() / len(s)),
+            })
+    return pd.DataFrame(rows)
+
+
 def per_cell(res: pd.DataFrame, min_rows: int = 10) -> pd.DataFrame:
     """Per (model, variant, use_case) metrics, plus coverage.
 

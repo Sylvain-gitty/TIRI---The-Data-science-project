@@ -216,16 +216,22 @@ def main() -> None:
         print(f"projected per full 1,848-row cell: ${total / len(sum_df) * (1848 / len(sample)):.3f}")
         return
 
+    # Output stem encodes the variant set whenever it is not the full default. Without this,
+    # `--variants P2lp` writes to wf_llm_grid_responses.parquet and silently destroys the
+    # 12-cell grid it took an hour to produce. (It did, once. The cache made recovery free,
+    # which is the only reason it was cheap.)
+    suffix = "" if sorted(args.variants) == sorted(PILOT_VARIANTS) else "_" + "-".join(args.variants)
+
     if args.stage == "control":
         bm = shuffled_brief_map(df, seed=0)
         print("shuffled-brief control - each use case scored against another's criteria")
         sum_df = run_cells(df, args.models, args.variants, args.concurrency,
-                           "wf_llm_control", brief_map=bm)
+                           f"wf_llm_control{suffix}", brief_map=bm)
         print("\n=== CONTROL SUMMARY ===")
         print(sum_df.to_string(index=False))
         return
 
-    sum_df = run_cells(df, args.models, args.variants, args.concurrency, "wf_llm_grid")
+    sum_df = run_cells(df, args.models, args.variants, args.concurrency, f"wf_llm_grid{suffix}")
     print("\n=== GRID SUMMARY ===")
     print(sum_df.to_string(index=False))
 
