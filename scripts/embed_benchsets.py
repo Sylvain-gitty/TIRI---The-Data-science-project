@@ -160,8 +160,15 @@ def _write_vectors(path: Path, ids: list[str], vectors: np.ndarray, id_col: str)
 
 
 def embed_collection(model_key: str, model_name: str, use_case_key: str,
-                     df: pd.DataFrame, dry_run: bool) -> str:
+                     df: pd.DataFrame, dry_run: bool,
+                     shard: tuple[int, int] | None = None) -> str:
     """Embed one collection's papers, resuming from any chunks already on disk.
+
+    `shard=(i, n)` takes only every n-th row, so the two collections big enough to
+    dominate the whole job (48,343 and 38,114 papers) can be split across concurrent
+    processes instead of being a serial tail. Shards are disjoint by construction and each
+    writes its own part files; whichever finishes last finds every id on disk and
+    consolidates. The others exit saying so.
 
     Returns a one-line status for the caller to print.
     """
@@ -180,15 +187,21 @@ def embed_collection(model_key: str, model_name: str, use_case_key: str,
         chunk = pd.read_parquet(part)
         done.update(zip(chunk["paper_id"], chunk["embedding"]))
 
-    todo = df[~df["paper_id"].isin(done)]
+    mine = df if shard is None else df.iloc[shard[0]::shard[1]]
+    todo = mine[~mine["paper_id"].isin(done)]
     if dry_run:
-        return f"WOULD EMBED {len(todo)} of {len(df)} papers ({len(done)} already in _partial)"
+        return f"WOULD EMBED {len(todo)} of {len(mine)} papers ({len(done)} already in _partial)"
     if len(done):
-        print(f"    resuming: {len(done)} already done, {len(todo)} to go")
+        print(f"    resuming: {len(done)} of {len(df)} already done, {len(todo)} in this shard")
+
+    # Part files must not collide between concurrent shards: two processes computing
+    # `len(done)` at the same moment would otherwise pick the same name and one would
+    # overwrite the other's vectors.
+    token = "all" if shard is None else f"{shard[0]}of{shard[1]}"
 
     PARTIAL.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    for offset in range(0, len(todo), CHUNK_SIZE):
+    for seq, offset in enumerate(range(0, len(todo), CHUNK_SIZE)):
         chunk = todo.iloc[offset:offset + CHUNK_SIZE]
         titles = chunk["title"].fillna("").tolist()
         abstracts = chunk["abstract"].fillna("").str.slice(0, MAX_ABSTRACT_CHARS).tolist()
@@ -207,22 +220,27 @@ def embed_collection(model_key: str, model_name: str, use_case_key: str,
                 for i in range(0, len(titles), OOM_RETRY_CHUNK)
             ]
             vectors = np.vstack(pieces)
-        # Sequence number keyed to position in the collection, so a resumed run's parts
-        # never collide with an earlier run's.
-        part = PARTIAL / f"{stem}.part{len(done):07d}.parquet"
+        part = PARTIAL / f"{stem}.part{seq:05d}_{token}.parquet"
         _write_vectors(part, chunk["paper_id"].tolist(), vectors, "paper_id")
         done.update(zip(chunk["paper_id"], vectors))
 
         elapsed = time.monotonic() - started
-        rate = (len(done) - (len(df) - len(todo))) / elapsed if elapsed else 0
-        print(f"      {len(done)}/{len(df)} papers  ({rate:.0f}/s)", flush=True)
+        n_this_run = (seq + 1) * CHUNK_SIZE
+        print(f"      {len(done)}/{len(df)} papers  "
+              f"({n_this_run / elapsed if elapsed else 0:.0f}/s this process)", flush=True)
+
+    # Only the process that can see every id may consolidate. With shards running
+    # concurrently the others simply stop here and leave _partial alone.
+    if len(done) < len(df):
+        return (f"shard done ({len(todo)} embedded); {len(done)}/{len(df)} of the "
+                "collection is on disk — another shard will consolidate")
 
     # Reindex to the collection's own row order before writing — the notebooks join on
     # paper_id, but a stable order makes the file diffable and the read cheaper.
     ordered = np.vstack([np.asarray(done[pid]) for pid in df["paper_id"]])
     _write_vectors(out, df["paper_id"].tolist(), ordered, "paper_id")
     for part in PARTIAL.glob(f"{stem}.part*.parquet"):
-        part.unlink()
+        part.unlink(missing_ok=True)  # a sibling shard may have consolidated first
     return f"embedded {len(df)} papers in {time.monotonic() - started:.0f}s"
 
 
@@ -334,7 +352,20 @@ def main() -> None:
                         help="report what is missing without embedding anything")
     parser.add_argument("--verify", action="store_true",
                         help="check already-written cache files and exit non-zero on any problem")
+    parser.add_argument("--shard", default="",
+                        help="'i/n' — take only every n-th row, to split one big collection "
+                             "across concurrent processes (run all n, any order)")
     args = parser.parse_args()
+
+    shard = None
+    if args.shard:
+        try:
+            i, n = (int(part) for part in args.shard.split("/"))
+        except ValueError:
+            parser.error(f"--shard must look like 'i/n', got {args.shard!r}")
+        if not 0 <= i < n:
+            parser.error(f"--shard index must satisfy 0 <= i < n, got {args.shard!r}")
+        shard = (i, n)
 
     model_keys = [m.strip() for m in args.models.split(",") if m.strip()]
     unknown = set(model_keys) - set(MODELS)
@@ -374,9 +405,9 @@ def main() -> None:
                     f"{path.name}: paper_id is not unique within the collection, which the "
                     "per-collection cache layout depends on (see this module's docstring)."
                 )
-            print(f"  {use_case_key:34s} {len(df):6d} papers  "
-                  f"{embed_collection(model_key, model_name, use_case_key, df, args.dry_run)}",
-                  flush=True)
+            status = embed_collection(model_key, model_name, use_case_key, df,
+                                      args.dry_run, shard)
+            print(f"  {use_case_key:34s} {len(df):6d} papers  {status}", flush=True)
 
 
 if __name__ == "__main__":
