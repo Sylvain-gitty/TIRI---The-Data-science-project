@@ -242,7 +242,7 @@ the bulk that's regenerable (~600 MB).
 | `embeddings_cache/` | 295 MB | `scripts/modal_embeddings.py` (GPU) + OpenRouter (paid) |
 | `data/benchsets_v1/` | 92 MB | re-download from the sources in its own `README.md` (all CC0 / CC BY) |
 | `papers_benchset_v1.parquet` | 157 MB | `notebooks/main/01_data_compile_benchset_v1.ipynb` |
-| `benchset_v1_{small_test,large_set_a,large_set_b}.parquet` | 36 MB total | `notebooks/main/04_feature_engineering_benchset_v1.ipynb` |
+| `benchset_v1_{small_test,large_set_a,large_set_b}.parquet` | 2.7 GB total | `notebooks/main/04_feature_engineering_benchset_v1.ipynb` |
 
 ### The benchmark corpus
 

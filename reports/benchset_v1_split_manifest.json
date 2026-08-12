@@ -70,7 +70,7 @@
   },
   "caveats": {
     "synergy_walker_2018": "81 of its positives were dropped with their abstract-less rows, which were 3.7x enriched for positives. Scores on this collection are optimistic relative to the real screening task.",
-    "embeddings": "not carried in these files - join from data/processed/embeddings_cache via embed_benchsets.load_paper_vectors(df, model_key)",
+    "embeddings": "carried as emb_jasper_* / emb_qwen4b_* scalar columns, matching papers_fe.parquet, so prefix-slicing downstream code works unchanged. Rebuildable from data/processed/embeddings_cache via embed_benchsets.load_paper_vectors(df, model_key)",
     "paper_age": "affine in year (single export timestamp); not an independent feature"
   }
 }
