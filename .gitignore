@@ -50,3 +50,9 @@ data/benchsets_v1
 
 # CatBoost's own per-fit training-log directory, written wherever a fit runs locally
 catboost_info/
+
+# Per-run LLM screening artifacts. `reports/` holds decision-trail .md files, not
+# per-run outputs (same convention the comparison scripts already follow).
+reports/wf_llm_*_responses.parquet
+reports/wf_llm_*_summary.csv
+reports/wf_llm_pilot_per_use_case.csv
