@@ -13,7 +13,7 @@ compare_ner_models.py found NER-derived features score close to chance standalon
 (ROC-AUC 0.55-0.62) — meaningfully weaker than every embedding model tested in
 compare_embeddings.py (0.65-0.80, see reports/model_shortlist.md §4). But "worse alone"
 doesn't answer "worse as an ADDED signal" — a survey of open-source paper-scoring tools
-(cross-referenced against this repo in HANDOFF.md) found every multi-stage tool in that
+(cross-referenced against this repo) found every multi-stage tool in that
 survey wins by combining a cheap signal with a precise one, not by picking one winner
 standalone (e.g. Paper-QA-RAG-LoRA's cross-encoder re-ranking stage moved hit@5 from
 0.776 to 0.928 over bi-encoder retrieval alone). This script tests that directly:
@@ -38,7 +38,7 @@ DEFAULT EMBEDDING MODEL
 sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 by default — chosen only
 because it's the model both existing exports ship precomputed vectors for. A convenience
 default, NOT a pick informed by compare_embeddings.py's results (this repo already
-retired that framing — see HANDOFF.md). Override with --embedding-model to test any
+retired that framing — see reports/model_shortlist.md). Override with --embedding-model to test any
 other registered model (see embedding_utils.MODEL_CONFIGS).
 
 TWO NER REPRESENTATIONS, SAME AS compare_ner_models.py

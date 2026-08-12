@@ -10,7 +10,7 @@ whatever "wins" a run of this script.
 
 WHY spaCy, WHY NER-DERIVED VECTORS AT ALL
 ------------------------------------------------
-HANDOFF.md's "where this is heading next" flagged NER as a way to pull structured
+An earlier planning pass flagged NER as a way to pull structured
 metadata (organisms, techniques, locations, ...) out of title/abstract text that isn't a
 column in the export today. Before treating NER output as a feature source, this script
 asks the same question compare_embeddings.py asks of sentence embeddings: does turning a
