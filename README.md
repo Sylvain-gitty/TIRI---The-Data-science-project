@@ -1,202 +1,337 @@
 # TIRI — The Data Science Project
 
-TIRI is the data-science working repo for turning a labelled academic-literature corpus
-into a real, end-to-end ML workflow: cleaning → feature engineering → modelling →
-ensembling → evaluation. It's built as a month-long project, structured week by week
-below.
+Turning a labelled corpus of academic literature into a working relevance-screening
+model: clean → feature-engineer → validate → model → ensemble → evaluate.
 
-## Where the data comes from
+A four-week capstone by two people, built on real data from a real product. The
+interesting part is not the accuracy number — it's the finding that the obvious
+approach was measurably the wrong one, and what we did about it.
 
-TIRI does not scrape or label papers itself — that's the job of the sibling repo,
-[`academic_research_agent`](../academic_research_agent). That app turns a use case into
-a search → triage → label loop and can **export an ML-ready parquet**: one row per paper,
-with title/abstract/metadata, the analyst's `triage_label` and `review_label`
-(positive / negative / pass), a `relevance_score`, and a precomputed sentence
-**embedding** + the `embed_model` that produced it.
+---
 
-TIRI takes that export as its raw input. This split matters: labelling is a slow,
-human-in-the-loop process (that's what the agent is for); once a corpus is labelled,
-everything from here is standard data science and can iterate fast without touching the
-labelling tool again.
+## The problem
 
-To get data into TIRI: run an export from the agent's Data Analytics screen (or point it
-at an existing export you already have) and drop the parquet file into `data/raw/`.
+A researcher defines a question ("find alternative cement binder chemistries that cut
+embodied carbon by more than half"), a search returns a few hundred candidate papers,
+and a human has to read all of them. We want a model that ranks the pile so the
+relevant papers surface first — **high recall first**, precision later.
 
-## Project workflow (4 weeks)
+TIRI does not scrape or label anything. That's the job of a sibling tool,
+`academic_research_agent`, which runs the search → triage → label loop and exports
+one row per paper: title, abstract, metadata, the analyst's `triage_label`, a
+`relevance_score`, and a precomputed embedding. TIRI consumes that export.
 
-**Week 1 — Ingest & clean**
-Load the export, understand its shape (`data/raw/*.parquet` → `data/processed/`).
-Handle nulls honestly (a `NULL` field means "we never found out", not "zero" — carried
-over from the agent's own convention). Dedupe, normalise text (strip markup from
-abstracts), check label balance, EDA on year/venue/citation_count/language/source.
+**Six research questions, 2,873 papers, 1,852 with a usable binary label** (a further
+543 were marked "borderline" and 478 were never reviewed — see
+[`data/processed/README.md`](data/processed/README.md) for why those are three different
+facts, not one).
 
-**Week 2 — Feature engineering**
-Text features: the embeddings that ship with the export, plus alternatives (see
-`scripts/compare_embeddings.py` and `scripts/compare_ner_models.py` below — this is the
-week to run them and inspect the latent space of each candidate embedding/NER
-representation against the already-labelled dataset: is the space sane or collapsed, how
-central does the use case sit relative to its own corpus, does it separate the existing
-labels at all). This is a diagnostic exercise, not a model-selection step for Week 3 —
-see the scope note in each script's docstring. Metadata features: citation counts,
-venue/source one-hots, recency.
+## The central finding
 
-**Week 3 — Modelling**
-Baselines and ensembles (random forest, gradient boosting, stacking) — unstarted,
-unscoped as of this writing. Which features/model the baseline trains on is a decision
-for that week, not something Week 2's embedding/NER comparison pre-selects. Cross-validate
-honestly (`StratifiedKFold`, no leakage between folds) — a score on data the model was
-trained on is not a result. `future_work/train_baseline_classifier.py` has cross-
-validation/scoring plumbing kept from an earlier, now-retired framing where it was wired
-to Week 2's comparison — functional but parked, not part of the current workflow.
+The obvious move is to embed each paper and train a classifier. We did that, and it
+scored well — right up until we tested it on a research question it hadn't seen.
 
-**Week 4 — Evaluate, error-analyse, write up**
-Held-out evaluation, error analysis (which papers does the model get wrong, and why),
-compare against the agent's own relevance ranking as a baseline, final report.
+> **Relevance is a property of the (brief, paper) *pair*, not of the paper.**
 
-## Repo layout
+Every feature we built at first described the paper alone. The measured consequences:
 
-```
-data/
-  raw/          exports dropped in as-is (gitignored — data doesn't belong in git)
-  processed/    cleaned / feature-engineered outputs of your own pipeline
-notebooks/      see notebooks/README.md for the current list and what each one does
-  eda/            exploratory analysis — read-only, no files written back to data/
-  data_compile/   data-processing pipelines — data/raw/ -> data/processed/
-scripts/        standalone, runnable analysis scripts
-  embedding_utils.py       shared embedding logic (model registry, prefixes, cross-
-                            validation) behind compare_embeddings.py — not run directly
-  latent_space_utils.py    shared latent-space diagnostics + plotting (dispersion,
-                            centroid analysis, 2D projection) behind BOTH comparison
-                            scripts below — not run directly
-  compare_embeddings.py    week-2 embedding-vs-labelled-dataset comparison (see below)
-  compare_ner_models.py    week-2 NER-vs-labelled-dataset comparison (see below)
-future_work/    parked, deferred work — not part of the current workflow
-  train_baseline_classifier.py   Week-3 baseline plumbing, kept but unwired (see below)
-reports/        write-ups, figures, model comparison tables
-```
+- A LogisticRegression predicts **which research question a paper belongs to from its
+  embedding alone, at 96.2% accuracy** (majority class 19%). The embedding isn't noisy —
+  it's a *fingerprint of the question*, not of relevance.
+- So a model trained across questions learns which question it's looking at, which is
+  definitionally non-transferable. Leave-one-question-out performance collapses to
+  **~0.54 ROC-AUC** — a coin flip.
+- This is **not** "too many features". Ten *brief-relative* scalars beat the full
+  384-dimension embedding on the same test (**0.642 vs 0.537**). It was never the
+  feature count; it was the feature *kind*.
+- Strongest form: with **zero** labels, ranking papers by plain cosine similarity to the
+  brief beats every supervised cross-question model we trained (ROC-AUC **0.693 vs
+  0.610**). A model trained on other people's questions is worse than no model at all.
 
-## Setup
+That reframed the project. Features must read the brief, and models are fit **per
+research question, never pooled**. Full technical detail — including everything we
+tried that didn't work — is in [`CONTEXT.md`](CONTEXT.md).
+
+---
+
+## Results
+
+**Read the surface column first.** These numbers are not comparable to each other, and
+which one matters depends on the question being asked. Conflating them is the single
+easiest way to misread this project.
+
+| Surface | What it answers | Headline |
+|---|---|---|
+| **Pooled** | How well does a model do on *more papers from questions it has already seen*? | Ensemble holdout **ROC-AUC 0.889** |
+| **Leave-one-question-out (LOGO)** | How well does it do on a *brand-new question* with no labels? | **~0.54 ROC-AUC — it doesn't.** This is the finding, not a failure to fix |
+| **Within-question (per-silo)** | How well does it do on a *new paper for a question we have labels for*? — **the production surface** | Per-silo ensemble clears the strong baseline by **0.03–0.18 ROC-AUC** across the six questions |
+
+### Pooled — the model comparison (`notebooks/main/06`–`08`)
+
+A random holdout drawn from the same six questions. This is the standard bootcamp
+comparison, and it is *explicitly not* a generalisation test.
+
+| Model | Holdout ROC-AUC | F2 @ 0.5 | F2 @ tuned threshold | Note |
+|---|---|---|---|---|
+| LogisticRegression baseline | 0.867 | 0.790 | — | `StandardScaler` → `PCA(50, whiten)` on the embedding block (58.0% variance retained) |
+| CatBoost (tuned for F2) | 0.864 | 0.798 | 0.887 @ 0.2 | Train→validation AUC 0.997→0.882 — overfits ~3x harder than the baseline |
+| **Stacked ensemble** | **0.889** | 0.810 | **0.892 @ 0.2** | CatBoost + LogReg + RandomForest, LogisticRegression meta-learner on out-of-fold predictions |
+
+The F2 columns are split deliberately: at the default 0.5 threshold the three models sit
+within 0.02 of each other, and most of the apparent F2 spread is a **decision-threshold
+effect, not a ranking-quality difference**. CatBoost's AUC and average precision are
+identical at 0.5 and 0.2 (0.864 / 0.897) — only recall moves (0.793 → 0.934). ROC-AUC is
+the fairer lens on which model actually ranks better.
+
+Every comparative claim here is backed by a **paired bootstrap test on the holdout**,
+not a point-estimate table. What that discipline bought us:
+
+- The ensemble beats the baseline significantly on both AUC (+0.022, p=0.005) and F2
+  (+0.101, p<0.001).
+- It beats standalone CatBoost on AUC (+0.025, p<0.001) — a genuine ranking-quality gain
+  from stacking itself.
+- But its F2 edge over standalone CatBoost (+0.005) is **not significant** (p=0.596, CI
+  crosses zero). The point-estimate table alone would have let us claim a win there.
+
+Two honest caveats we'd rather state than bury:
+
+- **Judged fairly, the "advanced" models barely beat the simple one.** At each model's
+  own best threshold, out-of-fold F2 is LogReg 0.903, CatBoost 0.902, RandomForest 0.898
+  — a spread of 0.005. The ensemble's real contribution (0.910) comes from *stacking*,
+  not from any base model being better.
+- **That +0.101 F2 compares a threshold-tuned ensemble against an untuned baseline.**
+  Both thresholds were tuned on training-fold out-of-fold predictions and never on the
+  holdout, so the number is not leaked — but the baseline was never given the same
+  treatment, and on the like-for-like 0.5 comparison the gap is +0.020, not +0.101.
+
+### Within-question — the production surface (`notebooks/main/09`, `reports/`)
+
+One model per research question, fit only on that question's own labels. Per-silo
+CatBoost + LogisticRegression, 50/50 averaged. Validated externally against three
+[SYNERGY](https://github.com/asreview/synergy-dataset) systematic reviews we had no hand
+in labelling, at realistic prevalence (1.7–14.8% positive, vs 26–77% in our own pools):
+**mean ROC-AUC 0.899**, against 0.888 for the best single-embedding baseline ever
+measured here.
+
+The full architecture decision doc — every choice, its evidence, and its confidence
+grade — is [`reports/wf_ensemble_final_recommendations.md`](reports/wf_ensemble_final_recommendations.md).
+
+### A note on what counts as a result here
+
+Measured seed-to-seed noise is **~0.010 ROC-AUC** and 0.015–0.027 WSS@95. We treat any
+gap below **~0.03 as not established**, regardless of which direction it points. Several
+things in this repo that look like wins are labelled as ties for exactly that reason.
+
+---
+
+## Quick start
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate      # Windows
+source .venv/bin/activate          # .venv\Scripts\activate on Windows
 pip install -r requirements.txt
+python -m spacy download en_core_web_sm   # only for the NER comparison script
 ```
 
-## Scripts
+**The data you need is in the repo.** Clone and run — no API keys, no GPU, no export
+step. Notebooks assume they're run with their own folder as the working directory.
 
-Both comparison scripts below share one scope note, worth stating once: they test how a
-representation (an embedding model, or an NER-derived feature) relates to an
-**already-labelled dataset** — latent-space sanity, cosine similarity, use-case
-centrality — purely as a diagnostic. Neither one selects a model for a future classifier
-baseline; nothing downstream in this repo is wired to whatever "wins" a run of either
-script. See `future_work/train_baseline_classifier.py` below for where that used to not
-be true, and why it's parked now.
+| Runs from a fresh clone | Needs regenerating first |
+|---|---|
+| `main/01_data_compile` — rebuilds the cleaned corpus from raw | `main/04_feature_engineering` — needs `embeddings_cache/` (~295 MB) |
+| `main/02_eda_quickstart`, `main/03_eda_full` | `main/06`–`08` — need the full `papers_fe.parquet` (106 MB) |
+| `main/05_validation_design` — where the collapse is measured | `main/09_ensemble_per_silo` — same, plus Modal |
+| **16 of the 18** `notebooks/experiments/` — the evidence | `experiments/wf_synergy_validation` — needs an OpenRouter key in `.env` |
+| both `notebooks/future_work/` templates (gated, safe to Run All) | `experiments/wf_top_embeddings_generalization` — needs `embeddings_cache/` |
 
-### `scripts/compare_embeddings.py`
+The left-hand column is **verified, not asserted**. `git clone` into an empty directory,
+`pip install -r requirements.txt`, Run All on every notebook: the main line passes — 01
+(3s), 02 (5s), 03 (37s), 05 (124s) — and 16 of the 18 supporting notebooks pass. `01`
+reproduces the committed `papers_combined.parquet` frame-for-frame, so the cleaning step
+is checkable rather than trusted.
 
-Visually compares the **latent space** of several embedding/NLP models against your
-labelled export — a lexical TF-IDF baseline plus one or more fastembed neural models by
-default. For each model it draws a row of three plots:
+**Install everything, not just the light half.** `fastembed` and `sentence-transformers`
+(which pulls PyTorch) are `requirements.txt`'s two heaviest entries and the easiest to
+skip — but anything that embeds text from scratch needs them, and the failure is a bare
+`ModuleNotFoundError` several cells in rather than at import time.
 
-1. a 2D map of the whole corpus (PCA or t-SNE), coloured by triage label, with the
-   corpus centroid and the embedded use case marked;
-2. a pairwise-cosine-similarity histogram — is this model's latent space **dense**
-   (every paper's vector points the same way — a known failure mode, "anisotropy"/
-   representation collapse) or **disperse** (vectors actually spread out by content)?
-3. a histogram of how similar each abstract is to the corpus centroid, with the use
-   case's own similarity marked — **how central is the use case relative to its own
-   corpus?**
+Everything in the right-hand column is **committed with its outputs intact**, so the
+results are readable without re-running. See [Data](#data) for exactly what ships and
+how to rebuild the rest.
 
-It also reports cross-validated ROC-AUC (same lens as the agent's own adaptive triage
-classifier, `model.py`) as a secondary "does this space separate the labels you already
-have" diagnostic — a reading on the labelled dataset, not a signal for picking a future
-classifier's model (see scope note above).
+---
+
+## Repo map
+
+```
+CONTEXT.md          the technical findings + negative-results register — read this second
+README.md           you are here
+
+data/
+  raw/              6 labelled exports (<question>.jsonl) + their briefs (<question>.usecase.json)
+  processed/        papers_combined.parquet, papers_fe_slim.parquet, and README.md (data dictionary)
+
+notebooks/
+  README.md         the index — what every notebook does and what it found
+  main/             the 9-notebook main line, numbered in reading order
+                      01 data compile   02 EDA quickstart   03 EDA full
+                      04 feature eng.   05 validation design
+                      06 baseline       07 CatBoost         08 ensemble (pooled)
+                      09 ensemble (per-question — the production surface)
+  experiments/      supporting evidence: feature viability checks, embedding
+                    bake-offs, external validation, superseded passes. Mostly
+                    negative results, kept on purpose. Never writes to data/
+  future_work/      two templates that have never been executed, by design
+
+scripts/            shared libraries (embedding, folds, lexical features, metrics) + experiment drivers
+future_work/        train_baseline_classifier.py — parked, not wired into the workflow
+reports/            the decision trail — what we tried, what we measured, what we rejected
+```
+
+Only `main/01` and `main/04` write to `data/`. Everything else is read-only, so
+notebooks can be run in any order once the data exists.
+
+### Where to start reading
+
+1. This file, then [`CONTEXT.md`](CONTEXT.md) for the findings that shaped the work.
+2. [`main/02_eda_quickstart.ipynb`](notebooks/main/02_eda_quickstart.ipynb) — the
+   5-minute tour of the corpus.
+3. [`main/03_eda_full.ipynb`](notebooks/main/03_eda_full.ipynb) — the full EDA pass,
+   with hypothesis tests.
+4. [`main/05_validation_design.ipynb`](notebooks/main/05_validation_design.ipynb)
+   — the validation design, and where the generalisation collapse is measured.
+5. [`main/06_baseline_logreg.ipynb`](notebooks/main/06_baseline_logreg.ipynb)
+   → [`07_advanced_catboost.ipynb`](notebooks/main/07_advanced_catboost.ipynb)
+   → [`08_ensemble_pooled.ipynb`](notebooks/main/08_ensemble_pooled.ipynb) — baseline,
+   advanced model, ensemble, in that order. Each is self-contained and reports train →
+   validation → holdout at every stage.
+
+---
+
+## Data
+
+`data/` is one pair of files per research question, named by its short key:
+
+```
+data/raw/<question_key>.jsonl          the labelled export (papers + labels)
+data/raw/<question_key>.usecase.json   the brief (objective, must/nice/exclude terms, decision rules)
+```
+
+The six keys are `carbon_capture`, `cement_binders`, `ner`, `soil_microbiome`,
+`solar_leo`, `tech_forecasting` — the same keys used in every notebook and report.
+
+### What ships in git, and why
+
+The default rule is that data doesn't belong in git. We broke it deliberately: a repo
+whose every notebook dies on cell 1 with `FileNotFoundError` can't be reviewed. So we
+ship whatever is small enough **and** needed to run the main line (~22 MB), and ignore
+the bulk that's regenerable (~600 MB).
+
+| Tracked | Size | What it is |
+|---|---|---|
+| `data/raw/*.jsonl` | 27 MB (12.5 MB packed) | The six labelled exports — source of truth |
+| `data/raw/*.usecase.json` | ~2 KB each | The briefs |
+| `data/processed/papers_combined.parquet` | 9.3 MB | Cleaned corpus, 2,873 × 50, incl. the original embedding |
+| `data/processed/papers_fe_slim.parquet` | 0.3 MB | Feature table, 1,848 × 38 — everything except the embedding blocks |
+
+| Ignored | Size | Rebuild with |
+|---|---|---|
+| `papers_fe.parquet` | 106 MB | `notebooks/main/04_feature_engineering.ipynb` |
+| `papers_fe_synergy*.parquet` | 173 MB | `scripts/run_synergy_recall_validation.py` |
+| `embeddings_cache/` | 295 MB | `scripts/modal_embeddings.py` (GPU) + OpenRouter (paid) |
+
+**Why a "slim" feature table.** `papers_fe.parquet` is 1,848 × 8,742 and 106 MB — 101 MB
+of it three raw embedding blocks. Drop those and 38 columns weighing 0.3 MB remain: the
+labels, the fold grouping key, the query-conditioned lexical block, cosine-to-brief, and
+metadata. That's enough to reproduce the **central finding above** with no embedding
+model, no API key and no GPU. Regenerate it with:
 
 ```bash
-python scripts/compare_embeddings.py --data data/raw/your-export.parquet
+python scripts/export_slim_fe.py
 ```
 
-Outputs (named after the input file, so different exports never overwrite each other):
-`reports/<data filename>_latent_space_comparison.png` (the visual comparison) and
-`reports/<data filename>_embedding_comparison.csv` (the scalar metrics behind it). See the
-script's own docstring for the full walkthrough — what each metric means, why those
-specific ones, and every flag (`--models`, `--projection tsne`, `--use-case-text`,
-`--list-models`, `--out`/`--out-plot`, …). See also `reports/model_shortlist.md` for the
-reasoning behind the default model set and what testing each one actually found.
+Column-by-column documentation for both processed files is in
+[`data/processed/README.md`](data/processed/README.md).
 
-### `scripts/compare_ner_models.py`
+### Adding a seventh research question
 
-The same latent-space/cosine-similarity comparison as `compare_embeddings.py`, but for
-**NER-derived representations** instead of sentence embeddings — extracting named
-entities (organisations, locations, dates, ...) from titles/abstracts via a local spaCy
-pipeline (`en_core_web_sm` by default) and testing whether turning a paper into an
-entity-based vector produces a sane latent space, and where the use case lands in it,
-against the same labelled dataset. Two representations by default: an entity-type-count
-profile, and a TF-IDF-over-entity-text representation — same 3-panel-per-row plot and
-scalar metrics as the embedding comparison, via shared `scripts/latent_space_utils.py`.
+The pipeline discovers files by glob and matches them on the `use_case` name recorded
+*inside* each file, not on the filename — so adding data is:
 
-```bash
-python scripts/compare_ner_models.py --data data/raw/your-export.parquet
-```
+1. Drop `<new_key>.jsonl` and `<new_key>.usecase.json` into `data/raw/`.
+2. Add a `USE_CASE_REGISTRY` entry in `notebooks/main/01_data_compile.ipynb`
+   (it raises loudly on an unregistered question rather than guessing a short code).
+3. Re-run that notebook, then feature engineering.
 
-Outputs: `reports/<data filename>_ner_latent_space_comparison.png` and
-`reports/<data filename>_ner_representation_comparison.csv`. See the script's own
-docstring for every flag (`--spacy-model`, `--representations`, `--list-entity-labels`,
-…) and `reports/ner_model_notes.md` for why spaCy was picked over GLiNER/scispaCy and
-what testing it on both real corpora actually found — including the honest negative
-result that a short use-case NAME often yields zero recognisable entities.
+The registry check is deliberate: a new question needs a considered short code, because
+that code is what every downstream report will call it.
 
-Requires the spaCy model to be downloaded once after `pip install`:
-```bash
-python -m spacy download en_core_web_sm
-```
+---
 
-### `future_work/train_baseline_classifier.py` — parked, not part of the current workflow
+## Future work
 
-Originally built as "the Week-3 baseline," with its default model framed as the winner
-of `compare_embeddings.py`'s comparison. That framing is retired (see `HANDOFF.md`): the
-comparison scripts are diagnostics against the labelled dataset, not a model-selection
-step for future classifier work, and Week 3's actual baseline (which features, which
-model, how to validate it) hasn't been decided. The script still runs — a plain
-`LogisticRegression` on paper embeddings, cross-validated honestly (out-of-fold
-predictions, never a row graded by a model that trained on it), scoring every paper with
-a usable vector — kept here so that plumbing isn't lost, but it is not wired to either
-comparison script's output and its default model is a placeholder, not a decision.
+**Continued experimentation with the advanced model** — the near-term list, in priority
+order (full reasoning in
+[`reports/wf_ensemble_final_recommendations.md`](reports/wf_ensemble_final_recommendations.md)):
 
-```bash
-python future_work/train_baseline_classifier.py --data data/raw/your-export.parquet
-```
+- **Replace the ~6,000-dim embedding block with a single supervised discriminant
+  direction.** Scored statistically identical (F2 0.897 vs 0.892) at a fraction of the
+  compute. A real simplification, needs SYNERGY validation before adoption.
+- **Re-run the feature ablation under the now-tuned CatBoost.** A stronger base learner
+  can absorb what weaker engineered features were compensating for; never re-checked
+  after tuning landed.
+- **A per-question lean model for `cement_binders`.** A lexical+metadata-only CatBoost
+  (no embedding) beat *both* production branches standalone there (ROC-AUC 0.933 vs
+  0.912/0.876). It's the one question where dropping the embedding wins.
+- **A proper central hyperparameter search** via the LOGO harness, rather than the
+  two-point sweep used so far — searching once centrally is the rule, per `CONTEXT.md` §1.
+- **Threshold/calibration transfer.** Every F2 number here was measured at ~20x
+  production prevalence. Recall@k is the right primary metric; a fixed threshold is not.
 
-## Conventions carried over from academic_research_agent
+**More data for testing** — the current evidence base is six questions of 260–360
+labelled rows, which is small and heterogeneous enough that we treat sub-0.03
+differences as noise:
+
+- **23 unused SYNERGY reviews are ring-fenced.** Many decisions here were made against
+  LOGO scores, so LOGO is no longer an unbiased surface. Those 23 reviews are the only
+  clean evaluation surface left — do not spend them on model selection.
+- **A seventh and eighth research question** would do more for confidence than any
+  further tuning. Several findings currently rest on 3-of-6 or 4-of-6 splits.
+- **Label recall is unmeasured.** One labeller means no inter-annotator agreement, and a
+  labeller's false negative is indistinguishable from a true negative — it silently
+  inflates measured recall. Fix: sample the negatives and re-label blind.
+- **Prevalence-realistic pools.** Ours run 26–77% positive; production is low single
+  digits. Recall metrics barely discriminate when there's no room to skip.
+
+`CONTEXT.md` §4 carries the full open-risk register, including the ones we could not
+close.
+
+---
+
+## How we work
+
+### Non-negotiable conventions
 
 - **NULL is not 0.** "We never found out" and "we looked and there was nothing" are
-  different facts — keep that distinction through cleaning and feature engineering
-  instead of silently filling nulls with zero.
-- **Cross-validated, not train-then-score.** Any accuracy/AUC number reported anywhere in
-  this repo should be on held-out folds, never on the data the model was fit on.
-- **Label which critic is speaking.** When a deterministic metric (e.g. CV ROC-AUC) and a
-  qualitative judgement (e.g. "this looks like a good split") sit side by side, say which
-  is which — a reader can't otherwise tell a measurement from an opinion.
+  different facts. Features over sparse fields emit NaN plus an indicator, rather than
+  silently filling zero.
+- **Cross-validated, never train-then-score.** Any accuracy/AUC/F2 in this repo is on
+  held-out folds. A score on data the model was fit on is not a result.
+- **Label which critic is speaking.** Where a hard metric sits next to a judgement call,
+  say which is which — a reader can't otherwise tell a measurement from an opinion.
+  Notebooks carry explicit "Finding" cells for this.
+- **Anything claiming to read the brief must survive a falsification control.** Rebuild
+  the feature against deliberately *wrong* briefs; if it still scores well, it's
+  measuring something generic and gets thrown away. This caught more than one plausible
+  feature.
 
-## Collaboration conventions
+### Collaboration
 
-### Branch naming
+Branches are prefixed with the author's initials (`wf-`, `sf-`), one logical change per
+commit, and everything lands on `main` through a reviewed pull request. Notebook
+filenames carry the same prefix, so the two work streams stay legible in a shared repo.
 
-Prefix every branch with your initials, then a short, descriptive slug:
-`<initials>-<what-it-does>` — e.g. `wf-eda-notebooks`, `wf-data-compile`. In a
-2-person repo where several branches can be in flight at once, this makes
-`git branch -a` self-explanatory about who's working on what, without having to open
-each branch to check.
-
-### Documentation standards
-
-- Every notebook gets a one-line description in `notebooks/README.md`, kept current
-  with the actual folder structure (`eda/`, `data_compile/`, ...) — that file is the
-  source of truth for "what notebooks exist and what do they do", not this README.
-- Notebooks explain *why*, not just *what*, in markdown cells, and label which claims
-  are hard computed numbers vs. judgement calls (same "label which critic is
-  speaking" convention as above).
-- Scripts keep the existing convention: a long module docstring carrying the
-  reasoning — and any negative results from real runs — behind the choices made (see
-  `scripts/compare_embeddings.py` for the reference example).
+**Contributions.** SF: the EDA passes, the LOGO fold strategy, and the baseline →
+CatBoost → ensemble modelling line. WF: data compilation, the feature-engineering track
+(query-conditioned lexical features, embedding bake-off), the per-silo ensemble, and
+external validation on SYNERGY.

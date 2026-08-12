@@ -1,5 +1,7 @@
 # Multi-seed verification of Ensemble v2 experiments
 
+> **Status: current, supporting.** The multi-seed, noise-floor-gated check on [`wf_ensemble_v2_experiments.md`](wf_ensemble_v2_experiments.md)'s single-seed findings. **Read this before acting on any number in that file.**
+
 Same three comparisons as `reports/wf_ensemble_v2_experiments.md`, repeated across 5/5 seeds instead of one, applying this project's own noise-floor discipline (`CONTEXT.md` §5: treat any gap below ~0.03 ROC-AUC as not established).
 
 ## Experiment A — tuned vs. screening CatBoost, across seeds

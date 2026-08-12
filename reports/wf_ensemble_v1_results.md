@@ -1,10 +1,12 @@
 # Ensemble v1 — what shipped, what was cut, and why
 
+> **Status: superseded** by [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md), which carries the same decisions updated with the v2 round. This was Ensemble v1's Phase 3 write-up; kept for the reasoning trail.
+
 **Audience:** anyone picking up TIRI's modelling work next. Companion to the approved
 ensemble-modelling plan (a per-silo CatBoost + LogisticRegression ensemble on
 `data/processed/papers_fe.parquet`) and its two artefacts: `reports/wf_ensemble_v1_candidate.md`
 (Phase 1, the feature/embedding/branch ablation) and
-`notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb` (Phase 2, the reviewable walkthrough).
+`notebooks/main/09_ensemble_per_silo.ipynb` (Phase 2, the reviewable walkthrough).
 This report is Phase 3: the decision trail, not a repeat of either artefact's numbers.
 
 ---
@@ -163,8 +165,8 @@ app `tiri-ensemble-ablation`), not locally. This wasn't a design preference — 
 | What | Where |
 |---|---|
 | Feature/embedding/branch ablation, full numbers | `reports/wf_ensemble_v1_candidate.md` |
-| Reviewable, stage-by-stage walkthrough of the winning combination | `notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb` |
+| Reviewable, stage-by-stage walkthrough of the winning combination | `notebooks/main/09_ensemble_per_silo.ipynb` |
 | Shared LOGO/within-silo eval harness (used by both the ablation and `run_tier1b_control.py`) | `scripts/ensemble_eval_utils.py` |
 | Modal execution (why, and the deploy/run commands) | `scripts/modal_ensemble_candidate.py` module docstring |
-| The approved plan this work executes, with full evidence-cited corrections to the original proposal | `/Users/warrenfauvel/.claude/plans/rustling-gliding-creek.md` |
+| The approved plan this work executes, with full evidence-cited corrections to the original proposal | (working plan, not checked in — its decisions are reproduced in `reports/wf_ensemble_final_recommendations.md`) |
 | Project-wide constraints and negative-results register this all builds on | `CONTEXT.md` |

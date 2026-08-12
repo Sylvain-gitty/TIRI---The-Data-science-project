@@ -1,6 +1,6 @@
 """modal_embeddings.py — GPU-backed embedding inference for 4 HF models too heavy
 for local CPU (SPECTER2 via adapters, QZhou-Embedding, Jasper-Token-Compression-600M,
-Qwen3-Embedding-4B). Called from notebooks/eda/wf_embedding_model_bakeoff.ipynb via
+Qwen3-Embedding-4B). Called from notebooks/experiments/wf_embedding_model_bakeoff.ipynb via
 scripts/embedding_utils.py's embed_via_modal, which looks up the deployed app by name
 rather than needing this file present/redeployed on every call.
 

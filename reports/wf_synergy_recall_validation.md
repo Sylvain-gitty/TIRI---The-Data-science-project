@@ -1,5 +1,7 @@
 # SYNERGY validation — the recall lens at realistic prevalence
 
+> **Status: current.** External validation at realistic prevalence (1.7–14.8% positive) on systematic reviews this project had no hand in labelling — the least self-graded evidence in the repo.
+
 | use_case_key      | n    | n_included | prevalence | wss_ceiling | exp_pos_in_25_random |
 |-------------------|------|------------|------------|-------------|----------------------|
 | Menon_2022        | 975  | 74         | 0.076      | 0.878       | 1.900                |

@@ -1,9 +1,10 @@
 # Ensemble — final recommendations
 
+> **Status: current — start here.** The single decision doc for the modelling architecture, synthesising Ensemble v1, v2 and the external validation. Every other ensemble report in this folder is its evidence.
+
 **What this is:** the single decision doc pulling together everything from the
-ensemble-modelling plan (`/Users/warrenfauvel/.claude/plans/rustling-gliding-creek.md`),
-Phase 1-3 (`reports/wf_ensemble_v1_candidate.md`, `wf_ensemble_v1_results.md`,
-`notebooks/pipelines/wf_ensemble_fold_pipeline.ipynb`), and the v2 exploratory round
+ensemble-modelling plan, Phase 1-3 (`reports/wf_ensemble_v1_candidate.md`, `wf_ensemble_v1_results.md`,
+`notebooks/main/09_ensemble_per_silo.ipynb`), and the v2 exploratory round
 (`reports/wf_ensemble_v2_experiments.md`). Each line below is a decision, not a discussion —
 read the linked report for the full argument.
 

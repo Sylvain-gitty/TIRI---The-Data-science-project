@@ -126,7 +126,7 @@ def main() -> None:
     lab = df[df.triage_label.isin(["positive", "negative"])].reset_index(drop=True)
     y = (lab.triage_label == "positive").to_numpy().astype(int)
     use_case = lab.use_case_key
-    # Author grouping mirrors notebooks/modelling/wf_fold_pca_test.ipynb: papers by the
+    # Author grouping mirrors notebooks/experiments/wf_fold_pca_test.ipynb: papers by the
     # same first author must not straddle a split, or a within-silo score is inflated.
     groups = lab.authors.fillna("").astype(str).str.split(",").str[0].str.strip().str.lower()
     groups = groups.where(groups != "", pd.Series([f"__solo_{i}" for i in range(len(lab))]))

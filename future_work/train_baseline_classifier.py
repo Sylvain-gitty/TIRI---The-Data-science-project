@@ -6,7 +6,7 @@ described as "the winner" of scripts/compare_embeddings.py's comparison. That fr
 been retired: compare_embeddings.py (and scripts/compare_ner_models.py) exist to test how
 an embedding/NER model's latent space relates to an already-labelled dataset — dispersion,
 cosine similarity, use-case centrality — not to select a classifier for future modelling
-work. See HANDOFF.md and reports/model_shortlist.md for the current framing.
+work. See reports/model_shortlist.md for the current framing.
 
 Week 3's actual baseline-classifier work (which embedding/features to train on, which
 model, how to validate it) has NOT been decided and is intentionally out of scope for this

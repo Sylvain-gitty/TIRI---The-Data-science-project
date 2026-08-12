@@ -1,5 +1,7 @@
 # Embedding comparison through the recall lens
 
+> **Status: current.** One of the live evidence docs listed in `CONTEXT.md` §7 — embedding choice judged through the recall lens (WSS@95) on both fold surfaces.
+
 1852 labelled papers, 6 use cases. Primary metric **WSS@95**: the share of the pool a reviewer can skip while still finding 95% of the relevant papers. Its ceiling is `0.95 x (1 - prevalence)`, shown per use case, because these pools are 26-77% positive and a WSS of 0.30 means very different things at each end.
 
 | use_case_key     | prevalence | wss_ceiling |

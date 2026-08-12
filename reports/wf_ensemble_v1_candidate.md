@@ -1,5 +1,7 @@
 # Ensemble v1 candidate — CatBoost vs LogisticRegression, feature/embedding ablation
 
+> **Status: current as evidence.** Ensemble v1 Phase 1 — the feature/embedding/branch ablation. Its architecture conclusions are superseded by [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md), which folds in the later v2 round.
+
 Run on Modal (8 cells, 8 CPUs/container, 8192MB) rather than locally — CatBoost's default `thread_count=-1` hits a severe slowdown on this machine's Apple Silicon (a single tiny fit never finished in 10+ minutes; `thread_count=1` took ~7s for the same fit). CatBoost also runs at `iterations=50, depth=4` (not CatBoost's own 1000/6 defaults) — measured directly, the widest variant (~4600 raw embedding columns, 150 sequential fits per cell) twice exceeded a 2400s per-cell timeout at 100 iterations even with 8GB of memory (a genuine per-fit time cost, not memory), and this is a screening pass across 8 cells, not the final tuned model. Otherwise identical ablation to `python scripts/run_ensemble_candidate.py`.
 
 `1848` labelled papers, 6 use cases. Gate: a combination only carries into Phase 2 if its within-silo ROC-AUC beats the published Tier1b+embedding LogisticRegression baseline (`reports/wf_tier1b_lexical_control.md` §2) by more than the ~0.03 noise floor (CONTEXT.md §5) on a majority of use cases.

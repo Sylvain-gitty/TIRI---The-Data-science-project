@@ -1,5 +1,7 @@
 # Tier 1b lexical block — results and the shuffled-brief control
 
+> **Status: current.** The Tier-1b lexical block and its shuffled-brief falsification control — the pattern `CONTEXT.md` says to copy for any feature that claims to read the brief.
+
 `1852` labelled papers, 6 use cases, 22 lexical features. Plain LogisticRegression throughout.
 
 > Read `recall_at_10pct` against its ceiling, not against 1.0. These pools are ~58% positive, so reviewing the top 10% of a pool can recover at most ~0.17 of the positives even with perfect ranking. The number becomes informative at production prevalence, not here.

@@ -54,3 +54,14 @@ synergy-dataset>=1.2
 # LOGO); native missing-value/categorical handling, monotonic constraints, mature SHAP
 # tooling; CPU-only, no GPU required.
 catboost>=1.2.0
+
+# Bayesian (TPE) hyperparameter search in notebooks/main/07_advanced_catboost.ipynb and
+# 08_ensemble_pooled.ipynb — both do `import optuna` unguarded in their first cell, so
+# without this they fail before reaching any modelling code.
+optuna>=3.6.0
+
+# Pulled in transitively by scikit-learn/catboost today, but imported directly by the
+# notebooks (scipy for the significance tests, joblib to parallelize fold-level fits) —
+# named explicitly so a dependency change upstream can't silently break them.
+scipy>=1.13.0
+joblib>=1.4.0

@@ -1,9 +1,11 @@
 # Ensemble strategy recommendations
 
+> **Status: historical** — written before Ensemble v1 existed. Superseded on architecture by [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md). Still the source of record for two entries in `CONTEXT.md`'s negative-results register: §0 (why `relevance_score` is unusable as a feature or a baseline) and §4 (why per-customer hyperparameter search overfits at a few hundred labels).
+
 Recommendations for Week-3 modelling, assuming the feature engineering in
 `reports/wf_eda_fe_report.md` gets built. Written after new facts about `relevance_score`
 changed one of that report's recommendations — see §0 before reading anything else here
-or in `notebooks/eda/wf_pre_pipeline_checks.ipynb` §1.
+or in `notebooks/experiments/wf_pre_pipeline_checks.ipynb` §1.
 
 ---
 
@@ -25,7 +27,7 @@ that use case's own pool. It is:
   one in the export we currently pull.
 
 **What this corrects:** `reports/wf_eda_fe_report.md` recommended adding `relevance_score`
-as an ensemble input, and `notebooks/eda/wf_pre_pipeline_checks.ipynb` §1 reported it
+as an ensemble input, and `notebooks/experiments/wf_pre_pipeline_checks.ipynb` §1 reported it
 "generalizing better than the embedding ensemble" (holdout AUC 0.649 vs. 0.530–0.586)
 and treated that as evidence it was a useful cross-domain signal. Both are wrong, for
 related reasons:
@@ -90,7 +92,7 @@ current snapshot (`paraphrase-multilingual-MiniLM-L12-v2@fastembed-0.8.0` for al
 rows) — the two-live-models situation described in §0 isn't active in our current data,
 but the pipeline needs to be built assuming it will be, not re-built later when it
 suddenly is. *Action item: once `use_case_version` appears in a fresh export,
-`notebooks/data_compile/combine_use_cases.ipynb` needs a broadcast step for it, same as
+`notebooks/main/01_data_compile.ipynb` needs a broadcast step for it, same as
 every other `_meta`/`usecase.json` field; until then, treat any cross-time comparison
 on the current 6 use cases as unstratified and provisional.*
 
