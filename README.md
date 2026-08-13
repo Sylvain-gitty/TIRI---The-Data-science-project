@@ -65,6 +65,7 @@ easiest way to misread this project.
 | **Pooled** | How well does a model do on *more papers from questions it has already seen*? | Ensemble holdout **ROC-AUC 0.889** |
 | **Leave-one-question-out (LOGO)** | How well does it do on a *brand-new question* with no labels? | **~0.54 ROC-AUC — it doesn't.** This is the finding, not a failure to fix |
 | **Within-question (per-silo)** | How well does it do on a *new paper for a question we have labels for*? — **the production surface** | Per-silo ensemble clears the strong baseline by **0.03–0.18 ROC-AUC** across the six questions |
+| **External, at realistic prevalence** | How well does any of it do where only **2%** of papers are relevant, on questions nobody here labelled? | Per-silo ensemble **ROC-AUC 0.891**; a prompted LLM reaches 0.834 and **does not** replace it |
 
 ### Pooled — the model comparison (`notebooks/main/06`–`08`)
 
@@ -115,6 +116,39 @@ measured here.
 
 The full architecture decision doc — every choice, its evidence, and its confidence
 grade — is [`reports/wf_ensemble_final_recommendations.md`](reports/wf_ensemble_final_recommendations.md).
+
+### Can a prompted LLM do this instead? (`notebooks/main/11`, `reports/wf_llm_*`)
+
+Short answer: **no, and the interesting part is why not.**
+
+Tested on an external 28-collection benchmark — 8 collections, 62,229 papers, **2.19%
+relevant**, which is the first surface here where F2 discriminates at all (at our own
+pools' 26–77% prevalence, "mark everything relevant" already scores F2 0.872, so nothing
+could be told apart). Four open-weights models from 20B to 397B, four prompt variants,
+89,937 responses, $16.10.
+
+| labels per question | method | mean ROC-AUC |
+|---|---|---|
+| 0 | cosine-to-brief | 0.774 |
+| 0 | best prompted LLM | 0.815 |
+| 60 | LLM + a brief **induced from those 60 labels** | **0.834** |
+| 60 | LogReg on the embedding | 0.844 |
+| in-silo | **per-silo ensemble** | **0.891** |
+
+Zero-shot, every model beat the free cosine baseline on exactly **3 of 8 collections**
+against a pre-registered ≥6/8. Two of this repo's earlier conclusions did not survive the
+move to realistic prevalence — the model ranking scrambled completely, and the
+prompt-engineering trick that was worth +0.35 F2 at high prevalence is worth ±0.03 here.
+
+What did work is a **better brief**, not a better model: showing a strong model 30 relevant
+and 30 irrelevant papers and asking it to write the screening rule it infers is worth
+**+0.057 ROC-AUC** for one $0.006 call — larger than the entire 20B→397B model spread
+(0.030). It is a **cold-start lever only**: folded into the trained ensemble it is worth
+**+0.001**, because the embedding block already encodes it.
+
+Decision doc: [`reports/wf_llm_benchset_a_findings.md`](reports/wf_llm_benchset_a_findings.md).
+Every method and metric side by side:
+[`reports/wf_llm_benchset_a_summary.md`](reports/wf_llm_benchset_a_summary.md).
 
 ### A note on what counts as a result here
 
@@ -174,11 +208,12 @@ data/
 
 notebooks/
   README.md         the index — what every notebook does and what it found
-  main/             the 9-notebook main line, numbered in reading order
+  main/             the main line, numbered in reading order
                       01 data compile   02 EDA quickstart   03 EDA full
                       04 feature eng.   05 validation design
                       06 baseline       07 CatBoost         08 ensemble (pooled)
                       09 ensemble (per-question — the production surface)
+                      11 LLM screening on the external benchmark, at 2% prevalence
   experiments/      supporting evidence: feature viability checks, embedding
                     bake-offs, external validation, superseded passes. Mostly
                     negative results, kept on purpose. Never writes to data/
@@ -310,6 +345,21 @@ order (full reasoning in
 - **A per-question lean model for `cement_binders`.** A lexical+metadata-only CatBoost
   (no embedding) beat *both* production branches standalone there (ROC-AUC 0.933 vs
   0.912/0.876). It's the one question where dropping the embedding wins.
+
+**From the LLM screening work** (full list in
+[`reports/wf_llm_benchset_a_findings.md`](reports/wf_llm_benchset_a_findings.md) §10):
+
+- **Run the induced brief on the collections that are too small to train on.** 12 of the
+  benchmark's 28 collections are too small to split, which is exactly the cold-start
+  population the induced brief serves — and the one the run above could not test.
+- **Locate the crossover.** A better brief is worth +0.057 ROC-AUC at 60 labels and +0.001
+  once a question has enough to train on. Only those two points were measured, so the label
+  count where it stops paying is unknown — and it is the number that decides when to stop
+  paying for one. Free: no new inference needed.
+- **An induced brief vs few-shot examples on the same 60 labels.** Decides whether the
+  artefact should be a brief or a set of demonstrations. A brief is far more attractive
+  operationally: human-readable, auditable, editable by an analyst, and it also feeds the
+  non-LLM lexical features, which in-context examples cannot.
 - **A proper central hyperparameter search** via the LOGO harness, rather than the
   two-point sweep used so far — searching once centrally is the rule, per `CONTEXT.md` §1.
 - **Threshold/calibration transfer.** Every F2 number here was measured at ~20x
