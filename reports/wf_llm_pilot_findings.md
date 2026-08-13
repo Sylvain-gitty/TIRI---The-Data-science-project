@@ -1,5 +1,16 @@
 # LLM screening pilot — findings
 
+> **Three claims below have since been overtaken — see `wf_llm_benchset_a_findings.md` and
+> `wf_llm_logprob_scoring.md`.** The measurements stand; the conclusions drawn from them do
+> not, because this pilot ran at 26–77% prevalence and set A ran the same models at 2.19%.
+> Specifically: §5's **"scale saturates at ~31B"** is a prevalence artefact (`gemma-4-31b` is
+> *last* of four on set A, `nemotron-120b` *first*); §2's **F2-asymmetry gain of +0.31 to
+> +0.37** shrinks to −0.040/+0.020 at production prevalence, because "when uncertain, include"
+> stops being cheap; and §6's recommendation to **use token logprobs for ranking** was tested
+> and rejected — it fixed the tie fraction (0.997 → 0.047) and made ranking *worse* (mean AUC
+> −0.035), so the 0.044 ranking gap in §1 is genuine and not an elicitation artefact.
+> Everything else here, including §3's control and §4's third-branch rejection, is unaffected.
+
 **What this is:** the decision doc for the pilot specified in `wf_llm_screening_plan.md` —
 can a prompted open-weights LLM beat the per-silo CatBoost+LogReg ensemble on F2?
 

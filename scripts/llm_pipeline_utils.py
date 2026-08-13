@@ -625,14 +625,21 @@ PINNED_PROVIDERS: dict[str, list[str]] = {
     # Chutes' median, for a few cents more across the whole grid. Latency spread across
     # providers for one model is ~5x, far wider than the price spread.
     "google/gemma-4-31b-it": ["Friendli"],               # $0.140/$0.400, p50 7.6s, max 9.3s
-    # DeepInfra, not Nebius, despite Nebius being the "healthy + claims seed" pick: BOTH
-    # providers reject `seed` as `extra_forbidden` at the endpoint while OpenRouter's table
-    # advertises support, so there is no seed-honouring option to buy. Given that, take the
-    # one that demonstrably works - DeepInfra parsed 108/108 at 322 median completion tokens
-    # where Nebius parsed 60/108 at 568. **Nemotron's determinism numbers therefore carry a
-    # caveat no other model in the pilot does**, and that is itself a deployability finding
-    # against a product requirement that says "100% deterministic".
-    "nvidia/nemotron-3-super-120b-a12b": ["DeepInfra"],  # $0.085/$0.400, no working seed
+    # Nebius, revised at set-A scale. All three of nemotron's endpoints fail a different way,
+    # and none of the three failures is visible in OpenRouter's capability table:
+    #   DeepInfra    ($0.085/M) rejects `seed`, and rate-limits so hard at 62k-row scale that
+    #                measured throughput collapses to **4 rows/min** - 42 hours for one cell.
+    #                Fine for the 1,848-row pilot, unusable here. Throughput is a capability.
+    #   DigitalOcean ($0.165/M) 404s every request: its endpoint advertises neither
+    #                `temperature` nor `seed`, so `require_parameters` filters it to nothing.
+    #   Nebius       ($0.300/M) rejects `seed` too, but parses 100% at 434 rows/min on P2.
+    # So: the only usable endpoint costs 3.5x the cheapest and still cannot honour `seed`.
+    # **Nemotron's determinism numbers therefore carry a caveat no other model here does**,
+    # and that is itself a finding against a requirement that says "100% deterministic".
+    # (The pilot preferred DeepInfra on P4 truncation - 108/108 at 322 median completion
+    # tokens vs Nebius' 60/108 at 568. P2 is short-output and shows 0 truncations on Nebius,
+    # so that objection does not apply to the variant run here.)
+    "nvidia/nemotron-3-super-120b-a12b": ["Nebius"],     # $0.300/$0.900, no working seed
     "qwen/qwen3.5-397b-a17b": ["Alibaba"],               # $0.390/$2.340, seed+logprobs
 }
 
@@ -867,6 +874,7 @@ def score_frame(
     variant: str,
     concurrency: int = 16,
     brief_map: dict | None = None,
+    brief_tag: str | None = None,
     cache_dir: Path = DEFAULT_CACHE_DIR,
     progress: bool = True,
     **client_kwargs,
@@ -877,6 +885,13 @@ def score_frame(
     is how the shuffled-brief control runs: pass a permuted map and every number below
     should collapse. If it does not, the cell is measuring generic paper quality rather
     than brief-conditioned relevance and its score means nothing.
+
+    `brief_tag` names which brief set a swapped run used, so the cache stays readable after
+    the fact. It only became necessary once the brief swap stopped being a control and
+    started being an experiment: the set-A brief-format ladder runs the *same* prompt over
+    the review's raw abstract (`raw`), the supplied brief, an induced rule set (`induced`)
+    and a derangement (`shuffled`), and tagging the first three "shuffled" would make the
+    audit trail lie. Defaults to "shuffled" so every existing call site is unchanged.
     """
     import pandas as pd
 
@@ -895,7 +910,7 @@ def score_frame(
     # exactly that and started silently re-buying the whole 12-cell grid.)
     tag = f"{variant}|{spec['version']}|{BRIEF_RENDER_VERSION}"
     if brief_map is not None:
-        tag += "|shuffled"
+        tag += "|" + (brief_tag or "shuffled")
     rows = list(df.itertuples(index=False))
     cols = list(df.columns)
 

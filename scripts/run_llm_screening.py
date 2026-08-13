@@ -124,9 +124,15 @@ def summarise(res: pd.DataFrame) -> dict:
     parsed = int(res["parsed"].sum())
     scored = int(res["score"].notna().sum())
     verdict = int(res["pred"].notna().sum())
-    cost = float(pd.to_numeric(res["cost"], errors="coerce").fillna(0).sum())
+    # `cost` is an audit field replayed from the cached response, so summing it gives what
+    # the cell cost to produce - not what this run spent. Those diverge to 100% of the total
+    # on a fully cached re-run, which is exactly when someone is watching the number to
+    # decide whether a cache change silently started re-buying responses. Report both.
+    cost_all = pd.to_numeric(res["cost"], errors="coerce").fillna(0)
+    fresh = ~res["cached"].fillna(False).astype(bool)
     return {
         "n": n,
+        "cached": int((~fresh).sum()),
         "http_errors": errors,
         "parse_rate": round(parsed / n, 3) if n else 0.0,
         "score_rate": round(scored / n, 3) if n else 0.0,
@@ -139,24 +145,27 @@ def summarise(res: pd.DataFrame) -> dict:
         "median_completion_tok": float(
             pd.to_numeric(res["completion_tokens"], errors="coerce").median()
         ),
-        "cost_usd": round(cost, 4),
+        "cost_usd": round(float(cost_all.sum()), 4),
+        "spend_usd": round(float(cost_all[fresh].sum()), 4),
         "providers": ",".join(sorted(res["provider"].dropna().unique().tolist())[:4]),
     }
 
 
 def run_cells(df: pd.DataFrame, models: list[str], variants: list[str], concurrency: int,
-              out_stem: str, brief_map: dict | None = None) -> pd.DataFrame:
+              out_stem: str, brief_map: dict | None = None,
+              brief_tag: str | None = None) -> pd.DataFrame:
     all_res, summary = [], []
     for model in models:
         for variant in variants:
             print(f"\n>>> {model}  {variant}  ({len(df)} rows)", flush=True)
             res = score_frame(df, model=model, variant=variant, concurrency=concurrency,
-                              brief_map=brief_map)
+                              brief_map=brief_map, brief_tag=brief_tag)
             all_res.append(res)
             row = {"model": model, "variant": variant, **summarise(res)}
             summary.append(row)
             print(f"    parse={row['parse_rate']:.0%} score={row['score_rate']:.0%} "
-                  f"errors={row['http_errors']} cost=${row['cost_usd']:.4f} "
+                  f"errors={row['http_errors']} spend=${row['spend_usd']:.4f} "
+                  f"(cached {row['cached']}/{row['n']}) "
                   f"p50={row['median_latency_s']}s via {row['providers']}", flush=True)
     res_df = pd.concat(all_res, ignore_index=True)
     sum_df = pd.DataFrame(summary)
@@ -192,46 +201,106 @@ def shuffled_brief_map(df: pd.DataFrame, seed: int = 0) -> dict[str, str]:
     raise RuntimeError("could not find a derangement")
 
 
+def load_corpus(corpus: str) -> pd.DataFrame:
+    """TIRI's 1,848 labelled rows, or the set-A case-control sample. Same columns either way.
+
+    `benchset_a` returns the 9,993-row sample, not all 62,229: every positive plus a random
+    share of the negatives, carrying the weight `w` that puts the metrics back at the true
+    2.19% prevalence. `scripts/validate_benchset_sampling.py` is the gate on that design and
+    must pass before any cell is bought here.
+    """
+    if corpus == "tiri":
+        return load_pilot_frame()
+    from benchset_loader import case_control_sample, load_set_a
+
+    return case_control_sample(load_set_a())
+
+
+def resolve_briefs(corpus: str, brief: str, df: pd.DataFrame) -> tuple[dict | None, str | None]:
+    """The brief-format ladder: one prompt, four brief sets.
+
+    `own` is the supplied brief and needs no map at all — importantly, that path must keep
+    producing a cache tag byte-identical to the pilot's, or every response already paid for
+    becomes unreachable and the grid silently re-buys itself.
+    """
+    if brief == "own":
+        return None, None
+    if brief == "shuffled":
+        return shuffled_brief_map(df, seed=0), "shuffled"
+    if brief == "raw":
+        from benchset_loader import raw_brief_map
+
+        return raw_brief_map(df), "raw"
+    if brief == "induced":
+        import json
+
+        path = Path("reports/wf_llm_setA_rules_v1.json")
+        if not path.exists():
+            raise SystemExit(f"{path} missing - run scripts/induce_rule_set.py first")
+        blob = json.loads(path.read_text())
+        return blob["briefs"], f"induced-{blob['rule_set_version']}"
+    raise ValueError(brief)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--smoke", action="store_true", help="5 rows/use case, all cells")
+    ap.add_argument("--smoke", action="store_true", help="a few rows/use case, all cells")
     ap.add_argument("--stage", default="grid", choices=["grid", "control"])
+    ap.add_argument("--corpus", default="tiri", choices=["tiri", "benchset_a"])
+    ap.add_argument("--brief", default="own", choices=["own", "raw", "induced", "shuffled"])
     ap.add_argument("--models", nargs="+", default=PILOT_MODELS)
     ap.add_argument("--variants", nargs="+", default=PILOT_VARIANTS)
     ap.add_argument("--concurrency", type=int, default=12)
+    ap.add_argument("--tag", default="",
+                    help="appended to the output stem. Needed when running one model per "
+                         "process - different models sit on different providers with "
+                         "independent rate limits, so cells run far faster in parallel, but "
+                         "they would otherwise all write to the same parquet.")
     args = ap.parse_args()
 
-    df = load_pilot_frame()
-    print(f"loaded {len(df):,} rows across {df.use_case_key.nunique()} use cases")
+    df = load_corpus(args.corpus)
+    print(f"loaded {len(df):,} rows across {df.use_case_key.nunique()} use cases "
+          f"({df.y.sum():,} positive)")
+
+    # Every output name carries corpus, variant set and brief arm. The TIRI + own-brief +
+    # full-variants path resolves to exactly the old names so nothing already produced moves.
+    # (`--variants P2lp` once wrote to wf_llm_grid_responses.parquet and destroyed the 12-cell
+    # grid it took an hour to produce. The cache made recovery free; the name is the real fix.)
+    corpus_tag = "" if args.corpus == "tiri" else "_setA"
+    suffix = "" if sorted(args.variants) == sorted(PILOT_VARIANTS) else "_" + "-".join(args.variants)
+    brief_sfx = "" if args.brief == "own" else f"_{args.brief}"
+    tag_sfx = f"_{args.tag}" if args.tag else ""
 
     if args.smoke:
-        sample = stratified_sample(df, per_use_case=6, seed=0)
+        per_uc = 6 if args.corpus == "tiri" else 30
+        sample = stratified_sample(df, per_use_case=per_uc, seed=0)
         print(f"smoke subset: {len(sample)} rows "
               f"({sample.y.sum()} positive, {(sample.y == 0).sum()} negative)")
-        sum_df = run_cells(sample, args.models, args.variants, args.concurrency, "wf_llm_smoke")
+        bm, bt = resolve_briefs(args.corpus, args.brief, df)
+        sum_df = run_cells(sample, args.models, args.variants, args.concurrency,
+                           f"wf_llm{corpus_tag}_smoke{brief_sfx}{tag_sfx}", brief_map=bm, brief_tag=bt)
         print("\n=== SMOKE SUMMARY ===")
         print(sum_df.to_string(index=False))
         total = sum_df["cost_usd"].sum()
-        print(f"\ntotal spend this run: ${total:.4f}")
-        print(f"projected per full 1,848-row cell: ${total / len(sum_df) * (1848 / len(sample)):.3f}")
+        print(f"\nspend this run: ${sum_df['spend_usd'].sum():.4f} "
+              f"(cell cost incl. cache hits: ${total:.4f})")
+        print(f"projected per full {len(df):,}-row cell: "
+              f"${total / len(sum_df) * (len(df) / len(sample)):.3f}")
         return
-
-    # Output stem encodes the variant set whenever it is not the full default. Without this,
-    # `--variants P2lp` writes to wf_llm_grid_responses.parquet and silently destroys the
-    # 12-cell grid it took an hour to produce. (It did, once. The cache made recovery free,
-    # which is the only reason it was cheap.)
-    suffix = "" if sorted(args.variants) == sorted(PILOT_VARIANTS) else "_" + "-".join(args.variants)
 
     if args.stage == "control":
         bm = shuffled_brief_map(df, seed=0)
         print("shuffled-brief control - each use case scored against another's criteria")
         sum_df = run_cells(df, args.models, args.variants, args.concurrency,
-                           f"wf_llm_control{suffix}", brief_map=bm)
+                           f"wf_llm{corpus_tag}_control{suffix}{tag_sfx}", brief_map=bm,
+                           brief_tag="shuffled")
         print("\n=== CONTROL SUMMARY ===")
         print(sum_df.to_string(index=False))
         return
 
-    sum_df = run_cells(df, args.models, args.variants, args.concurrency, f"wf_llm_grid{suffix}")
+    bm, bt = resolve_briefs(args.corpus, args.brief, df)
+    sum_df = run_cells(df, args.models, args.variants, args.concurrency,
+                       f"wf_llm{corpus_tag}_grid{suffix}{brief_sfx}{tag_sfx}", brief_map=bm, brief_tag=bt)
     print("\n=== GRID SUMMARY ===")
     print(sum_df.to_string(index=False))
 

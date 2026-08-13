@@ -109,16 +109,25 @@ mean-centring the embedding (0.532 → 0.529), and adding metadata.
   labels" is safe only if those labels were *actively selected* — e.g. by labelling the top
   of a cosine-to-brief ranking — not randomly sampled. Confirm how the labelling project
   sources them.
-- **The query-conditioned advantage is contingent on brief format, not automatic.** The
-  shuffled-brief control passes decisively on TIRI (5/6 use cases, +0.155) and **fails on
-  SYNERGY** (1/3, −0.012). SYNERGY briefs are a published review's title and abstract —
-  a description of what a review did, not a statement of what to include — and carry no
-  curated term lists. Curated inclusion terminology looks load-bearing. Feed this to the
-  brief-format experiment; re-validate the block against any new brief format.
+- ~~**The query-conditioned advantage is contingent on brief format, not automatic.**~~
+  **CLOSED — it was a brief-format artefact, not a property of SYNERGY.** The original
+  finding stands as measured (shuffled-brief passes on TIRI 5/6, +0.155; fails on old
+  SYNERGY 1/3, −0.012), but `benchset_v1`'s re-briefed SYNERGY collections pass the control
+  **decisively**: AUC 0.777 → **0.498**, F2@own → **0.000**, predicted-positive rate →
+  **0.000** on 8/8 collections (`reports/wf_llm_benchset_a_findings.md` §4). What did *not*
+  survive is the diagnosis. "Curated inclusion terminology looks load-bearing" is true for
+  the lexical block and **false for an LLM reader**: stripping the term lists back to the
+  review's raw abstract leaves ranking identical (0.777 both) and *improves* the operating
+  point (recall 0.559 vs 0.484 at equal reading cost). **Term lists help keyword matchers
+  and hurt readers** — do not generalise "brief quality matters" into "add term lists".
 - **Model ranking is not stable across prevalence regimes.** Qwen3-4B is mid-pack in-repo
   and *last* on SYNERGY; Qwen3-8B wins at realistic prevalence. Recall metrics only
   discriminate where there is room to skip — our 26–77% pools are a poor surface for
-  judging a recall-oriented system.
+  judging a recall-oriented system. **Reproduced a second time, on generative models:** the
+  four-model LLM ranking scrambles completely between TIRI and benchset set A —
+  `gemma-4-31b` goes 2nd of 4 to *last*, `nemotron-3-super-120b` 3rd to *1st*
+  (`wf_llm_benchset_a_findings.md` §2). Treat this as the default expectation, not a
+  surprise: **never carry a model choice across a prevalence regime without re-measuring.**
 - **Selection-on-holdout.** Many decisions (11 embedding models, combination methods,
   calibration methods, PCA on/off) were made against LOGO scores, so LOGO is no longer
   unbiased. **23 unused SYNERGY reviews** are the only clean surface left — ring-fence them.
@@ -164,6 +173,12 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | Per-use-case mean-centring of embeddings | 0.532 → 0.529 LOGO, no effect |
 | **PCA-64 within a silo** | −0.008 to −0.014 WSS on all three models; §6.2's compress-then-concat win was a *transfer* phenomenon and does not carry to production folds |
 | Term overlap as an abstract-length proxy (a suspicion, now closed) | length features alone reach 0.550; removing them costs 0.004 |
+| **Prompted LLM screening as a replacement for the ensemble** | `wf_llm_pilot_findings.md` — loses on ranking by 0.044, ties on oracle-F2. Also rejected as a third ensemble branch (best +0.019 AUC against a 0.03 floor) |
+| **Zero-shot LLM screening as a replacement for the cold-start cosine rung** | `wf_llm_benchset_a_findings.md` §1 — 3 of 8 collections for *every* model from 20B to 397B, against a pre-registered ≥6/8. All four land within 0.030 of each other |
+| **Adding LLM-written `terms_*` lists to a brief, for an LLM reader** | Ranking identical (0.777), operating point *worse* (recall 0.484 vs 0.559). Opposite sign to their effect on the lexical block |
+| **P4, the per-criterion checklist prompt** | Worse AUC on 3 of 4 models, F2@own collapses to 0.24–0.50 — reasoning scaffolding makes a model demand *all* criteria |
+| **Verbalised 0–100 confidence replaced by token logprobs** | Fixed the granularity completely (tie fraction 0.997 → 0.047) and ranking got *worse* (mean AUC −0.035). `wf_llm_logprob_scoring.md` |
+| **`nemotron-3-super` on DeepInfra at corpus scale** | 4 rows/min measured (42 h/cell) from rate-limit backoff, despite a healthy 3.9s p50. Throughput is a capability; benchmark it at target scale |
 
 ---
 
@@ -180,6 +195,22 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | CatBoost fitting on this machine — route through Modal (`scripts/modal_ensemble_candidate.py`), do not fit locally | `scripts/ensemble_eval_utils.py`'s consumers; see that file's module docstring for the confirmed Apple Silicon thread-oversubscription pathology |
 | Ensemble v2 — hyperparameter tuning, nested combiner-weight selection, the Qwen3-8B SYNERGY swap, a 3-lever diversity sweep (SVM/lexical-only/k-NN as a third branch, all rejected, each for a documented reason), and a LOGO-based central hyperparameter search (LogReg `C=1.0` found under-regularizing; not adopted for the 6 shipped use cases but recommended as the starting default for new ones) | `reports/wf_ensemble_v2_experiments.md` (the full running log, §1-16); Modal functions consolidated in `scripts/modal_ensemble_experiments.py` — **do not split Modal functions across files**, see that file's docstring |
 | Final, synthesized architecture recommendation — one decision doc pulling together v1 + v2, confidence-graded, with explicit rejects and caveats | `reports/wf_ensemble_final_recommendations.md` |
+
+| LLM screening — the pilot on TIRI (12-cell grid, prompt variants, third-branch blend) and the set-A run at 2.19% prevalence (brief-format ladder, induced rule sets, case-control sampling) | `reports/wf_llm_pilot_findings.md` and `reports/wf_llm_benchset_a_findings.md` are the two decision docs; `scripts/llm_pipeline_utils.py` is the harness, `scripts/benchset_metrics.py` the population-metric layer, `notebooks/main/11_llm_benchset_a.ipynb` the diagnostic |
+
+**🟢 Brief quality is the largest measured lever in the LLM work, and it is not LLM-specific.**
+Same model, same prompt, a rule set distilled from 60 labels: **+0.057 AUC and +0.203 F2@own**,
+against a 0.030 total spread across four model families from 20B to 397B
+(`wf_llm_benchset_a_findings.md` §5). It ties a supervised model on the same 60 labels while
+reading 17% of the corpus against 30%. The open question worth answering next is whether a
+better brief also lifts `cos_brief_*` and the BM25 block — if it does, this is a finding about
+briefs, not about LLMs.
+
+**The bound on it:** `synergy_moran_2021` is a collection where a 60-label linear probe on the
+embedding reaches 0.639 while **no** LLM under any of four briefs — including one distilled
+from those exact labels — exceeds chance. Some inclusion rules are learnable in representation
+space and **not statable as a rule**. Do not read "distil labels into a brief" as a general
+replacement for training.
 
 **The shuffled-brief control is the pattern to copy.** Any feature claiming to read the
 brief must be rebuildable against deliberately wrong briefs. If it still scores well, it is
