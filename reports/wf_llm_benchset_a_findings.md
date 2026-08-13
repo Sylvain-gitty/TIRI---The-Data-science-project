@@ -212,6 +212,62 @@ Three consequences worth acting on:
    they have to be derived from labels rather than from the review's abstract to be worth
    anything at all.
 
+## 5c. 🟢 …and it is worth nothing inside the ensemble. It is a cold-start lever.
+
+§5b left the obvious question: the lexical block is one branch of a two-branch per-silo
+ensemble that also sees 4,608 raw embedding dimensions, so is the +0.065 **new information
+or a re-encoding of what the embeddings already carry?**
+
+Per-silo CatBoost + LogisticRegression, grouped by `first_author`, 5-fold, **3 seeds**, three
+variants held to identical width (4,625 columns) so nothing is confounded with feature count
+(`scripts/run_setA_brief_ensemble.py`, `wf_llm_benchset_a_ensemble.md`):
+
+| | ROC-AUC gain from swapping in the induced brief |
+|---|---|
+| BM25 + overlap block alone, fitted on 60 labels | **+0.065** |
+| LLM reader, same model and prompt | **+0.057** |
+| CatBoost branch | +0.002 |
+| LogReg branch | +0.000 |
+| **Ensemble blend** | **+0.001** |
+
+**0 of 8 silos move by more than the noise floor, on any branch.** The paired per-silo deltas
+range −0.005 to +0.006 against a seed-to-seed sd of 0.007 — the comparison is paired on rows,
+folds *and* seeds, so it resolves changes well below that spread, and there is nothing to
+resolve. Swapping the cosine too (`induced_all`) changes nothing further, as §5b predicted.
+
+Worth stating plainly because it is a correction to the natural reading of §5b: **the entire
++0.065 is redundant with the embedding block.** A better brief tells the lexical features
+something the 4,608 embedding dimensions already encoded; it only looked like new information
+because the isolated block could not see them.
+
+### The ladder, every rung measured on the same held-out rows
+
+| labels per silo | method | mean ROC-AUC |
+|---|---|---|
+| 0 | cosine-to-brief (`qwen4b`) | 0.774 |
+| 0 | LLM reader, supplied brief | 0.777 |
+| 60 | BM25 + overlap block, supplied brief | 0.733 |
+| 60 | BM25 + overlap block, **induced** brief | 0.798 |
+| 60 | LLM reader, **induced** brief | 0.834 |
+| 60 | LogReg on the Qwen3-4B embedding | 0.844 |
+| ~80% of each silo | ensemble blend, supplied brief | **0.884** |
+| ~80% of each silo | ensemble blend, **induced** brief | 0.885 |
+
+**The brief is a cold-start lever and it decays to nothing once a silo has enough labels to
+train on.** That is `CONTEXT.md` §1's ladder — *cosine-to-brief below ~25 in-silo labels,
+supervised model above* — now with a number on every rung, and with a third option on the
+cheap end that beats the cosine by 0.060 for one $0.006 LLM call.
+
+Which is where it should be deployed, and only there. The benchset's own README notes **12 of
+28 collections are too small to split**, i.e. too small to train anything: those are exactly
+the collections where an induced brief is worth 0.774 → 0.834, and they are the collections
+this run could not use. Do **not** fold the induced brief into the shipped ensemble — it costs
+an LLM call per collection and buys +0.001.
+
+Honest limit: the crossover is not located. This measured 60 labels and ~80% of each silo
+(660–1,660 rows) and nothing between. The label count where a better brief stops paying is a
+product decision and wants measuring at 10 / 25 / 60 / 120 / 250.
+
 ## 6. 🟢 `moran_2021`: some inclusion rules are learnable but not statable
 
 One collection where a cosine scores **below chance** on 5,154 papers, and it is the most
@@ -226,6 +282,7 @@ cosine is 0.445 and the picture is the same.)
 | LLM, **induced brief from its own labels** (B2) | 0.462 |
 | LogReg, query-conditioned block, 60 labels | 0.573 |
 | **LogReg, Qwen3-4B embedding, 60 labels** | **0.639** |
+| **Per-silo ensemble, ~80% of the silo's labels** | **0.833** |
 
 A linear probe on the embedding finds **+0.152** over the cosine from 60 labels. No LLM
 exceeds chance under any of four briefs — *including one distilled from those exact labels by
@@ -238,6 +295,13 @@ can apply.** That is a hard bound on the distil-labels-into-a-brief strategy, an
 reason §5's tie should not be read as "briefs replace training". Correcting an earlier reading
 of my own: this is not a corpus defect. The labels are learnable; the *description* is what
 fails.
+
+The ensemble row settles it. Given ~80% of the silo's labels, `moran_2021` reaches **0.833** —
+comfortably the second-hardest collection rather than an impossible one. A collection where a
+cosine scores below chance, four LLMs under four briefs sit at chance, a 60-label probe reaches
+0.639 and a fully-trained model reaches 0.833 is not broken data; it is a question whose
+inclusion rule lives in the representation and not in language. Screening it needs labels, and
+no amount of brief-writing substitutes.
 
 ## 7. ⚪ Engineering: throughput is a capability, and capability tables are claims
 
@@ -318,21 +382,20 @@ to the cold-start rung the product actually ships. The next three experiments, i
    §5b.** It lifts the lexical block by +0.065, as much as it lifted the LLM, and the cosine by
    nothing. The finding is about briefs, and the cheapest way to bank it needs no LLM at
    scoring time at all.
-2. **Fold the induced brief into the ensemble's lexical block and re-measure the ensemble.**
-   This is now the highest-value next step and it involves no new LLM inference: the rule sets
-   are already on disk, the feature builder already takes them, and the per-silo
-   CatBoost+LogReg pipeline consumes `lex_*` unchanged. §5b measures the block in isolation;
-   what matters is whether +0.065 on one branch survives into the ensemble.
+2. ~~**Fold the induced brief into the ensemble's lexical block and re-measure.**~~ **DONE —
+   §5c. It is worth +0.001 and should not be shipped there.** The lever is cold-start only.
 3. **B2 vs few-shot on the same 60 labels** (caveat 2). Decides whether the artefact should be
    a brief or a set of examples. A brief is far more attractive operationally — human-readable,
    auditable, editable by an analyst, and §5b shows it also feeds non-LLM features, which a
    set of in-context examples cannot.
 4. **Replicate the ladder on a second model family** (caveat 3), ~$5.
-5. **Re-derive the label-count ladder.** `CONTEXT.md` §1 says *cosine-to-brief below ~25
-   in-silo labels, supervised model above*. §5b complicates it: at 60 labels the best use of
-   them may be to write a brief that upgrades a feature block, rather than to fit on them
-   directly. Worth measuring at 10 / 25 / 60 / 120 labels, because the crossover point is a
-   product decision.
+5. **Locate the crossover.** §5c measures 60 labels and ~80% of a silo and nothing between,
+   so the label count at which a better brief stops paying is unknown — and it is the number
+   that decides when to stop paying for one. Measure at 10 / 25 / 60 / 120 / 250. Free: no
+   new inference, the rule sets and features are on disk.
+6. **Run the induced brief on the 12 collections that are too small to train.** That is the
+   population §5c says this belongs to, and it is the one set A could not supply. The other
+   two benchsets carry them.
 
 **Not recommended:** further zero-shot model sweeps. Four families spanning 20B–397B land
 within 0.030 of each other and all fail the same bar in the same 5 collections.

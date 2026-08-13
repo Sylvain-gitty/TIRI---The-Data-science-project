@@ -192,7 +192,7 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | Shared fold/metric helpers (use these, do not re-implement) | `scripts/fold_pipeline_utils.py`, `scripts/embedding_utils.py` |
 | Full narrative of the above | `reports/wf_query_conditioned_findings.md` |
 | Ensemble v1 — per-silo CatBoost + LogisticRegression, feature/embedding ablation, and what was cut from the original proposal | `reports/wf_ensemble_v1_candidate.md`, `reports/wf_ensemble_v1_results.md`, `notebooks/main/09_ensemble_per_silo.ipynb` |
-| CatBoost fitting on this machine — route through Modal (`scripts/modal_ensemble_candidate.py`), do not fit locally | `scripts/ensemble_eval_utils.py`'s consumers; see that file's module docstring for the confirmed Apple Silicon thread-oversubscription pathology |
+| CatBoost fitting on this machine — **the rule is "never `thread_count=-1`", not "never local"**. Pass an explicit `thread_count` (`catboost_fn` has always taken one; Modal was passing it all along) and local fitting is fine: measured at **15.5s** for 1,660 rows × 4,625 columns, iterations=50/depth=4, and a full 18-cell per-silo grid over set A ran locally in ~2.5h for **$0**. Route to Modal for genuinely heavy jobs, not on principle | `scripts/run_setA_brief_ensemble.py`; the pathology itself is real and documented in `scripts/run_ensemble_candidate.py`'s docstring |
 | Ensemble v2 — hyperparameter tuning, nested combiner-weight selection, the Qwen3-8B SYNERGY swap, a 3-lever diversity sweep (SVM/lexical-only/k-NN as a third branch, all rejected, each for a documented reason), and a LOGO-based central hyperparameter search (LogReg `C=1.0` found under-regularizing; not adopted for the 6 shipped use cases but recommended as the starting default for new ones) | `reports/wf_ensemble_v2_experiments.md` (the full running log, §1-16); Modal functions consolidated in `scripts/modal_ensemble_experiments.py` — **do not split Modal functions across files**, see that file's docstring |
 | Final, synthesized architecture recommendation — one decision doc pulling together v1 + v2, confidence-graded, with explicit rejects and caveats | `reports/wf_ensemble_final_recommendations.md` |
 
@@ -210,9 +210,31 @@ collection) is worth, on identical held-out rows at 2.19% prevalence
 | `bm25_nice` alone, unfitted | 0.605 → **0.696** | **+0.091** |
 | **cosine-to-brief** (`qwen4b` / `jasper`) | 0.774 → 0.778 / 0.768 → 0.763 | **+0.004 / −0.005** |
 
-For scale, the entire spread across four model families from 20B to 397B is 0.030. **A better
-brief beats a 13× larger model, and it upgrades a feature block already in the shipped
-ensemble with no inference at scoring time.**
+For scale, the entire spread across four model families from 20B to 397B is 0.030 — a better
+brief beats a 13× larger model.
+
+**But it is a cold-start lever and nothing else.** Folded into the per-silo CatBoost+LogReg
+ensemble (3 seeds, identical feature width) the same swap is worth **+0.001**, with **0 of 8
+silos** moving past the noise floor on any branch (`wf_llm_benchset_a_findings.md` §5c). The
+whole +0.065 is redundant with the 4,608 embedding dimensions the ensemble already sees; it
+only looked like new information because the isolated block could not see them. **Do not ship
+the induced brief into the ensemble** — it costs an LLM call per collection and buys nothing.
+
+The ladder, every rung on the same held-out rows at 2.19% prevalence:
+
+| labels per silo | method | mean ROC-AUC |
+|---|---|---|
+| 0 | cosine-to-brief | 0.774 |
+| 60 | BM25 + overlap, supplied brief | 0.733 |
+| 60 | BM25 + overlap, **induced** brief | 0.798 |
+| 60 | LLM reader, **induced** brief | **0.834** |
+| 60 | LogReg on the Qwen3-4B embedding | 0.844 |
+| ~80% of the silo | per-silo ensemble | **0.884** |
+
+So §1's rule gains a middle rung: below ~25 labels cosine-to-brief; **at a few dozen labels an
+induced brief is worth +0.060 over it for one $0.006 call**; with enough labels to train, train.
+The crossover between the last two is unmeasured (60 and ~80%-of-silo are the only points), and
+it is the number that decides when to stop paying for a brief.
 
 The split is mechanical and worth remembering: a brief carries **vocabulary** (BM25 and overlap
 consume it directly), **instructions** (only a reader acts on them), and **topic** (all a cosine
