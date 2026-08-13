@@ -198,13 +198,33 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 
 | LLM screening — the pilot on TIRI (12-cell grid, prompt variants, third-branch blend) and the set-A run at 2.19% prevalence (brief-format ladder, induced rule sets, case-control sampling) | `reports/wf_llm_pilot_findings.md` and `reports/wf_llm_benchset_a_findings.md` are the two decision docs; `scripts/llm_pipeline_utils.py` is the harness, `scripts/benchset_metrics.py` the population-metric layer, `notebooks/main/11_llm_benchset_a.ipynb` the diagnostic |
 
-**🟢 Brief quality is the largest measured lever in the LLM work, and it is not LLM-specific.**
-Same model, same prompt, a rule set distilled from 60 labels: **+0.057 AUC and +0.203 F2@own**,
-against a 0.030 total spread across four model families from 20B to 397B
-(`wf_llm_benchset_a_findings.md` §5). It ties a supervised model on the same 60 labels while
-reading 17% of the corpus against 30%. The open question worth answering next is whether a
-better brief also lifts `cos_brief_*` and the BM25 block — if it does, this is a finding about
-briefs, not about LLMs.
+**🟢 Brief quality is the largest measured lever found so far, and it is not LLM-specific.**
+A rule set induced from 60 in-silo labels (`scripts/induce_rule_set.py`, one $0.006 call per
+collection) is worth, on identical held-out rows at 2.19% prevalence
+(`wf_llm_benchset_a_findings.md` §5, §5b):
+
+| Consumer of the brief | supplied → induced | Δ |
+|---|---|---|
+| BM25 + term-overlap block, fitted on the same 60 labels | 0.733 → **0.798** | **+0.065** |
+| LLM reader, same model and prompt | 0.777 → **0.834** | **+0.057** |
+| `bm25_nice` alone, unfitted | 0.605 → **0.696** | **+0.091** |
+| **cosine-to-brief** (`qwen4b` / `jasper`) | 0.774 → 0.778 / 0.768 → 0.763 | **+0.004 / −0.005** |
+
+For scale, the entire spread across four model families from 20B to 397B is 0.030. **A better
+brief beats a 13× larger model, and it upgrades a feature block already in the shipped
+ensemble with no inference at scoring time.**
+
+The split is mechanical and worth remembering: a brief carries **vocabulary** (BM25 and overlap
+consume it directly), **instructions** (only a reader acts on them), and **topic** (all a cosine
+can see, and the shipped brief already had it right because `objective` is the review's own
+abstract — text that looks like the papers). So **the cold-start rung to improve with a better
+brief is the lexical block, not the cosine** — which inverts the intuition, because the cosine is
+the *stronger* cold-start feature on this corpus (0.774 vs 0.733) and the unimprovable one. With
+the induced brief the ordering flips, 0.798 vs 0.778.
+
+Note this does **not** license adding term lists generally: LLM-written `terms_*` are worth
+nothing to a reader and cost it recall, while *label-derived* ones are worth +0.091 to a matcher
+(§4 above, §5b). Term lists are for matchers, and only if derived from labels.
 
 **The bound on it:** `synergy_moran_2021` is a collection where a 60-label linear probe on the
 embedding reaches 0.639 while **no** LLM under any of four briefs — including one distilled

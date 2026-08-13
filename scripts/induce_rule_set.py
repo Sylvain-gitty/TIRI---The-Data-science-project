@@ -119,7 +119,7 @@ def main() -> None:
     train = sample[sample.split == "train"]
     client = OpenRouterClient(model=args.model, max_tokens=2500)
 
-    briefs, meta = {}, []
+    briefs, fields, meta = {}, {}, []
     for uc, grp in train.groupby("use_case_key", sort=True):
         current = render_brief(dict(zip(grp.columns, grp.iloc[0])))
         pos, neg = _examples(grp, 1, args.k), _examples(grp, 0, args.k)
@@ -142,6 +142,12 @@ def main() -> None:
         # Rendered through render_brief so the ONLY difference between this arm and the
         # supplied-brief arm is the content of the fields, never their formatting.
         briefs[uc] = render_brief(obj)
+        # The structured fields are kept as well as the rendered prose, because the rule set
+        # is not only an LLM prompt: `compare_setA_induced_brief.py` feeds these same fields
+        # to the BM25/overlap block and to cosine-to-brief, which need the columns and not
+        # the paragraph. Storing only the render made that experiment impossible without
+        # going back to the response cache.
+        fields[uc] = {c: obj.get(c) for c, _ in BRIEF_FIELDS}
         meta.append({"use_case_key": uc, "n_pos_shown": n_pos, "n_neg_shown": n_neg,
                      "n_train": len(grp), "chars": len(briefs[uc]),
                      "cost": res["cost"], "cached": res["cached"]})
@@ -155,6 +161,7 @@ def main() -> None:
         "abstract_chars": ABSTRACT_CHARS,
         "split": "train",
         "briefs": briefs,
+        "fields": fields,
         "per_use_case": meta,
     }, indent=2, ensure_ascii=False))
     print(f"\nwrote {OUT}  (total ${sum(m['cost'] or 0 for m in meta):.4f})")

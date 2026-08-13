@@ -162,6 +162,56 @@ recall **0.043** (it rejects almost everything); the induced brief gets **0.713*
 `muthu_2021`: 0.022 → 0.485. Two of eight collections were catastrophic under the shipped
 brief, and both are fixed by naming the near-misses explicitly.
 
+## 5b. 🟢 The brief lever is not LLM-specific — but it is not universal either
+
+§5's +0.057 was measured on a *reader*. The features the product ships do not read: `cos_brief_*`
+embeds the brief and takes a cosine, the BM25/overlap block tokenises it and matches. Both were
+rebuilt from the induced fields and scored on the same held-out rows
+(`scripts/compare_setA_induced_brief.py`, `wf_llm_benchset_a_induced_features.md`). The recipe
+was validated first by reproducing the shipped `cos_brief_qwen4b` column from the on-disk paper
+vectors to **1.1e-07**, and the rebuilt lexical block correlates **0.9993** with the shipped one.
+
+**Swapping the supplied brief for the induced one, mean ROC-AUC over 8 collections:**
+
+| Consumer of the brief | supplied → induced | Δ | improves / degrades |
+|---|---|---|---|
+| BM25 + overlap block, fitted on the same 60 labels | 0.733 → **0.798** | **+0.065** | 5/8 · **0/8** |
+| LLM reader (§5) | 0.777 → **0.834** | **+0.057** | 4/8 · **0/8** |
+| `bm25_nice` alone, no labels, no fitting | 0.605 → **0.696** | **+0.091** | 6/8 · 0/8 |
+| `overlap_must_frac` alone | 0.718 → 0.754 | +0.036 | 5/8 · 1/8 |
+| **cosine-to-brief, `qwen4b`** | 0.774 → 0.778 | **+0.004** | 1/8 · 1/8 |
+| **cosine-to-brief, `jasper`** | 0.768 → 0.763 | **−0.005** | 0/8 · 0/8 |
+
+**The lexical block gains as much as the LLM did (+0.065 vs +0.057) and the cosine gains
+nothing (±0.005).** So the answer is split, and the split has a mechanism:
+
+- A better brief supplies better **vocabulary**, which BM25 and term overlap consume directly —
+  hence the largest single-feature gain is `bm25_nice` (+0.091), where the induced
+  `terms_nice_to_have` replaced generic filler with the phrasing that actually distinguishes
+  included papers.
+- A better brief supplies better **instructions**, which only a reader can act on — §5.
+- A cosine compresses the whole brief to one direction in a 2,560-d space and can use neither.
+  It responds to topical similarity, which the supplied brief already got right: `objective`
+  holds the review's own abstract, text that *looks like* the papers. Replacing it with a
+  statement of inclusion criteria is better instruction and less document-like, so the two
+  effects cancel — visible as jasper's −0.005 across 0/8 changed collections.
+
+Three consequences worth acting on:
+
+1. **The rung to improve with a better brief is the lexical block, not the cosine.** That
+   inverts the intuition, because `cos_brief_*` is the stronger cold-start feature on this
+   corpus (0.774 vs the supplied-brief lexical block's 0.733) — but it is the *unimprovable*
+   one. With the induced brief the ordering flips: **0.798 vs 0.778.**
+2. **This is a finding about briefs, and it costs one LLM call per collection.** The
+   $0.006-per-collection rule set is not an LLM-screening feature; it is a preprocessing step
+   that upgrades a feature block already in the shipped ensemble, with no inference at
+   scoring time. That makes it far cheaper to adopt than anything in §1.
+3. **It sharpens §5's term-list result rather than contradicting it.** The LLM-written
+   `terms_*` lists were worth nothing to a reader and cost it recall (B0 vs B1); the
+   *label-derived* term lists are worth +0.091 to a matcher. Term lists are for matchers, and
+   they have to be derived from labels rather than from the review's abstract to be worth
+   anything at all.
+
 ## 6. 🟢 `moran_2021`: some inclusion rules are learnable but not statable
 
 One collection where a cosine scores **below chance** on 5,154 papers, and it is the most
@@ -264,14 +314,25 @@ all moved).
 the same model and prompt, is a larger and cheaper lever than model selection, and it applies
 to the cold-start rung the product actually ships. The next three experiments, in order:
 
-1. **B2 vs few-shot on the same 60 labels** (caveat 2). Cheap, and it decides whether the
-   artefact should be a brief or a set of examples. A brief is far more attractive
-   operationally — it is human-readable, auditable and editable by the analyst.
-2. **Replicate the ladder on a second model family** (caveat 3), which is ~$5.
-3. **Test the induced brief on the lexical/embedding block, not just the LLM.** If a better
-   brief also lifts `cos_brief_*` and the BM25 features, the finding is about briefs and not
-   about LLMs at all — which would be the most valuable version of it, and §5's B0 result
-   (term lists help matchers, hurt readers) says the answer is not obvious.
+1. ~~**Test the induced brief on the lexical/embedding block, not just the LLM.**~~ **DONE —
+   §5b.** It lifts the lexical block by +0.065, as much as it lifted the LLM, and the cosine by
+   nothing. The finding is about briefs, and the cheapest way to bank it needs no LLM at
+   scoring time at all.
+2. **Fold the induced brief into the ensemble's lexical block and re-measure the ensemble.**
+   This is now the highest-value next step and it involves no new LLM inference: the rule sets
+   are already on disk, the feature builder already takes them, and the per-silo
+   CatBoost+LogReg pipeline consumes `lex_*` unchanged. §5b measures the block in isolation;
+   what matters is whether +0.065 on one branch survives into the ensemble.
+3. **B2 vs few-shot on the same 60 labels** (caveat 2). Decides whether the artefact should be
+   a brief or a set of examples. A brief is far more attractive operationally — human-readable,
+   auditable, editable by an analyst, and §5b shows it also feeds non-LLM features, which a
+   set of in-context examples cannot.
+4. **Replicate the ladder on a second model family** (caveat 3), ~$5.
+5. **Re-derive the label-count ladder.** `CONTEXT.md` §1 says *cosine-to-brief below ~25
+   in-silo labels, supervised model above*. §5b complicates it: at 60 labels the best use of
+   them may be to write a brief that upgrades a feature block, rather than to fit on them
+   directly. Worth measuring at 10 / 25 / 60 / 120 labels, because the crossover point is a
+   product decision.
 
 **Not recommended:** further zero-shot model sweeps. Four families spanning 20B–397B land
 within 0.030 of each other and all fail the same bar in the same 5 collections.
