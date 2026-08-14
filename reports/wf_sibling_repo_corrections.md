@@ -38,14 +38,43 @@ reads the brief's prose directly. Damage to it, `d` on the worst-affected featur
 | `no_nice` — no nice-to-have terms | −0.105 | **−0.215** | replicates, **twice as bad** |
 | `must_only_one` — one must-include term | −0.103 | **−0.175** | replicates, worse |
 
-**Action:** §4.11's `objective` MVP row can be stated more strongly, not less. *"Fluff/vagueness →
-below chance"* holds on both surfaces, and the cost of writing no objective at all is **−0.263** on
-clean data rather than −0.151.
+🔴 **But one specific claim in §4.10 finding 1 does NOT replicate, and it is the most quotable one.**
+*"Fluff and vagueness drive the objective feature below chance (0.442–0.473 against 0.651), which is
+worse than deleting the field"* is **set-A-specific**. Read the same feature in absolute terms:
 
-*ELI18: the number that matters before anyone has labelled anything is "how well does the brief's
-own prose sort papers on its own". On fresh data, deleting the objective hurts that **more** than we
-first measured — it is the single most load-bearing thing in the whole brief at the moment a project
-starts.*
+| `objective` feature, absolute (0.500 = coin flip) | set A | set B |
+|---|---|---|
+| real prose (`full`) | 0.651 | **0.763** |
+| fluff **appended** to real prose | 0.633 | 0.758 |
+| generic fluff **replacing** it | **0.473** 🔴 below chance | **0.594** |
+| vague one-liner | **0.441** 🔴 below chance | **0.569** |
+| field deleted / name only | 0.500 | 0.500 |
+
+On clean data neither variant goes below chance, and **both are better than deleting the field**, not
+worse. The ordering on set B is monotone and unsurprising — real prose > diluted prose > generic prose
+> vague prose > nothing — where on set A the bottom two dipped *below* nothing.
+
+⚠️ **And a measurement caveat that matters for how §1's deltas are read.** `no_obj` and `only_name`
+both land on **exactly 0.500** because deleting the field makes that feature uncomputable, so it
+degenerates to a coin flip. Their "delta" is therefore just `full − 0.500`, which mechanically grows
+with how good `full` was. So **−0.263 on set B is not "deletion hurts more on B"** — it is *"the
+objective feature is worth 0.263 above chance on B"*. Same for `no_nice` (−0.215) and the cold-start
+half of `must_only_one`. Read those rows as **what the field is worth**, not as damage.
+
+**Actions:**
+
+- §4.11's `objective` MVP row **stands and can cite two surfaces**: the field is worth **+0.151 (A) /
+  +0.263 (B)** above chance at zero labels. It is the single most load-bearing field in the schema on
+  both surfaces, by a wide margin.
+- §4.10 finding 1's *"below chance … worse than deleting the field"* → **retract, or scope to set A.**
+  On clean data any prose beats no prose. The practical guidance barely changes ("write a real
+  objective") but the *rhetorical* claim does, and it is the one a designer would quote.
+
+*ELI18: the objective — the plain-English description of what you're looking for — is the single most
+valuable thing in the brief before anyone has labelled anything, worth about 0.26 on a scale where 0
+is a coin flip. Writing it badly costs you most of that. On our older dataset writing waffle actually
+scored **worse than leaving the box empty**, which was a great line; on fresh data it doesn't, and
+waffle is merely bad rather than actively misleading.*
 
 ---
 
