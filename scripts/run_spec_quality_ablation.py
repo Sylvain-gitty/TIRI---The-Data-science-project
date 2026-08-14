@@ -85,7 +85,9 @@ from sklearn.metrics import roc_auc_score
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 
-from benchset_loader import SETS, case_control_sample, drop_ab_crossing, load_set  # noqa: E402
+from benchset_loader import (  # noqa: E402
+    SETS, case_control_sample, drop_ab_crossing, load_set, make_splits,
+)
 from ensemble_eval_utils import to_md  # noqa: E402
 from lexical_features import build_lexical_features  # noqa: E402
 from run_ensemble_candidate import logreg_c_fn  # noqa: E402
@@ -95,11 +97,92 @@ OUT_CSV = REPO / "reports" / "wf_spec_quality_ablation.csv"
 FIG = REPO / "reports" / "wf_spec_quality_ablation.png"
 
 
-def out_paths(set_name: str) -> tuple[Path, Path, Path]:
-    """Set A keeps the original filenames; any other set is suffixed so it cannot overwrite it."""
-    stem = "wf_spec_quality_ablation" + ("" if set_name == "a" else f"_set_{set_name}")
+TIRI_FE = REPO / "data" / "processed" / "papers_fe.parquet"
+TIRI_PC = REPO / "data" / "processed" / "papers_combined.parquet"
+TIRI_TEXT = ["title", "abstract", "use_case_name", "objective", "problem_statement",
+             "terms_must_include", "terms_nice_to_have", "terms_exclude",
+             "domain_industry", "domain_application", "domain_technology_focus"]
+
+
+TIRI_PREAMBLE = (
+    "🔴 **This is the surface the guidance actually ships to, and it is not the one it was measured "
+    "on.** Every number in `wf_spec_quality_answer.md` came from SYNERGY/benchset collections — "
+    "biomedical, clinical and social-science reviews. These six are cement, carbon capture, "
+    "satellites, soil microbiology, NER and technology forecasting. Read this table as the transfer "
+    "check, not as a replication: three things differ and all three change what a variant *means*.\n\n"
+    "1. **The briefs are far thinner.** `objective` runs 76–369 characters here against ~1,200 on "
+    "SYNERGY, where it holds a whole review abstract. So `fluff_replace` **lengthens** the field on "
+    "some of these use cases while it shortens it on every benchset one.\n"
+    "2. **`terms_exclude` is empty on 3 of 6** (`carbon_capture`, `solar_leo`, `tech_forecasting`), "
+    "so `no_exclude` and `conflicting` are no-ops there and measure 3 use cases, not 6.\n"
+    "3. **Prevalence is 26–77%**, roughly 20× production (`CONTEXT.md` §3). Absolute AUC is **not** "
+    "comparable to the benchset numbers. What transfers or fails to transfer is the *ranking of "
+    "fields*.\n\n"
+    "⚠️ And note what these six specs already are: `terms_must_include` runs 2–10 and "
+    "`terms_nice_to_have` 1–6, against the answer's recommended 5–8 and ≥5. **TIRI's own use cases "
+    "mostly fail TIRI's own recommendation**, which is worth knowing before the recommendation "
+    "becomes a form.\n\n"
+)
+
+COMBO_PREAMBLE = (
+    "🟢 **Three combination variants are included, and they answer the question single-field "
+    "ablations cannot:** *my objective is good but my keywords are lazy — does that matter?* Read "
+    "them as an interaction test. If `d(pair) ≈ d(a) + d(b)` the two defects are **independent** and "
+    "a linter should block on each separately. If `|d(pair)| < |d(a)| + |d(b)|` one field is partly "
+    "**covering for** the other, and blocking on both over-warns. If it is larger, they **compound** "
+    "and the pair is worse than the sum of its parts.\n\n"
+    "  - `fluff_and_flood` = `fluff_replace` + `keyword_flood` (bad prose **and** padded terms)\n"
+    "  - `vague_and_flood` = `vague_objective` + `keyword_flood`\n"
+    "  - `fluff_and_no_must` = `fluff_replace` + `no_must` (bad prose **and** no must-include terms)\n\n"
+)
+
+
+def out_paths(surface: str) -> tuple[Path, Path, Path]:
+    """Set A keeps the original filenames; anything else is suffixed so it cannot overwrite it."""
+    stem = "wf_spec_quality_ablation" + ("" if surface == "a" else f"_{surface}")
     d = REPO / "reports"
     return d / f"{stem}.md", d / f"{stem}.csv", d / f"{stem}.png"
+
+
+def load_tiri() -> pd.DataFrame:
+    """TIRI's own six use cases — the population this guidance would actually ship to.
+
+    Why this path exists, and it is the largest open risk in `wf_spec_quality_answer.md`: every
+    number in that answer was measured on SYNERGY/benchset collections, which are **biomedical,
+    clinical and social-science reviews**. TIRI's six are cement, carbon capture, satellites, soil
+    microbiology, NER and technology forecasting. `CONTEXT.md` L49-51 records that the live corpus
+    is "uniformly technology / hard science / industry — never social science", so the guidance has
+    never been checked against the population that will read it.
+
+    Three differences from the benchset surface that are not cosmetic, and all three change how the
+    variants behave rather than merely adding noise:
+
+    1. **The briefs are far thinner.** `objective` is 76-369 characters here against ~1,200 on
+       SYNERGY, where it holds a whole review abstract. So `fluff_replace` *lengthens* the field on
+       some TIRI use cases while it *shortens* it on every benchset one — the same variant name is
+       not quite the same manipulation, and any comparison has to say so.
+    2. **`terms_exclude` is empty on 3 of 6** (carbon_capture, solar_leo, tech_forecasting), so
+       `no_exclude` and `conflicting` are no-ops there. Those rows measure 4 use cases, not 6.
+    3. **Prevalence is 26-77%**, roughly 20x production (`CONTEXT.md` §3). Absolute AUC is not
+       comparable to the benchset numbers; the *ranking of fields* is what transfers or does not.
+
+    No case-control weighting: this corpus is not sampled, so `w = 1.0` throughout and nothing in
+    `evaluate` reads it. Splits come from the same `make_splits` instrument as everywhere else, so
+    the train/held-out boundary is grouped by first author exactly as on the benchset surface.
+    """
+    fe = pd.read_parquet(TIRI_FE, columns=[
+        "paper_id", "use_case_key", "first_author", "y",
+        "lex_bm25_obj", "lex_bm25_nice", "lex_overlap_must_frac"])
+    pc = pd.read_parquet(TIRI_PC, columns=["paper_id", "use_case_key", *TIRI_TEXT])
+    df = fe.merge(pc, on=["paper_id", "use_case_key"], how="left", validate="one_to_one")
+    if len(df) != len(fe):
+        raise RuntimeError(f"join changed row count: {len(fe)} -> {len(df)}")
+    if df["title"].isna().any():
+        raise RuntimeError("join produced null titles - schema drift, do not proceed")
+    df["y"] = df["y"].astype(int)
+    df["w"] = 1.0
+    df["split"] = make_splits(df)
+    return df.reset_index(drop=True)
 
 LOGREG_C = 0.0005
 N_POS = N_NEG = 30  # the induced-brief ladder's budget, so this is comparable to it
@@ -128,7 +211,24 @@ def _lst(v) -> list[str]:
 
 
 def variant(df: pd.DataFrame, name: str) -> pd.DataFrame:
-    """`df` with its brief columns rewritten. Never mutates the input."""
+    """`df` with its brief columns rewritten. Never mutates the input.
+
+    Combination variants compose the primitives rather than re-implementing them, which is safe
+    precisely because every branch works on a fresh copy. They exist to answer the question a
+    person filling in a form actually has - *"my objective is good but my keywords are lazy, does
+    that matter?"* - which single-field ablations cannot answer. With `full`, one primitive, the
+    other primitive and the pair, the interaction is readable directly: if
+    `d(pair) ~= d(a) + d(b)` the defects are independent and a linter should block on each; if
+    `|d(pair)| < |d(a)| + |d(b)|` one field is partly covering for the other and blocking on both
+    over-warns.
+    """
+    if name == "fluff_and_flood":       # bad prose AND padded terms
+        return variant(variant(df, "fluff_replace"), "keyword_flood")
+    if name == "vague_and_flood":       # vague prose AND padded terms
+        return variant(variant(df, "vague_objective"), "keyword_flood")
+    if name == "fluff_and_no_must":     # bad prose AND no must-include terms at all
+        return variant(variant(df, "fluff_replace"), "no_must")
+
     d = df.copy()
     empty_list = [np.array([], dtype=object)] * len(d)
 
@@ -190,13 +290,18 @@ VARIANTS = ["full", "no_obj", "no_prob", "no_must", "no_nice", "no_exclude", "no
             "only_name", "fluff_replace", "fluff_added", "vague_objective", "conflicting",
             "keyword_flood", "must_only_one"]
 
+# Appended only with --combos, so the default 14-variant run keeps reproducing its committed CSV
+# byte-for-byte. Each pairs a prose defect with a term defect - the two halves that §4.10 found
+# serve different consumers - so the pair is the interaction test.
+COMBO_VARIANTS = ["fluff_and_flood", "vague_and_flood", "fluff_and_no_must"]
+
 UNFITTED = ["bm25_nice", "bm25_obj", "overlap_must_frac"]
 
 
-def evaluate(sample: pd.DataFrame, seeds: int) -> pd.DataFrame:
+def evaluate(sample: pd.DataFrame, seeds: int, names: list[str]) -> pd.DataFrame:
     rows = []
     blocks: dict[str, pd.DataFrame] = {}
-    for name in VARIANTS:
+    for name in names:
         blocks[name] = build_lexical_features(variant(sample, name))
         print(f"  built {name}", flush=True)
 
@@ -286,12 +391,30 @@ def main() -> None:
     ap.add_argument("--seeds", type=int, default=5)
     ap.add_argument("--set", default="a", choices=sorted(SETS),
                     help="which large split to score; 'a' keeps the original output filenames")
+    ap.add_argument("--corpus", default="benchset", choices=["benchset", "tiri"],
+                    help="'tiri' scores TIRI's own 6 use cases - the population this guidance "
+                         "ships to, and the one it has never been measured on. Ignores --set.")
+    ap.add_argument("--combos", action="store_true",
+                    help="append the 3 combination variants (prose defect x term defect). Off by "
+                         "default so the 14-variant run keeps reproducing its committed CSV.")
     ap.add_argument("--drop-ab-crossing", action="store_true",
                     help="exclude papers that also appear in the other large split, for a strict "
                          "held-out read (154 papers straddle the A/B boundary)")
     args = ap.parse_args()
 
-    out_md, out_csv, fig = out_paths(args.set)
+    names = VARIANTS + (COMBO_VARIANTS if args.combos else [])
+    tag = ("tiri" if args.corpus == "tiri" else args.set) + ("_combos" if args.combos else "")
+    out_md, out_csv, fig = out_paths(tag)
+
+    if args.corpus == "tiri":
+        surface = "TIRI's own 6 use cases (papers_fe + papers_combined)"
+        sample = load_tiri()
+        print(f"sample: {len(sample)} rows, {sample.use_case_key.nunique()} use cases, "
+              f"{int(sample.y.sum())} positive ({sample.y.mean():.1%})", flush=True)
+        res = evaluate(sample, args.seeds, names)
+        _finish(res, sample, names, args, out_md, out_csv, fig, surface)
+        return
+
     surface = f"benchset_v1_large_set_{args.set}"
 
     base = load_set(args.set)
@@ -306,19 +429,30 @@ def main() -> None:
     sample = case_control_sample(base).reset_index(drop=True)
     print(f"sample: {len(sample)} rows, {sample.use_case_key.nunique()} collections", flush=True)
 
-    res = evaluate(sample, args.seeds)
+    res = evaluate(sample, args.seeds, names)
+    _finish(res, sample, names, args, out_md, out_csv, fig, surface)
+
+
+def surface_label(args) -> str:
+    """Short label for the chart title."""
+    return "TIRI 6" if args.corpus == "tiri" else f"set {args.set.upper()}"
+
+
+def _finish(res, sample, names, args, out_md, out_csv, fig, surface) -> None:
+    """Summarise, chart and write the report. Shared by the benchset and TIRI paths so the
+    two corpora cannot drift into reporting the same numbers two different ways."""
     res.to_csv(out_csv, index=False)
 
     metrics = [c for c in res.columns if c.startswith(("unfitted_", "fitted_"))]
-    summary = res.groupby("variant")[metrics].mean().loc[VARIANTS]
+    summary = res.groupby("variant")[metrics].mean().loc[names]
     for m in metrics:
         summary[f"d_{m}"] = summary[m] - summary.loc["full", m]
 
     # win/loss counts against `full`, per collection — CONTEXT.md §5
     piv = res.pivot(index="use_case", columns="variant", values="fitted_auc")
-    worse = {v: int((piv[v] < piv["full"] - 0.03).sum()) for v in VARIANTS}
+    worse = {v: int((piv[v] < piv["full"] - 0.03).sum()) for v in names}
     pivu = res.pivot(index="use_case", columns="variant", values="unfitted_bm25_nice")
-    worse_u = {v: int((pivu[v] < pivu["full"] - 0.03).sum()) for v in VARIANTS}
+    worse_u = {v: int((pivu[v] < pivu["full"] - 0.03).sum()) for v in names}
     summary["collections_worse_fitted"] = pd.Series(worse)
     summary["collections_worse_unfitted"] = pd.Series(worse_u)
 
@@ -329,7 +463,7 @@ def main() -> None:
     n_fitted = int(piv["full"].notna().sum())
     dropped = sorted(piv.index[piv["full"].isna()])
 
-    chart(summary, fig, f"set {args.set.upper()}", n_coll)
+    chart(summary, fig, surface_label(args), n_coll)
 
     shipped = sample[["lex_bm25_obj", "lex_bm25_nice", "lex_overlap_must_frac"]]
     rebuilt = build_lexical_features(variant(sample, "full"))
@@ -350,10 +484,15 @@ def main() -> None:
     )
     out_md.write_text(
         "# Use-case spec quality — what each field is worth, and what bad writing costs\n\n"
-        f"Generated by `scripts/run_spec_quality_ablation.py --seeds {args.seeds} --set "
-        f"{args.set}` on `{surface}` ({n_coll} collections). Held-out rows only.{strict} Read the "
+        f"Generated by `scripts/run_spec_quality_ablation.py --seeds {args.seeds} "
+        f"--corpus {args.corpus}"
+        + (f" --set {args.set}" if args.corpus == "benchset" else "")
+        + (" --combos" if args.combos else "")
+        + f"` on `{surface}` ({n_coll} use cases). Held-out rows only.{strict} Read the "
         "script docstring for what each variant imitates.\n\n"
-        "**Instrument check (ADR 0009, run before any verdict).** Rebuilt `full` variant against "
+        + (TIRI_PREAMBLE if args.corpus == "tiri" else "")
+        + (COMBO_PREAMBLE if args.combos else "")
+        + "**Instrument check (ADR 0009, run before any verdict).** Rebuilt `full` variant against "
         "the shipped `lex_*` columns: "
         + ", ".join(f"`{k}` r={v:.4f}" for k, v in checks.items())
         + ". IDF here is computed over the case-control sample rather than the full pool, so a "
@@ -381,6 +520,8 @@ def main() -> None:
         encoding="utf-8",
     )
     print(f"wrote {out_md}")
+
+
 
 
 if __name__ == "__main__":
