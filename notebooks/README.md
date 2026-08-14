@@ -74,8 +74,10 @@ permanent one — but it is what rebuilds them if a file is deleted.
 Read-only. This is where most of the project's measured **negative results** live, which
 is why none of it was deleted.
 
-**All 18 were executed from a fresh clone; 16 pass.** The two that don't fail for
-different reasons, both about things deliberately kept out of git:
+**18 of the 20 below were executed from a fresh clone; 16 of those pass.** The two that don't fail
+for different reasons, both about things deliberately kept out of git. (`wf_usecase_diversity.ipynb`
+and `wf_brief_quality_detectors.ipynb` were added after that sweep and are not counted in it; both
+execute top-to-bottom today.)
 
 | Notebook | Blocker |
 |---|---|
@@ -127,6 +129,13 @@ Three caveats on the 16 that pass:
 | `wf_top_embeddings_generalization.ipynb` | Repeats the held-out test for the top 3 with **each** of the 6 questions held out in turn, tests prediction-level combination vs vector concatenation, and tests isotonic/Platt calibration under a simulated ~50-label budget. |
 | `wf_synergy_validation.ipynb` | External validation against 3 [SYNERGY](https://github.com/asreview/synergy-dataset) systematic reviews — an independent benchmark this project had no hand in labelling, at realistic prevalence (1.7–14.8% positive vs our 26–77%). **Model ranking is not stable across prevalence regimes:** Qwen3-4B is mid-pack in-repo and *last* on SYNERGY. |
 | `run_comparisons.ipynb` | Runs `scripts/compare_*.py`'s own functions with every table and plot inline, plus a paired significance check across representations. Set `USE_CASE_KEY` to analyse a different research question. Embeds the corpus from scratch, so it is the slowest notebook here and needs `fastembed` + `sentence-transformers`. |
+
+### Spec and brief quality
+
+| Notebook | What it does |
+|---|---|
+| `wf_usecase_diversity.ipynb` | Maps how far apart the 34 use cases sit (6 live + 28 benchset) and tests causally whether that diversity biases LOGO. §6 builds the brief × corpus matrix — score every use case's papers with every *other* use case's brief — which is where the foreign-brief margin comes from. **Hard finding:** `max_foreign_brief_auc` correlates with LOGO transfer at rho +0.70 but **+0.37 once prevalence is held constant**, and prevalence alone is −0.72; so nothing here may be read without controlling for it. |
+| `wf_brief_quality_detectors.ipynb` | Probes `P-FB` and `P-CK` from `reports/wf_spec_quality_plan.md`, both $0 and both label-free at scoring time. **Hard findings: both fail their pre-registered bars.** The foreign-brief margin is a property of the *embedding*, not the brief — rebuild the 34×34 matrix in BM25 space and 8 new collections flag that cosine called healthy (bar: ≤2), the two margins correlate at only rho 0.33, and `soil_microbiome`'s headline −0.190 becomes −0.021. But the same margin predicts labelling gain at rho **−0.929** (n=7, surviving every leave-one-out), so it is a workload forecaster wearing a spec-checker's caption. Checkability fails too: pooled IQR 0.055 against a 0.2 bar, `tech_forecasting` ranks 3rd of 6 when it should rank last, and its "stability check" compared a rulebook against itself (`checkability_broad` identical on all 34, max diff 0.0). |
 
 ### Fold and pipeline design
 

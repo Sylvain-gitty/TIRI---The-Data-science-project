@@ -18,6 +18,20 @@ were when measured; what these labels tell you is whether a later document revis
 |---|---|
 | [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md) | **The single decision doc.** Every architecture choice, its evidence, and a confidence grade — plus an explicit "do not re-propose these" list. If you read one file in this folder, read this. |
 
+## Spec and brief quality — the 2026-08-13/14 block
+
+⚠️ **This index predates the nine `wf_llm_*` reports and the two `wf_usecase_coverage_*` reports**,
+which are not listed anywhere below. The rows here cover only the spec-quality work; the rest of the
+backlog is a known gap, not a claim that those reports do not exist.
+
+| Report | Answers |
+|---|---|
+| [`wf_spec_quality_plan.md`](wf_spec_quality_plan.md) | **Read this first for any of the four rows below.** The pre-registration, plus a dated Amendment recording five false premises corrected *before* any probe ran — three of the four probes had bars that could not be read as written. Every bar lives here, not in the findings. |
+| [`wf_spec_quality_ablation.md`](wf_spec_quality_ablation.md) · [`_set_b`](wf_spec_quality_ablation_set_b.md) | What each brief field is worth to a **matcher**, and what the four classic bad specs cost. Set A first, then set B as a clean check — where **most of the term-damage finding does not replicate**: `keyword_flood` −0.072→−0.031, `no_must` −0.043→−0.010. Set A's means were carried by one collection. What does replicate: contradiction barely dents a matcher (−0.014→−0.009). |
+| [`wf_spec_quality_reader.md`](wf_spec_quality_reader.md) | The same 14 texts against a **reader** (LLM). The two arms do not disagree the way S-AL predicted — a reader is insensitive to spec *form* while remaining fully sensitive to spec *content*. Read the shuffled-brief floor beside every number or the null is unreadable. |
+| [`wf_foreign_brief_detector.md`](wf_foreign_brief_detector.md) | Is "a stranger's brief screens your corpus better than your own" a brief defect? **No — it is a property of the embedding.** Rebuilt in BM25 space, 8 new collections flag that cosine called healthy. But the same margin predicts labelling gain at rho −0.929. `NUMBERS.md` N33 ships this caption today and needs rewriting. |
+| [`wf_checkability_audit.md`](wf_checkability_audit.md) | Can we say a use case is automatable before scoring it? **No.** Pooled IQR 0.055 against a 0.2 bar; `tech_forecasting` ranks 3rd of 6 when it should rank last. Keeps two findings that are not the metric: half of TIRI's own use cases never state what evidence they want, and half this metric's own definition never fired. |
+
 ## Current — the live evidence
 
 | Report | Answers |
