@@ -281,6 +281,13 @@ def variant(df: pd.DataFrame, name: str) -> pd.DataFrame:
     elif name == "must_only_one":
         d["terms_must_include"] = [np.array(_lst(m)[:1], dtype=object)
                                    for m in d.terms_must_include]
+    elif name == "nice_only_one":
+        # The mirror of must_only_one, added to price a linter check that was otherwise a bare
+        # recommendation: `no_nice` (zero terms) is measured and costly, but nothing measured
+        # whether ONE nice-to-have term is nearly as bad as none. TIRI's `solar_leo` ships with
+        # exactly one, so this is not a hypothetical shape.
+        d["terms_nice_to_have"] = [np.array(_lst(n)[:1], dtype=object)
+                                   for n in d.terms_nice_to_have]
     else:
         raise ValueError(name)
     return d
@@ -293,7 +300,8 @@ VARIANTS = ["full", "no_obj", "no_prob", "no_must", "no_nice", "no_exclude", "no
 # Appended only with --combos, so the default 14-variant run keeps reproducing its committed CSV
 # byte-for-byte. Each pairs a prose defect with a term defect - the two halves that §4.10 found
 # serve different consumers - so the pair is the interaction test.
-COMBO_VARIANTS = ["fluff_and_flood", "vague_and_flood", "fluff_and_no_must"]
+COMBO_VARIANTS = ["fluff_and_flood", "vague_and_flood", "fluff_and_no_must",
+                  "nice_only_one"]
 
 UNFITTED = ["bm25_nice", "bm25_obj", "overlap_must_frac"]
 
