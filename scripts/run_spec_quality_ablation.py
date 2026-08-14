@@ -51,7 +51,25 @@ Note the IDF here is computed over the case-control sample rather than the full 
 gap is expected and is constant across variants - which is what makes variant-vs-variant valid
 even where variant-vs-shipped is not.
 
+Two surfaces
+------------
+`--set a` is the original run (8 SYNERGY collections, 2.19% positive) and keeps the original
+output filenames, so its committed report and CSV reproduce unchanged. `--set b` is the clean
+confirmatory surface (7 collections, 1.87% positive) and writes `*_set_b.*`.
+
+Set B exists here for one specific reason: `wf_spec_quality_plan.md`'s `P-R` probe compares a
+**reader** delta against a **matcher** delta, and the matcher's numbers were only ever measured
+on set A. Subtracting a set-B reader delta from a set-A matcher delta would be comparing two
+surfaces and calling the difference an arm effect — the selection-on-holdout error in miniature.
+This re-run is free, so there is no reason to accept that.
+
+Expect fewer collections in the *fitted* arm on B than on A: the arm needs 30 train positives
+and 30 train negatives per collection, and B's smaller collections do not all have them. The
+report prints which ones dropped out and why, because a win count over an unstated denominator
+is the thing `CONTEXT.md` §5 exists to prevent.
+
     python scripts/run_spec_quality_ablation.py --seeds 5
+    python scripts/run_spec_quality_ablation.py --seeds 5 --set b --drop-ab-crossing
 """
 
 from __future__ import annotations
@@ -67,7 +85,7 @@ from sklearn.metrics import roc_auc_score
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 
-from benchset_loader import case_control_sample, load_set_a, make_splits  # noqa: E402
+from benchset_loader import SETS, case_control_sample, drop_ab_crossing, load_set  # noqa: E402
 from ensemble_eval_utils import to_md  # noqa: E402
 from lexical_features import build_lexical_features  # noqa: E402
 from run_ensemble_candidate import logreg_c_fn  # noqa: E402
@@ -75,6 +93,13 @@ from run_ensemble_candidate import logreg_c_fn  # noqa: E402
 OUT_MD = REPO / "reports" / "wf_spec_quality_ablation.md"
 OUT_CSV = REPO / "reports" / "wf_spec_quality_ablation.csv"
 FIG = REPO / "reports" / "wf_spec_quality_ablation.png"
+
+
+def out_paths(set_name: str) -> tuple[Path, Path, Path]:
+    """Set A keeps the original filenames; any other set is suffixed so it cannot overwrite it."""
+    stem = "wf_spec_quality_ablation" + ("" if set_name == "a" else f"_set_{set_name}")
+    d = REPO / "reports"
+    return d / f"{stem}.md", d / f"{stem}.csv", d / f"{stem}.png"
 
 LOGREG_C = 0.0005
 N_POS = N_NEG = 30  # the induced-brief ladder's budget, so this is comparable to it
@@ -217,7 +242,7 @@ def evaluate(sample: pd.DataFrame, seeds: int) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def chart(summary: pd.DataFrame) -> None:
+def chart(summary: pd.DataFrame, fig: Path, surface: str, n_coll: int) -> None:
     import matplotlib
 
     matplotlib.use("Agg")
@@ -225,7 +250,7 @@ def chart(summary: pd.DataFrame) -> None:
 
     s = summary.drop(index="full").sort_values("d_fitted_auc")
     yy = np.arange(len(s))
-    fig, axes = plt.subplots(1, 2, figsize=(15, 6), sharey=True)
+    f, axes = plt.subplots(1, 2, figsize=(15, 6), sharey=True)
 
     ax = axes[0]
     series = [("d_unfitted_bm25_obj", "bm25 vs objective"),
@@ -246,26 +271,43 @@ def chart(summary: pd.DataFrame) -> None:
         ax.set_xlabel("ROC-AUC change vs the full shipped brief")
         ax.grid(alpha=0.3, axis="x")
     axes[0].set_yticks(yy); axes[0].set_yticklabels(s.index)
-    fig.suptitle("What each brief field is worth, and what writing it badly costs — "
-                 "set A, 8 SYNERGY collections\n"
-                 "negative is worse than the full brief; a bar at 0 means that variant does not "
-                 "touch that feature (NaN = the feature becomes uncomputable)", fontsize=10)
-    fig.tight_layout(); fig.savefig(FIG, dpi=130)
-    print(f"wrote {FIG}")
+    f.suptitle("What each brief field is worth, and what writing it badly costs — "
+               f"{surface}, {n_coll} collections\n"
+               "negative is worse than the full brief; a bar at 0 means that variant does not "
+               "touch that feature (NaN = the feature becomes uncomputable). The grey band is "
+               "±0.03, the smallest gap this repo treats as real — a bar inside it is noise.",
+               fontsize=10)
+    f.tight_layout(); f.savefig(fig, dpi=130)
+    print(f"wrote {fig}")
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, default=5)
+    ap.add_argument("--set", default="a", choices=sorted(SETS),
+                    help="which large split to score; 'a' keeps the original output filenames")
+    ap.add_argument("--drop-ab-crossing", action="store_true",
+                    help="exclude papers that also appear in the other large split, for a strict "
+                         "held-out read (154 papers straddle the A/B boundary)")
     args = ap.parse_args()
 
-    base = load_set_a()
-    base["split"] = make_splits(base)
+    out_md, out_csv, fig = out_paths(args.set)
+    surface = f"benchset_v1_large_set_{args.set}"
+
+    base = load_set(args.set)
+    # No `make_splits` here: `case_control_sample` computes `split` on the sample it returns, so
+    # assigning it on the 62k/82k-row frame first was a discarded fold computation over the whole
+    # corpus. Removing it changes no output - the sample's column is overwritten either way.
+    n_before = len(base)
+    if args.drop_ab_crossing:
+        base = drop_ab_crossing(base, args.set)
+        print(f"strict held-out: dropped {n_before - len(base)} rows that also appear in the "
+              f"other large split", flush=True)
     sample = case_control_sample(base).reset_index(drop=True)
     print(f"sample: {len(sample)} rows, {sample.use_case_key.nunique()} collections", flush=True)
 
     res = evaluate(sample, args.seeds)
-    res.to_csv(OUT_CSV, index=False)
+    res.to_csv(out_csv, index=False)
 
     metrics = [c for c in res.columns if c.startswith(("unfitted_", "fitted_"))]
     summary = res.groupby("variant")[metrics].mean().loc[VARIANTS]
@@ -280,7 +322,14 @@ def main() -> None:
     summary["collections_worse_fitted"] = pd.Series(worse)
     summary["collections_worse_unfitted"] = pd.Series(worse_u)
 
-    chart(summary)
+    # The denominators, stated rather than implied. The fitted arm needs 30 train positives and 30
+    # train negatives per collection; a collection short of either is NaN, not a zero, and it must
+    # not be counted in a "worse on N of M" claim (NULL is not 0).
+    n_coll = int(res.use_case.nunique())
+    n_fitted = int(piv["full"].notna().sum())
+    dropped = sorted(piv.index[piv["full"].isna()])
+
+    chart(summary, fig, f"set {args.set.upper()}", n_coll)
 
     shipped = sample[["lex_bm25_obj", "lex_bm25_nice", "lex_overlap_must_frac"]]
     rebuilt = build_lexical_features(variant(sample, "full"))
@@ -290,25 +339,48 @@ def main() -> None:
 
     cols = ["unfitted_bm25_nice", "d_unfitted_bm25_nice", "collections_worse_unfitted",
             "fitted_auc", "d_fitted_auc", "collections_worse_fitted"]
-    OUT_MD.write_text(
+    strict = (" Papers that also appear in the other large split are excluded, so this is a "
+              "strict held-out read." if args.drop_ab_crossing else "")
+    drop_note = (
+        f"\n\n⚠️ **The fitted arm covers {n_fitted} of the {n_coll} collections, not all "
+        f"{n_coll}.** {', '.join(f'`{d}`' for d in dropped)} lack the 30 train positives + 30 "
+        "train negatives the arm needs, so their score is **undefined rather than zero** and they "
+        "are excluded from `collections_worse_fitted`. Read that count against "
+        f"{n_fitted}, not {n_coll}.\n" if dropped else "\n"
+    )
+    out_md.write_text(
         "# Use-case spec quality — what each field is worth, and what bad writing costs\n\n"
-        f"Generated by `scripts/run_spec_quality_ablation.py --seeds {args.seeds}` on "
-        "`benchset_v1_large_set_a` (8 SYNERGY collections). Held-out rows only. Read the script "
-        "docstring for what each variant imitates.\n\n"
+        f"Generated by `scripts/run_spec_quality_ablation.py --seeds {args.seeds} --set "
+        f"{args.set}` on `{surface}` ({n_coll} collections). Held-out rows only.{strict} Read the "
+        "script docstring for what each variant imitates.\n\n"
         "**Instrument check (ADR 0009, run before any verdict).** Rebuilt `full` variant against "
         "the shipped `lex_*` columns: "
         + ", ".join(f"`{k}` r={v:.4f}" for k, v in checks.items())
         + ". IDF here is computed over the case-control sample rather than the full pool, so a "
         "gap against the shipped column is expected; it is constant across variants, which is "
         "what makes variant-vs-variant comparison valid.\n\n"
-        "`d_` columns are the change against the **full shipped brief**. Negative is worse. "
-        "`collections_worse_*` counts how many of 8 fall more than the 0.03 noise floor below "
-        "`full` — a mean can hide a split, so read the count beside it (`CONTEXT.md` §5).\n\n"
+        "## 0. How to read any number here\n\n"
+        "Every score is **ROC-AUC**: the chance that this feature ranks a genuinely relevant "
+        "paper above an irrelevant one. **0.500 is a coin flip** and 1.000 is perfect, so a "
+        "number below 0.500 means the feature is pointing the wrong way — worse than useless.\n\n"
+        "`d_` columns are the change against the **full shipped brief**, so they answer *what did "
+        "damaging the brief this way cost?* **Negative is worse.** A `d_` of 0.000 usually means "
+        "the variant does not touch that particular feature at all, not that the damage was free.\n\n"
+        "**A gap smaller than 0.03 is not a result.** Re-running with different random seeds moves "
+        "these numbers by about 0.010 on its own (`CONTEXT.md` §5), so anything under ~0.03 is "
+        "inside the noise. That is why `collections_worse_*` sits beside every mean: it counts how "
+        f"many of the {n_coll} collections fall more than 0.03 below `full`. A mean can be dragged "
+        "by one easy collection; a count cannot.\n\n"
+        "Blank (`NaN`) means **uncomputable, not zero**. Emptying a brief field can leave its "
+        "feature with nothing to read, and the honest report of that is an absence — which is "
+        "itself the finding."
+        + drop_note + "\n"
+        "## 1. Results\n\n"
         + to_md(summary[cols].round(4)) + "\n\n"
-        "## All metrics\n\n" + to_md(summary.round(4)) + "\n",
+        "## 2. All metrics\n\n" + to_md(summary.round(4)) + "\n",
         encoding="utf-8",
     )
-    print(f"wrote {OUT_MD}")
+    print(f"wrote {out_md}")
 
 
 if __name__ == "__main__":
