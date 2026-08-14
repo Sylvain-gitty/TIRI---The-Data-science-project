@@ -16,8 +16,48 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from scipy.stats import rankdata, spearmanr
 from sklearn.metrics import average_precision_score, fbeta_score, roc_auc_score
 from sklearn.model_selection import StratifiedGroupKFold
+
+
+def partial_rho(a, b, ctrl) -> float:
+    """Spearman correlation of `a` and `b` after linearly removing `ctrl` from both, on ranks.
+
+    Lifted verbatim out of `notebooks/experiments/wf_usecase_diversity.ipynb` §7, where it was
+    the only thing separating a real finding from a confounded one: `max_foreign_brief_auc`
+    correlates with LOGO transfer at rho +0.70, but **+0.37 once prevalence is held constant**,
+    and prevalence alone is rho -0.72. Any correlation over these 34 use cases has to be shown
+    against prevalence before it means anything, so this belongs in `scripts/` rather than in
+    one notebook cell.
+
+    Ranks, not values, because every quantity here is a bounded score with a skewed
+    distribution and the question is monotone ("do weak briefs gain more?"), not linear.
+    """
+    ra, rb, rc = rankdata(a), rankdata(b), rankdata(ctrl)
+    resid = lambda v: v - np.polyval(np.polyfit(rc, v, 1), rc)  # noqa: E731
+    return float(spearmanr(resid(ra), resid(rb)).statistic)
+
+
+def spearman_ci(a, b, n_boot: int = 2000, seed: int = 0) -> dict[str, float]:
+    """Spearman rho with a bootstrap percentile interval, for the small-n case.
+
+    At n=8 or n=34 a p-value alone invites over-reading; `CONTEXT.md` §5 asks for the spread
+    beside every number. Resamples pairs with replacement, which is the right unit because the
+    use case is the sampling unit.
+    """
+    a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    r = spearmanr(a, b)
+    rng = np.random.default_rng(seed)
+    boot = np.empty(n_boot)
+    for i in range(n_boot):
+        idx = rng.integers(0, len(a), len(a))
+        # A resample can draw all-identical values, for which rho is undefined; NaN is the
+        # honest answer for that draw and nanpercentile below carries it correctly.
+        boot[i] = spearmanr(a[idx], b[idx]).statistic
+    lo, hi = np.nanpercentile(boot, [2.5, 97.5])
+    return {"rho": float(r.statistic), "p": float(r.pvalue), "n": len(a),
+            "ci_lo": float(lo), "ci_hi": float(hi)}
 
 
 def to_md(frame: pd.DataFrame, index_name: str = "") -> str:

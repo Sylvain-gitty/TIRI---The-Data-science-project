@@ -74,8 +74,10 @@ permanent one — but it is what rebuilds them if a file is deleted.
 Read-only. This is where most of the project's measured **negative results** live, which
 is why none of it was deleted.
 
-**All 18 were executed from a fresh clone; 16 pass.** The two that don't fail for
-different reasons, both about things deliberately kept out of git:
+**18 of the 20 below were executed from a fresh clone; 16 of those pass.** The two that don't fail
+for different reasons, both about things deliberately kept out of git. (`wf_usecase_diversity.ipynb`
+and `wf_brief_quality_detectors.ipynb` were added after that sweep and are not counted in it; both
+execute top-to-bottom today.)
 
 | Notebook | Blocker |
 |---|---|
@@ -127,6 +129,14 @@ Three caveats on the 16 that pass:
 | `wf_top_embeddings_generalization.ipynb` | Repeats the held-out test for the top 3 with **each** of the 6 questions held out in turn, tests prediction-level combination vs vector concatenation, and tests isotonic/Platt calibration under a simulated ~50-label budget. |
 | `wf_synergy_validation.ipynb` | External validation against 3 [SYNERGY](https://github.com/asreview/synergy-dataset) systematic reviews — an independent benchmark this project had no hand in labelling, at realistic prevalence (1.7–14.8% positive vs our 26–77%). **Model ranking is not stable across prevalence regimes:** Qwen3-4B is mid-pack in-repo and *last* on SYNERGY. |
 | `run_comparisons.ipynb` | Runs `scripts/compare_*.py`'s own functions with every table and plot inline, plus a paired significance check across representations. Set `USE_CASE_KEY` to analyse a different research question. Embeds the corpus from scratch, so it is the slowest notebook here and needs `fastembed` + `sentence-transformers`. |
+
+### Spec and brief quality
+
+| Notebook | What it does |
+|---|---|
+| `wf_usecase_diversity.ipynb` | Maps how far apart the 34 use cases sit (6 live + 28 benchset) and tests causally whether that diversity biases LOGO. §6 builds the brief × corpus matrix — score every use case's papers with every *other* use case's brief — which is where the foreign-brief margin comes from. **Hard finding:** `max_foreign_brief_auc` correlates with LOGO transfer at rho +0.70 but **+0.37 once prevalence is held constant**, and prevalence alone is −0.72; so nothing here may be read without controlling for it. |
+| `wf_spec_reader_arm.ipynb` | Probe `P-R`: the same 14 brief variants the matcher arm scored, put in front of an LLM screener, to decide whether a spec linter needs one critic or two. **Hard findings:** contradiction, keyword padding, fluff and vagueness each cost the reader **less than the 0.03 noise floor** (three are *positive*), while a deranged brief costs **−0.282 AUC / −0.297 F2@own / −15.8pp fraction-read** — so the instrument is not blind. Stripping the brief to its bare topic name costs **−0.038**, which places the mechanism: no single field is load-bearing because the topic signal is **redundant** across fields. Every failure mode the reader sees, the matcher sees harder, so D43's two-critic linter collapses to one for *ranking* — but `only_name` raises fraction-read while lowering F2@own, which only a reader can show. $1.32 of a $10 ceiling; stage 2 unbought because the pre-registered stop rule fired. |
+| `wf_brief_quality_detectors.ipynb` | Probes `P-FB` and `P-CK` from `reports/wf_spec_quality_plan.md`, both $0 and both label-free at scoring time. **Hard findings: both fail their pre-registered bars.** The foreign-brief margin is a property of the *embedding*, not the brief — rebuild the 34×34 matrix in BM25 space and 8 new collections flag that cosine called healthy (bar: ≤2), the two margins correlate at only rho 0.33, and `soil_microbiome`'s headline −0.190 becomes −0.021. The margin looked like a workload forecaster instead — rho **−0.929** against labelling gain — but that **fails on set B** (−0.464, CI crossing zero, sign flipping under prevalence control) and was never embedding-independent even on set A (qwen4b −0.571). Nothing ships. Checkability fails too: pooled IQR 0.055 against a 0.2 bar, `tech_forecasting` ranks 3rd of 6 when it should rank last, and its "stability check" compared a rulebook against itself (`checkability_broad` identical on all 34, max diff 0.0). |
 
 ### Fold and pipeline design
 

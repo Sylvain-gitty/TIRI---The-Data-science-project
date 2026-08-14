@@ -179,6 +179,39 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | **P4, the per-criterion checklist prompt** | Worse AUC on 3 of 4 models, F2@own collapses to 0.24–0.50 — reasoning scaffolding makes a model demand *all* criteria |
 | **Verbalised 0–100 confidence replaced by token logprobs** | Fixed the granularity completely (tie fraction 0.997 → 0.047) and ranking got *worse* (mean AUC −0.035). `wf_llm_logprob_scoring.md` |
 | **`nemotron-3-super` on DeepInfra at corpus scale** | 4 rows/min measured (42 h/cell) from rate-limit backoff, despite a healthy 3.9s p50. Throughput is a capability; benchmark it at target scale |
+| **The foreign-brief margin as a brief-quality alarm** (`own_brief_auc − best_foreign_brief_auc`) | `wf_foreign_brief_detector.md` — rebuilt in BM25 space, **8 collections flag that the embedding called healthy** against a pre-registered ≤2, and the two margins correlate at rho 0.33. It is a property of one embedding's geometry, not of the text. Its fallback caption (a labelling-cost forecast) also died: rho −0.929 on set A → **−0.464 on set B with the sign flipping to +0.143** under prevalence control, and never embedding-independent even on A (qwen4b −0.571, CI crossing zero). `wf_foreign_brief_validity_setb.md`. **`NUMBERS.md` N33 should be removed** |
+| **Criterion checkability / evidence availability as an automatability score** | `wf_checkability_audit.md` — pooled IQR **0.055** against a pre-registered 0.2, and it ranks `tech_forecasting` (no performance criteria, hardest use case here) 3rd of 6 instead of last. Half the metric's own definition never fired: the broad judgement lexicon scored all 34 use cases **identically**. Do not re-derive this without reading §3 of that report |
+| **A single spec-quality *score* of any kind** | Three independent attempts, three failures (the two above plus `NUMBERS.md` N23's criteria-populated count, which measures presence not quality). There is a structural reason: the cost of a defect **inverts** between label regimes — prose damage is ~0.17 at 0 labels and ~0.01 fitted, term damage the mirror — so any single number must average regimes that disagree. `wf_spec_quality_answer.md` §5. **Ship a priced linter instead** (`scripts/spec_linter.py`) |
+
+### 6b. Spec quality — what is settled, so it is not re-litigated
+
+Full answer in [`reports/wf_spec_quality_answer.md`](reports/wf_spec_quality_answer.md); the bars were
+pre-registered in `wf_spec_quality_plan.md`, which also carries a dated Amendment recording five
+premises corrected **before** any probe ran. Measured on **three surfaces** — benchset set A (burned),
+set B (clean, and now spent), and **TIRI's own six use cases**, spanning 1.87% to 57.6% prevalence.
+
+- **Three fields carry essentially all the value.** `objective` (+0.151 / +0.263 / +0.100 above chance
+  at 0 labels — the largest single-field effect measured anywhere), `terms_nice_to_have` (+0.105 /
+  +0.215 / +0.118, and the *largest* effect on TIRI's own corpus), and `terms_must_include` by **count**
+  rather than presence.
+- **Three fields are decoration to every consumer on all three surfaces.** `problem_statement`,
+  `domain_*` and `terms_exclude` measure **0.000 at 0 labels and ≤0.009 fitted**. Keep them for humans;
+  **do not make them required**.
+- 🔴 **Do not quote set A's term-damage magnitudes.** `keyword_flood` −0.072 → −0.031, `no_must`
+  −0.043 → **−0.010** on clean data; set A's means were carried by `leenaars_2020` alone. The
+  *cold-start* findings replicate and strengthen; the *after-labels* term findings roughly halve.
+- 🔴 **"Fluff is worse than an empty field" is set-A-specific.** 0.473/0.441 on A and TIRI's 0.499/0.491,
+  but **0.594/0.569 on set B** where both beat deletion. Any prose beats no prose.
+- **Defects compound, they do not rescue.** 6 of 6 prose×term pairs across two surfaces cost more than
+  the sum of their parts. A strong objective does not license a lazy term list.
+- **A reader is robust to localised spec damage but not to wrong content** — every single-field
+  degradation is inside the noise floor while a deranged brief costs **−0.282**. The signal is
+  redundant across fields.
+- **The one reader-only defect is a prose contradiction**: an objective asserting what `terms_exclude`
+  rejects leaves ranking untouched (+0.001) and moves the operating point **+0.120 fraction-read on 8
+  of 8 collections**, while a *fitted* matcher sees nothing at all. S-AL's −0.056 AUC is **not**
+  reproduced; the effect is real and AUC was the wrong instrument.
+- **The completion test that survived everything** is the shuffled-brief control, not any score.
 
 ---
 
