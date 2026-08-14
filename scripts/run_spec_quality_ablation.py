@@ -281,6 +281,28 @@ def variant(df: pd.DataFrame, name: str) -> pd.DataFrame:
     elif name == "must_only_one":
         d["terms_must_include"] = [np.array(_lst(m)[:1], dtype=object)
                                    for m in d.terms_must_include]
+    elif name == "conflicting_prose":
+        # The prose analogue of `conflicting`, and the variant that actually tests S-AL.
+        #
+        # S-AL measured a hand-written *policy sentence* costing an LLM reader 0.828 -> 0.772,
+        # because it "named as a positive signal the category its own labels rejected".
+        # `conflicting` above moves `terms_exclude` INTO `terms_must_include` - a contradiction
+        # between two LIST fields - and it cost a reader +0.016, i.e. nothing. Those are not the
+        # same manipulation, so `conflicting` never tested S-AL's claim. This does.
+        #
+        # Built deterministically from the spec's own declared exclusions: a plausible policy
+        # sentence appended to the objective asserting that the excluded categories are wanted.
+        # `terms_exclude` is left INTACT, so the spec now contradicts itself across fields AND
+        # contradicts its own labels - a superset of S-AL's condition, which is the strongest form
+        # of the test rather than the weakest.
+        # Benchset objectives hold a review abstract and some are truncated mid-word in the
+        # export, so join on a sentence boundary rather than assuming one is there.
+        d["objective"] = [
+            (str(o).strip().rstrip(".") + ". Note that work on " + ", ".join(_lst(e))
+             + " is directly relevant here and should be treated as a positive signal.")
+            if _lst(e) else str(o)
+            for o, e in zip(d.objective, d.terms_exclude, strict=True)
+        ]
     elif name == "nice_only_one":
         # The mirror of must_only_one, added to price a linter check that was otherwise a bare
         # recommendation: `no_nice` (zero terms) is measured and costly, but nothing measured
@@ -301,7 +323,7 @@ VARIANTS = ["full", "no_obj", "no_prob", "no_must", "no_nice", "no_exclude", "no
 # byte-for-byte. Each pairs a prose defect with a term defect - the two halves that §4.10 found
 # serve different consumers - so the pair is the interaction test.
 COMBO_VARIANTS = ["fluff_and_flood", "vague_and_flood", "fluff_and_no_must",
-                  "nice_only_one"]
+                  "nice_only_one", "conflicting_prose"]
 
 UNFITTED = ["bm25_nice", "bm25_obj", "overlap_must_frac"]
 

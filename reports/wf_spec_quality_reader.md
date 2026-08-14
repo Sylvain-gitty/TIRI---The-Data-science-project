@@ -197,6 +197,40 @@ rule because the null is interesting would be the exact behaviour the rule exist
 
 ---
 
+### 🟢 3a. The prose contradiction — the one thing only a reader shows
+
+`conflicting` moves `terms_exclude` into `terms_must_include`: a contradiction between two **list**
+fields. S-AL's result was about a contradiction in **prose**. Those are not the same manipulation, so
+`conflicting` never tested it. `conflicting_prose` does: a plausible policy sentence appended to the
+objective asserting the spec's own excluded categories are wanted, with `terms_exclude` left intact —
+so the spec contradicts its sibling field *and* its own labels.
+
+| | reader AUC | reader F2@own | reader fraction-read | matcher cold | matcher fitted |
+|---|---|---|---|---|---|
+| `conflicting` (lists) | +0.016 | +0.041 | +0.009 | 0.000 | −0.014 / −0.009 / −0.001 |
+| **`conflicting_prose`** | **+0.001** | −0.003 | **+0.120** | −0.018 / −0.042 / −0.037 | **~0.000, 0 of 8/7/6** |
+
+**Hard finding — it leaves ranking alone and moves the operating point on 8 of 8 collections.**
+AUC +0.001 with a symmetric scatter (3 collections worse than the floor, 3 better) is noise. But
+fraction-read is **positive on all eight** (+0.014 to +0.345, mean +0.120) and recall is up on all
+eight. The model obeys the contradicting sentence: it includes the categories the spec said to
+exclude, so it flags more papers, in the same order.
+
+**Hard finding — a fitted matcher cannot see this at all.** 0 of 8, 0 of 7 and 0 of 6 collections
+affected after 60 labels, on all three surfaces. It shows up only in the matcher's zero-label prose
+feature. **So this is the one defect in the whole ablation that a reader detects and a fitted matcher
+does not** — which is a real, narrow, and now-priced job for a second critic.
+
+⚠️ **S-AL's number is not reproduced.** S-AL measured −0.056 AUC; this measures +0.001 AUC and a
+12-point read shift. The honest reading is *"the effect is real and AUC was the wrong instrument"* —
+not a confirmation and not a refutation. One model family, one corpus, and a manipulation built from
+the spec's own exclude list rather than S-AL's hand-written policy.
+
+⚠️ **F2 being a wash is a prevalence artefact.** −0.003 at the subsample's 13.6% positive rate,
+because extra recall pays for extra reading. At production prevalence (~2%) it would not — but
+`CONTEXT.md` §4 forbids carrying a threshold across regimes, so that is an expectation, not a
+measurement.
+
 ## 4. 🟢 What this changes
 
 **D43's spec linter needs one critic, not two — and it is the matcher.** The plan's premise was that
@@ -212,9 +246,14 @@ both. Half of that is confirmed and half is inverted:
 | **nothing but the topic name** | **yes** (−0.105) | **yes, modestly** (−0.038, 5 of 8) |
 | wrong topic entirely | **yes** | **yes, decisively** (−0.282) |
 
-**Every row the reader notices, the matcher notices too — and notices harder.** There is no failure
-mode in this ablation visible *only* to the reader on ranking quality, so for **ranking** a
-two-critic linter buys nothing over a one-critic linter. That is worth the $1.32 to know, and it
+| **prose contradicting the exclude list** | only at 0 labels (−0.018/−0.042/−0.037); **nothing fitted** | **yes — +0.120 fraction-read, 8 of 8** |
+
+**On ranking quality, every row the reader notices the matcher notices too — and harder.** So a
+two-critic linter buys nothing *for ranking*.
+
+🟢 **But the last row is a genuine reader-only defect, and it was the point of the follow-up.** A
+prose contradiction is invisible to a fitted matcher on all three surfaces and costs 12 points of
+extra corpus read. That is the narrow, specific job a second critic has. That is worth the $1.32 to know, and it
 simplifies the guidance: **lint the spec against the matcher.**
 
 **But the reader keeps one job, and `only_name` is what shows it.** Stripped to a topic label the

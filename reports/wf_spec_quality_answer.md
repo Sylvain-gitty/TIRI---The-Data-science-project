@@ -105,6 +105,7 @@ different mechanism from putting the words in the spec.)
 | **generic fluff replacing prose** | −0.177 / **−0.169** | +0.003 / −0.009 | **+0.003** |
 | **term lists padded with generics** | −0.089 / −0.067 | −0.072 / −0.031 | **−0.007** |
 | **self-contradicting term lists** | −0.007 / −0.028 | −0.014 / −0.009 | **+0.016** |
+| **self-contradicting *prose*** (new) | −0.018 / −0.042 / −0.037 | **~0.000, 0 of 8/7/6** | +0.001 AUC but **+0.120 fraction-read, 8 of 8** |
 | *fluff **appended** to real prose* | −0.018 / −0.006 | +0.008 / −0.004 | — |
 | *(reference) the wrong brief entirely* | — | — | **−0.282** |
 
@@ -325,9 +326,10 @@ worth 0.02".
    but no absolute number here is a production estimate.
 4. 🟡 **The reader arm is set A only, one model family** (`gemma-4-31b-it`, the weakest of four on
    set A). A stronger reader could be more sensitive to spec form, not less.
-5. 🟡 **Prose contradiction for a reader.** S-AL measured a *prose* contradiction costing a reader
-   0.828 → 0.772. The variant here contradicts the *term lists* and costs +0.016. **S-AL is
-   un-addressed, not refuted**, and closing it is a ~$0.30 experiment.
+5. ✅ ~~**Prose contradiction for a reader.**~~ **Closed — see §3.** Measured for $0.31. S-AL's AUC
+   drop is **not** reproduced (+0.001), but a large operating-point shift is (**+0.120 fraction-read,
+   8 of 8 collections**) — an effect AUC cannot see. It is the only reader-only failure mode found,
+   and it is now a linter check at 0/34 false positives.
 6. ⚪ **Whether telling someone to write better prose works.** S-FF's grader gap (+0.27 recall@10%
    between an oracle and a failing human grader) is explicitly unresolvable in simulation. It needs one
    user session.

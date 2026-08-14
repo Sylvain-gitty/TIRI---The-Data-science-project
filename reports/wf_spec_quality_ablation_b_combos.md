@@ -42,6 +42,7 @@ Blank (`NaN`) means **uncomputable, not zero**. Emptying a brief field can leave
 | vague_and_flood   | 0.710              | -0.004               | 2                          | 0.774      | -0.042       | 4                        |
 | fluff_and_no_must | 0.715              | 0.000                | 0                          | 0.781      | -0.035       | 4                        |
 | nice_only_one     | 0.547              | -0.168               | 7                          | 0.813      | -0.004       | 0                        |
+| conflicting_prose | 0.715              | 0.000                | 0                          | 0.816      | -0.000       | 0                        |
 
 ## 2. All metrics
 
@@ -65,3 +66,4 @@ Blank (`NaN`) means **uncomputable, not zero**. Emptying a brief field can leave
 | vague_and_flood   | 0.710              | 0.570             | 0.662                      | 0.774      | -0.004               | -0.194              | -0.067                       | -0.042       | 4                        | 2                          |
 | fluff_and_no_must | 0.715              | 0.594             | nan                        | 0.781      | 0.000                | -0.169              | nan                          | -0.035       | 4                        | 0                          |
 | nice_only_one     | 0.547              | 0.763             | 0.729                      | 0.813      | -0.168               | 0.000               | 0.000                        | -0.004       | 0                        | 7                          |
+| conflicting_prose | 0.715              | 0.721             | 0.729                      | 0.816      | 0.000                | -0.042              | 0.000                        | -0.000       | 0                        | 0                          |

@@ -90,6 +90,13 @@ _SELF_REF = re.compile(r"\b(us|we|our|me|my|I)\b")
 _EVALUATIVE = re.compile(
     r"\b(interesting|relevant|useful|promising|suitable|nice|good)\b", re.I)
 
+# A term the spec excludes may legitimately appear in the objective when it is NEGATED - two of
+# `synergy_chou_2003`'s exclude terms show up as "non-cancer pain" and "non-parenteral", which is
+# the objective correctly scoping itself out. Without this guard the check would fire on that spec,
+# i.e. 1/34 false positives instead of 0/34.
+_NEGATION_BEFORE = re.compile(
+    r"(non[- ]?|not |no |excluding |except |other than |without |rather than |exclude[sd]? )$", re.I)
+
 
 # --------------------------------------------------------------------------- spec normalisation
 
@@ -139,6 +146,27 @@ def normalise(raw: dict) -> dict:
 def generic_share(text: str) -> float:
     words = re.findall(r"[a-z]+", text.lower())
     return sum(1 for w in words if w in GENERIC_SET) / max(len(words), 1)
+
+
+def excluded_terms_asserted_in_prose(spec: dict) -> list[str]:
+    """Terms the spec says to EXCLUDE that its objective nonetheless states positively.
+
+    The prose analogue of `exclude_in_must`, and a far more expensive one — see the check's price.
+    Matches only un-negated mentions, so an objective that scopes itself out correctly ("chronic
+    non-cancer pain") is not flagged. Calibrated at **0/34 real specs** and it fires on **8/8**
+    collections of the measured `conflicting_prose` variant.
+    """
+    obj = spec["objective"]
+    out = []
+    for term in spec["terms_exclude"]:
+        term = term.strip()
+        if not term:
+            continue
+        for m in re.finditer(r"\b" + re.escape(term) + r"\b", obj, re.I):
+            if not _NEGATION_BEFORE.search(obj[max(0, m.start() - 14):m.start()]):
+                out.append(term)
+                break
+    return out
 
 
 def instruction_shaped(text: str) -> bool:
@@ -254,6 +282,22 @@ CHECKS: list[Check] = [
           "28 benchset briefs.",
           "Consider adding a few more, but treat this as advice rather than a defect."),
 
+    Check("exclude_asserted_in_prose", "warn", "exact",
+          lambda s: bool(excluded_terms_asserted_in_prose(s)),
+          "The objective states positively something the spec's own exclude list rejects. The "
+          "model will obey the prose and flag papers you said you did not want.",
+          "Measured specifically to test this, and it is the **only failure mode where a reader "
+          "shows something no matcher arm can**. It leaves ranking untouched (reader AUC **+0.001**) "
+          "but moves the operating point decisively: **+12.0 percentage points of the corpus read, "
+          "on 8 of 8 collections** (+1.4 to +34.5), with recall up on 8 of 8. For a matcher it costs "
+          "−0.018 / −0.042 / −0.037 at zero labels and is **fully absorbed after 60 labels** (0 "
+          "collections affected on all three surfaces). ⚠️ F2@own is a wash here (−0.003) at 13.6% "
+          "prevalence; at production prevalence reading 12pp more of a corpus for recall you did "
+          "not need is not a wash.",
+          "Remove the claim, or move the category out of `terms_exclude` — but decide which you "
+          "meant. Note this is a *different and more expensive* defect than the same term appearing "
+          "in both term lists (`exclude_in_must`), which is near-free."),
+
     Check("exclude_in_must", "note", "exact",
           lambda s: bool({t.lower() for t in s["terms_must_include"]}
                          & {t.lower() for t in s["terms_exclude"]}),
@@ -332,6 +376,9 @@ def self_test() -> bool:
         "only_name": {"use_case_name": "Low-temperature amine solvents"},
         "nice_empty": {**base, "terms_nice_to_have": []},
         "nice_single": {**base, "terms_nice_to_have": ["absorption"]},
+        "exclude_asserted_in_prose": {
+            **base, "objective": base["objective"] + " Note that work on membrane is directly "
+                                 "relevant here and should be treated as a positive signal."},
         "must_single": {**base, "terms_must_include": ["amine"]},
         "objective_generic": {**base, "objective": FLUFF},
         "objective_instruction_shaped": {**base, "objective": VAGUE},
