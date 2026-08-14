@@ -240,7 +240,21 @@ Prevalence correlated with LOGO transfer at rho -0.72 in the diversity notebook 
 
 `NUMBERS.md` N33 (status `LIVE+SQL`) already quotes the `soil_microbiome` 0.603/0.792 pair with no validation behind it. This script supplies that validation: cross-instrument specificity **FAIL**, overall validity **PASS**, confound control **PASS**. Because at least one bar above did not clear, the caption should not ship as-is without saying so — a registered caption that fires on healthy briefs (or that nobody has shown predicts anything real) is worse than an unregistered one, per the plan's own "raises the stakes" framing.
 
-### The sharper version: right signal, wrong caption
+> 🔴 **SUPERSEDED, 2026-08-14, by [`wf_foreign_brief_validity_setb.md`](wf_foreign_brief_validity_setb.md).**
+> The section below argued that the margin is a real signal wearing the wrong caption, on the
+> strength of rho **−0.929** against labelling gain. **That result does not survive a clean
+> surface.** On set B the same statistic gives rho **−0.464** with a CI of −1.000 to **+0.765**, and
+> the sign **flips to +0.143** once prevalence is controlled. It was also never
+> embedding-independent even on set A: the qwen4b margin gives **−0.571 with a CI crossing zero**
+> (p=0.180) on the same rows, and the lexical margin −0.286.
+>
+> So the conclusion below is wrong in its constructive half. The margin is not a mis-labelled
+> workload forecaster; it is **jasper-specific on one burned surface**, which is the same defect the
+> specificity test found, showing up a second time in the validity result. `NUMBERS.md` **N33 should
+> be removed, not rewritten.** The text is kept below because the *reasoning* about how to tell a
+> brief property from an embedding property still holds — it is the conclusion that was premature.
+
+### The sharper version: right signal, wrong caption ~~— superseded, see above~~
 
 The two results point somewhere more specific than "needs care", and it is worth stating plainly
 because it changes what N33 should *say* rather than merely how confidently it says it.

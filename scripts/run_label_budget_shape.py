@@ -290,19 +290,63 @@ def chart(yield_df: pd.DataFrame, grid: pd.DataFrame) -> None:
     print(f"wrote {FIG}")
 
 
+def load_frame(set_name: str) -> tuple[pd.DataFrame, list[str]]:
+    """The five meta columns plus the qwen4b embedding block, for one large split.
+
+    Set A reads the pre-built `setA_ensemble_features.parquet` exactly as before, so its
+    published grid reproduces unchanged. Any other set is assembled straight from the raw
+    parquet, because the pre-built file cannot be built for it without an LLM: the builder
+    also produces induced-brief columns, and the induced rule set was induced from **set A's
+    own train labels** (`wf_llm_setA_rules_v1.json`). Nothing here uses those columns - this
+    grid needs `use_case_key/y/w/split/cos_brief_qwen4b` and `emb_qwen4b_*` and nothing else -
+    so building the whole ensemble table first would be paying for a rule induction to throw
+    it away.
+    """
+    import pyarrow.parquet as pq
+
+    meta = ["use_case_key", "y", "w", "split", COS]
+    if set_name == "a":
+        emb_cols = sorted(c for c in pq.ParquetFile(FEATURES).schema_arrow.names
+                          if c.startswith("emb_qwen4b_"))
+        print(f"set A: loading {len(emb_cols)} embedding columns + {len(meta)} meta from "
+              f"{FEATURES.name} ...", flush=True)
+        return pd.read_parquet(FEATURES, columns=meta + emb_cols), emb_cols
+
+    from benchset_loader import SETS, case_control_sample, drop_ab_crossing, load_set
+
+    path = SETS[set_name].path
+    emb_cols = sorted(c for c in pq.ParquetFile(path).schema_arrow.names
+                      if c.startswith("emb_qwen4b_"))
+    print(f"set {set_name.upper()}: assembling {len(emb_cols)} embedding columns + "
+          f"{len(meta)} meta from {path.name} ...", flush=True)
+    base = drop_ab_crossing(load_set(set_name), set_name)
+    sample = case_control_sample(base).reset_index(drop=True)
+    embs = pd.read_parquet(path, columns=["row_key", "use_case_key", *emb_cols])
+    out = sample[["row_key", "use_case_key", "y", "w", "split", COS]].merge(
+        embs, on=["row_key", "use_case_key"], how="left", validate="one_to_one")
+    if out[COS].isna().any() or out[emb_cols[0]].isna().any():
+        raise RuntimeError("embedding/cosine join left nulls - do not proceed")
+    return out.drop(columns=["row_key"]), emb_cols
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, default=5)
+    ap.add_argument("--set", default="a", choices=["a", "b"],
+                    help="which large split; 'a' keeps the original output filenames")
     args = ap.parse_args()
 
-    meta = ["use_case_key", "y", "w", "split", COS]
-    import pyarrow.parquet as pq
+    global OUT_MD, OUT_YIELD, OUT_GRID, OUT_NEGPOL, FIG
+    if args.set != "a":
+        sfx = f"_set_{args.set}"
+        OUT_MD = REPO / "reports" / f"wf_label_budget_shape{sfx}.md"
+        OUT_YIELD = REPO / "reports" / f"wf_label_budget_shape{sfx}_yield.csv"
+        OUT_GRID = REPO / "reports" / f"wf_label_budget_shape{sfx}_grid.csv"
+        OUT_NEGPOL = REPO / "reports" / f"wf_label_budget_shape{sfx}_negpolicy.csv"
+        FIG = REPO / "reports" / f"wf_label_budget_shape{sfx}.png"
 
-    emb_cols = sorted(
-        c for c in pq.ParquetFile(FEATURES).schema_arrow.names if c.startswith("emb_qwen4b_")
-    )
-    print(f"loading {len(emb_cols)} embedding columns + {len(meta)} meta ...", flush=True)
-    df = pd.read_parquet(FEATURES, columns=meta + emb_cols)
+    df, emb_cols = load_frame(args.set)
+    meta = ["use_case_key", "y", "w", "split", COS]
 
     print("A. yield ...", flush=True)
     ydf = yield_table(df[meta])

@@ -531,20 +531,23 @@ four reports; this is only the scoreboard against what was fixed above.
 
 | probe | verdict | spend |
 |---|---|---|
-| **`P-FB`** | Cross-instrument specificity **FAIL** — 8 lexical-only flags against a bar of ≤2, and the two representations correlate at rho 0.33. Validity **PASS** on the point estimate (rho −0.929 against labelling gain, n=7, jackknife-stable). Confound control **PASS**. → [`wf_foreign_brief_detector.md`](wf_foreign_brief_detector.md) | $0 |
+| **`P-FB`** | Cross-instrument specificity **FAIL** — 8 lexical-only flags against a bar of ≤2, and the two representations correlate at rho 0.33. Validity **PASS on set A, then FAIL on set B**: rho −0.929 became −0.464 with a CI of −1.000 to +0.765 and a sign that flips to +0.143 under prevalence control — and was never embedding-independent even on A (qwen4b −0.571, CI crossing zero). **Nothing ships; N33 is removed, not rewritten.** → [`wf_foreign_brief_detector.md`](wf_foreign_brief_detector.md), [`wf_foreign_brief_validity_setb.md`](wf_foreign_brief_validity_setb.md) | $0 |
 | **`P-CK`** | Spread **FAIL** on both figures (IQR 0.055 and 0.179 against 0.2). Face validity **FAIL**. Stability **PASS** for evidence, **VACUOUS** for checkability. → [`wf_checkability_audit.md`](wf_checkability_audit.md) | $0 |
 | **`P-R`** | H1 **FAIL**, H2 **FAIL** both halves, H3 **PASS**. Stop rule fired; stage 2 unbought. → [`wf_spec_quality_reader.md`](wf_spec_quality_reader.md) | $1.32 |
 | **`P-TX`** | Gate **PASS** on 4 of 4, three of them clearing the 0.03 floor, **with inconsistent sign**. Modal run earned but not yet run. → [`wf_text_input_precheck.md`](wf_text_input_precheck.md) | $0 |
 
-**Total $1.32 of a $10 ceiling**, and `benchset_v1_large_set_b` was spent only on the free matcher
-re-run, not on the reader arm — so it remains available for one confirmatory question.
+**Total $1.32 of a $10 ceiling.** `benchset_v1_large_set_b` was *not* spent on the reader arm (the stop
+rule fired), and was instead spent on the one confirmatory question worth it: whether `P-FB`'s
+surviving result survives a clean surface. It does not. That read is now used up.
 
 ### The honest expectation, scored
 
 §Sequencing above predicted: *"`P-FB` passes validity and fails specificity; `P-CK` passes
 descriptively; `P-R`'s H1 passes and H2 fails; `P-TX`'s pre-check kills it."* **Two of four.**
 
-- ✅ **`P-FB` — exactly right**, including which bar would fail.
+- ✅ **`P-FB` — right about specificity**, including which bar would fail. But the prediction said it
+  would *pass* validity, and on the clean surface it does not. The plan was right that this detector
+  fires too often and wrong that anything underneath it was salvageable.
 - ❌ **`P-CK` did not pass descriptively.** It failed every bar it could fail. The prediction assumed
   the two figures would at least *vary*; the reason they do not is that half the metric's definition
   never fired, which no amount of forethought about the bars would have caught — only running it did.
