@@ -170,14 +170,26 @@ tested by the experiment cited for it.
 - **Readers: measured, and it went the other way.** Moving `terms_exclude` into `terms_must_include`
   cost an LLM reader **+0.016** — marginally *better*. It clears the required gap on 1 of 8
   collections.
-- **But this does not refute S-AL.** S-AL's 0.828 → 0.772 contradicted the brief **in prose** — a
-  policy sentence naming as positive the category its own labels rejected. TIRI's variant contradicts
-  it **in the term lists**. If a reader largely ignores term-list fields, these are not the same
-  experiment — and two separate results say it does: `keyword_flood` costs a reader −0.007, and
-  `CONTEXT.md` §6 already rejects "LLM-written `terms_*` for an LLM reader" on independent evidence.
+- **The prose version was then measured directly, and it is a different animal.** ✅ TIRI built
+  `conflicting_prose`: a plausible policy sentence appended to the objective asserting that the
+  spec's own `terms_exclude` categories are wanted, with that list left intact — so the spec
+  contradicts its sibling field *and* its own labels. Result: **reader AUC +0.001** (no ranking
+  effect) but **fraction-read +0.120 on 8 of 8 collections** (+1.4 to +34.5pp), recall up on 8 of 8.
+  A *fitted* matcher sees **nothing at all** — 0 collections affected on all three surfaces.
 
-**Action:** rest finding 5 on S-AL's own prose evidence and **say that explicitly**, rather than on
-the `conflicting` variant, which does not support it. The stronger overall claim from the reader arm:
+🔴 **So finding 5's conclusion is right and its stated reason is wrong.** A spec linter *does* need a
+reader-side critic, but not because contradictions cost a reader ranking quality — they do not. It is
+because a prose contradiction makes a reader **over-flag**, and that is invisible to every
+matcher-side check once labels exist. That is a narrower and more useful claim than the original.
+
+⚠️ **S-AL's number is not reproduced.** S-AL measured 0.828 → 0.772 (−0.056 AUC); this measures
++0.001 AUC plus a 12-point read shift. Read it as *"the effect is real and AUC was the wrong
+instrument"* — neither a confirmation nor a refutation. One model family, one corpus, and a
+manipulation built from the exclude list rather than a hand-written policy. §4.10 should say so
+rather than continuing to cite the AUC figure as though it were replicated.
+
+**Action:** rewrite finding 5 around the operating point rather than around ranking, and cite
+`wf_spec_quality_reader.md` §3a for the measurement. The stronger overall claim from the reader arm:
 
 | failure mode | matcher notices | reader notices |
 |---|---|---|
@@ -187,11 +199,20 @@ the `conflicting` variant, which does not support it. The stronger overall claim
 | nothing but the topic name | **yes** (−0.105) | yes, modestly (−0.038) |
 | wrong topic entirely | **yes** | **yes, decisively** (−0.282) |
 
-**Every failure mode the reader notices, the matcher notices harder.** So for **ranking quality**,
-D43's linter needs one critic and it is the matcher. **The reader keeps exactly one job**: stripped to
-a bare topic name it *over-flags* — fraction-read **+3.9pp** while F2@own falls 0.018. A matcher has no
-operating point, so no matcher-side check can produce that number. That is a narrower second critic
-than D43 assumes, pointed at the operating point rather than at spec quality.
+**On ranking quality, every failure mode the reader notices the matcher notices harder.** So for
+*ranking*, D43's linter needs one critic and it is the matcher.
+
+🟢 **But two rows are genuinely reader-only, and both are about the operating point.** Stripped to a
+bare topic name the reader over-flags (+3.9pp read, F2@own −0.018); given prose that contradicts its
+own exclusions it over-flags far more (**+12.0pp read on 8 of 8**, and a fitted matcher cannot see it).
+A matcher has no operating point at all, so no matcher-side check can produce either number. **That is
+the second critic, and it is narrower and better-specified than D43 assumes** — it checks whether the
+spec will make the model flag too much, not whether the spec is well written.
+
+🟢 **TIRI shipped this as a linter check**: `exclude_asserted_in_prose` in `scripts/spec_linter.py`, at
+**0/34 false positives** on real specs and firing on 8/8 constructed cases. It needs a negation guard —
+`synergy_chou_2003`'s objective legitimately contains two of its own exclude terms as "non-cancer pain"
+and "non-parenteral" — so port the guard, not just the check.
 
 **Why the reader is so robust, which is the useful mechanism:** stripping the brief to its topic name
 costs a reader only −0.038, so the prose is worth ~0.04 in total — but each degradation corrupts *one*
@@ -225,7 +246,26 @@ the shipped number would move. And the `+venue` arm was dropped as unbuildable �
 
 ---
 
-## 6. ⚪ Two things that do not need a correction, but change what is buildable
+## 6. 🟢 The linter is built, and it is meant to be ported rather than re-derived
+
+`scripts/spec_linter.py` — **11 deterministic, label-free checks**, each carrying the measured cost
+that prices it, quoted on all three surfaces. `--self-test` asserts two properties: every check fires
+on the exact string whose cost was measured (`FLUFF`/`VAGUE`/`GENERIC` are *imported* from the ablation
+script, never restated), and **no check fires spuriously on any of the 34 real specs**.
+
+Four blockers, five warnings, one note, and an **explicit do-not-warn list** — `problem_statement`,
+`domain_*` and `terms_exclude` being empty, because they measure 0.000/≤0.009 and a linter that fires
+on healthy input teaches the analyst to ignore it (S-FR's own conclusion).
+
+Run over all 34 specs it returns **5 findings, every one on TIRI's own use cases and none on the 28
+benchset briefs** — which is the same finding as §1's aside, arriving from the other direction.
+
+**Two things worth porting exactly rather than reimplementing:** the negation guard on
+`exclude_asserted_in_prose` (see §4), and the *conjunction* in the instruction-shape detector —
+imperative-opening alone fires on 4 of 34 real specs and self-reference alone on 12, while
+`(imperative OR self-ref) AND ≥2 evaluative adjectives` fires on the measured bad string and 0 of 34.
+
+## 7. ⚪ Two things that do not need a correction, but change what is buildable
 
 - **`benchset_v1_large_set_b` is now loadable** (`benchset_loader.load_set("b")`, plus
   `drop_ab_crossing` for the 154 papers straddling the A/B boundary). Any other claim in
@@ -248,6 +288,7 @@ the shipped number would move. And the `+venue` arm was dropped as unbuildable �
 | §3 validity | `confirm_foreign_brief_validity.py` | `wf_foreign_brief_validity_setb.md` |
 | §4 | `run_spec_quality_reader.py`, `analyze_spec_quality_reader.py` | `wf_spec_quality_reader.md` |
 | §5 | `run_text_input_precheck.py` | `wf_text_input_precheck.md` |
+| §6 | `spec_linter.py --self-test`, `--specs all` | `wf_spec_linter.md` |
 
 All bars were pre-registered in `wf_spec_quality_plan.md` before any measurement, and that file
 carries a dated Amendment recording five premises corrected **before** running — plus a closing
