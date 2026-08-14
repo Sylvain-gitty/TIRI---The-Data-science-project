@@ -868,6 +868,73 @@ class OpenRouterClient:
         return {**rec, "cached": False}
 
 
+def cache_tag(variant: str, brief_map: dict | None = None, brief_tag: str | None = None) -> str:
+    """The `tag` component of the cache key for one cell. Single source of truth.
+
+    Extracted so `dry_run_frame` cannot drift from `score_frame`. That drift is not a
+    hypothetical: the tag is part of the cache key, so a dry run that computed the tag
+    slightly differently would report 0% cached, and the honest response to that report is
+    to go and buy responses that were already paid for. A cost estimator that can be wrong
+    in the expensive direction is worse than none.
+
+    Note the asymmetry, which is load-bearing: the brief tag is appended **only** when
+    `brief_map is not None`. An own-brief run must produce the bare tag, byte for byte, or
+    every response already on disk becomes unreachable.
+    """
+    tag = f"{variant}|{PROMPT_VARIANTS[variant]['version']}|{BRIEF_RENDER_VERSION}"
+    if brief_map is not None:
+        tag += "|" + (brief_tag or "shuffled")
+    return tag
+
+
+def dry_run_frame(
+    df,
+    model: str,
+    variant: str,
+    brief_map: dict | None = None,
+    brief_tag: str | None = None,
+    cache_dir: Path = DEFAULT_CACHE_DIR,
+    usd_per_row: float | None = None,
+) -> dict:
+    """What would `score_frame` cost, and how much of it is already paid for? No network.
+
+    Builds the identical prompts and cache keys `score_frame` would, then looks each one up
+    on disk. Nothing is sent anywhere, so this is free and safe to run before every spend.
+
+    `usd_per_row` defaults to the median recorded cost of this model's existing successful
+    cache rows — a measured unit price rather than an estimated one. Returns NaN for the
+    projection when the cache holds no priced rows for the model yet, rather than guessing.
+    """
+    import numpy as np
+
+    client = OpenRouterClient(model=model, cache_dir=cache_dir)
+    tag = cache_tag(variant, brief_map, brief_tag)
+    cols = list(df.columns)
+
+    n_cached = 0
+    for rt in df.itertuples(index=False):
+        row = dict(zip(cols, rt))
+        brief_text = brief_map.get(row.get("use_case_key")) if brief_map is not None else None
+        system, user = build_screening_prompt(row, variant, brief_text=brief_text)
+        hit = client._cache.get(client._key(system, user, tag))
+        if hit is not None and not hit.get("error"):
+            n_cached += 1
+
+    if usd_per_row is None:
+        priced = [r["cost"] for r in client._cache.values()
+                  if not r.get("error") and isinstance(r.get("cost"), (int, float))]
+        usd_per_row = float(np.median(priced)) if priced else float("nan")
+
+    n_fresh = len(df) - n_cached
+    return {
+        "model": model, "variant": variant, "tag": tag,
+        "n_rows": len(df), "n_cached": n_cached, "n_fresh": n_fresh,
+        "hit_rate": n_cached / len(df) if len(df) else 0.0,
+        "usd_per_row": usd_per_row,
+        "projected_usd": n_fresh * usd_per_row,
+    }
+
+
 def score_frame(
     df,
     model: str,
@@ -908,9 +975,7 @@ def score_frame(
     # left EXACTLY as it was: `tag` is part of the cache key, so appending anything to the
     # default case invalidates every response already paid for. (Adding "|own" here did
     # exactly that and started silently re-buying the whole 12-cell grid.)
-    tag = f"{variant}|{spec['version']}|{BRIEF_RENDER_VERSION}"
-    if brief_map is not None:
-        tag += "|" + (brief_tag or "shuffled")
+    tag = cache_tag(variant, brief_map, brief_tag)
     rows = list(df.itertuples(index=False))
     cols = list(df.columns)
 
