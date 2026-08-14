@@ -1,14 +1,18 @@
-# The reader arm — a reader is insensitive to spec *form*, not to spec *content*
+# The reader arm — no single brief field is load-bearing for a reader, because the signal is redundant
 
 Status: **stage 1 complete, stage 2 deliberately not bought.** The pre-registered stop rule fired.
-H1 FAIL, H2 FAIL (both halves), H3 PASS. Total spend **$1.12** against a $10 ceiling.
+H1 FAIL, H2 FAIL (both halves), H3 PASS. Total spend **$1.32** against a $10 ceiling.
 
 🟢 clears the 0.03 noise floor / decisively measured · 🟡 real but under the floor · ⚪ engineering finding
 
-**Answer, in one line:** damaging a brief's *quality* — contradicting it, padding it with generic
-keywords, replacing its prose with fluff or vagueness — moves an LLM screener by **less than the
-noise floor in every case**, while replacing its *content* with another use case's brief costs
-**−0.282 AUC**. The reader is reading, and what it reads is the topic.
+**Answer, in one line:** a brief's prose is worth about **0.04 AUC** to an LLM screener in total
+(stripping it to the bare topic name costs −0.038), but **no single way of writing it badly costs
+anything** — contradiction, keyword padding, fluff and vagueness all land inside the noise floor,
+because the topic signal is spread **redundantly** across the brief's fields and corrupting one
+leaves the others carrying it. Replace the content outright and it costs **−0.282**.
+
+So the reader is not insensitive to spec quality; it is **robust to localised spec damage**. Those
+are different claims and only the second one is supported here.
 
 Probe `P-R` of [`wf_spec_quality_plan.md`](wf_spec_quality_plan.md). **Read that file's Amendment
 before any number here** — the bars are fixed there, and three of this plan's four probes had
@@ -109,6 +113,41 @@ The whole spread across the four is **0.023** — smaller than the 0.03 floor, a
 on 1 collection and *better* by more than the floor on 2. `vague_objective` is 2 and 2. A real effect
 does not scatter symmetrically.
 
+### 🟢 2a. The diagnostic that explains the null — and it is redundancy, not indifference
+
+Every variant above leaves `use_case_name` intact (`variant()` never clears it), so a reader that
+reconstructs the topic from any surviving field would be indifferent to all of them. `only_name`
+tests that directly: the 2–4 word name and nothing else. It is the worst variant the matcher measured
+(**−0.105**) and it is what `embedding_utils.get_use_case_text` falls back to today, so it is the
+floor the `scripts/*.py` path actually ships.
+
+| cell | reader d AUC | d F2@own | d fraction-read | collections worse than floor |
+|---|---|---|---|---|
+| `full` (reference) | 0.000 | 0.000 | 0.000 | 0 of 8 |
+| **`only_name`** | **−0.038** | −0.018 | **+0.039** | **5 of 8** |
+| `shuffled` (wrong topic) | −0.282 | −0.297 | −0.158 | 7 of 8 |
+
+**It lands between the two anchors, and that is the informative outcome.** −0.038 clears the 0.03
+floor and is worse than the floor on 5 of 8 collections, so **the brief's prose is genuinely worth
+something to the reader — about 0.04**. But it is nowhere near the −0.282 of a wrong brief.
+
+*ELI18: think of the brief as an instruction sheet with several sections that all describe the same
+topic in different words. Tear off everything except the title and the model gets slightly worse
+(0.04). Scribble over any one section and it does not get worse at all — the other sections still say
+what the topic is. Swap the whole sheet for a different project's and it falls apart (0.28).*
+
+**So the mechanism behind §2's null is redundancy.** The four degradations each corrupt one part of
+the brief — `vague_objective` only `objective`, `fluff_replace` only the two prose fields,
+`conflicting` and `keyword_flood` only the term lists — and in every case the remaining fields still
+carry the topic. **Which means §2 should not be read as "spec quality does not matter to a reader".**
+It should be read as: *no single field is load-bearing for a reader, because the same information is
+in several of them.* A degradation that corrupted **all** fields at once has not been measured, and
+`only_name` is the closest thing to it here.
+
+⚠️ Note `only_name` **increases** fraction-read by 3.9 points while lowering F2@own by 0.018 — given
+only a topic label the reader flags *more* papers, less precisely. That is the kind of failure only a
+reader can exhibit and a ranker cannot, and it is the one argument left for a reader-side critic.
+
 🟡 **One collection is consistently helped by every degradation**, which is worth recording:
 `muthu_2021` gains +0.112 (`conflicting`), +0.117 (`fluff_replace`) and +0.125 (`vague_objective`).
 Read as a judgement call: its shipped brief appears to *mislead* this reader, and damaging it removes
@@ -170,16 +209,24 @@ both. Half of that is confirmed and half is inverted:
 | too few must-include terms | **yes** on set A (−0.043), not on set B (−0.010) | untested |
 | fluff / vague prose | **yes, catastrophically, at 0 labels** (−0.177 / −0.209) | no (+0.003 / +0.010) |
 | self-contradicting term lists | barely (−0.014 / −0.009) | no (+0.016) |
+| **nothing but the topic name** | **yes** (−0.105) | **yes, modestly** (−0.038, 5 of 8) |
 | wrong topic entirely | **yes** | **yes, decisively** (−0.282) |
 
-Every row the reader notices, the matcher notices too. **There is no failure mode in this ablation
-that only the reader can see**, so a two-critic linter buys nothing over a one-critic linter here.
-That simplifies the guidance and it is worth the $1.12 to know.
+**Every row the reader notices, the matcher notices too — and notices harder.** There is no failure
+mode in this ablation visible *only* to the reader on ranking quality, so for **ranking** a
+two-critic linter buys nothing over a one-critic linter. That is worth the $1.32 to know, and it
+simplifies the guidance: **lint the spec against the matcher.**
 
-**What the reader arm does contribute** is the operating point, which a ranker cannot produce: the
-derangement drops fraction-read from its baseline by 15.8 points and F2@own by 0.297. A brief-quality
-check that wants to say *"this brief will cause the model to stop flagging papers"* needs a reader.
-One that wants to say *"this brief is badly written"* does not.
+**But the reader keeps one job, and `only_name` is what shows it.** Stripped to a topic label the
+reader's *ranking* only slips 0.038 while its **fraction-read rises 3.9 points and F2@own falls
+0.018** — it flags more papers, less precisely. A matcher has no operating point at all, so no
+matcher-side check can produce that number. So:
+
+- a check that says *"this brief is badly written"* → **matcher**, and the reader adds nothing;
+- a check that says *"this brief will make the model over-flag"* → **reader**, and only the reader.
+
+That is a narrower second critic than D43 assumed, aimed at the operating point rather than at spec
+quality. It is not the two-critic linter the plan set out to justify, and it is not nothing.
 
 **For the sibling repo:** `DATA_BRIEF.md` §4.10's finding 5 — *"contradictions are invisible to
 matchers and expensive to readers … which is why a spec linter needs both critics"* — should be
@@ -195,8 +242,16 @@ stands on its own evidence and is not tested here; the sentence should say so ra
 |---|---|---|---|
 | 1 — set A subsample, 4 decisive variants | `full`, `conflicting`, `fluff_replace`, `keyword_flood` | 1,998 each | **$0.88** |
 | 1b — H2's untested half + the floor | `vague_objective`, `shuffled` | 1,998 each | **$0.24** |
+| 1c — the mechanism diagnostic | `only_name` | 1,998 | **$0.20** |
 | 2 — set B held-out | *not bought — stop rule* | — | **$0.00** |
-| | | | **$1.12** of $10 |
+| | | | **$1.32** of $10 |
+
+**`only_name` was bought after the stop rule fired, and that is not a violation of it.** The rule
+governs whether to buy *stage 2* — a confirmatory run on the clean surface — once the four variants
+land inside 0.03 of each other. `only_name` is a $0.20 diagnostic on the *already-burned* surface,
+asked to explain why the null happened rather than to test H1–H3 again. It changed the conclusion
+from "a reader is insensitive to spec form" to "no single field is load-bearing because the signal is
+redundant", which is a materially different thing to tell someone building a linter.
 
 **`vague_objective` was not in the plan's four-variant list, and H2 names it.** Four cells would have
 left a pre-registered hypothesis half-tested, and the two are not interchangeable: `fluff_replace`
@@ -236,7 +291,8 @@ shuffled_brief_map` is imported instead.
    are reported beside every mean and why stage 1 was pre-registered as estimates-only.
 5. **`conflicting` is a term-list manipulation, not a prose one.** See H1. It does not test S-AL's
    result and must not be quoted as refuting it.
-6. **Four of fourteen variants.** The other ten are unbought and out of budget (~$6.6 more on set B).
-   `only_name` was added as a diagnostic — see §7.
+6. **Five of fourteen variants bought** (`full`, `conflicting`, `fluff_replace`, `vague_objective`,
+   `keyword_flood`) plus `only_name` as a diagnostic and `shuffled` as the floor. The other nine are
+   unbought and out of budget (~$6.6 more on set B).
 7. **The matcher comparators come from two different label counts.** Neither is label-matched to a
    zero-shot reader; both are printed for that reason.

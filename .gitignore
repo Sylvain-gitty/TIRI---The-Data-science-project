@@ -56,3 +56,6 @@ catboost_info/
 reports/wf_llm_*_responses.parquet
 reports/wf_llm_*_summary.csv
 reports/wf_llm_pilot_per_use_case.csv
+# Same rule, same reason. Regenerating this is $0 - every row is served from
+# `data/processed/llm_cache/`, which is where the paid-for responses actually live.
+reports/wf_spec_quality_reader_*_responses.parquet

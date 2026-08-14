@@ -81,15 +81,23 @@ sys.path.insert(0, str(REPO / "scripts"))
 
 from benchset_loader import case_control_sample, drop_ab_crossing, load_set  # noqa: E402
 from llm_pipeline_utils import dry_run_frame, render_brief, score_frame  # noqa: E402
+from run_llm_screening import shuffled_brief_map  # noqa: E402
 from run_spec_quality_ablation import variant  # noqa: E402
 
 MODEL = "google/gemma-4-31b-it"
 PROMPT = "P2"
 
-# The 4 decisive variants. `full` is the reference; the other three are the ones H1-H3 name.
-# Deliberately not all 14: at B's measured unit price all 14 is ~$21.6 against a $10 ceiling,
+# The decisive variants: `full` is the reference and the rest are exactly the ones H1-H3 name.
+# Deliberately not all 14 - at B's measured unit price all 14 is ~$21.6 against a $10 ceiling,
 # and buying 10 variants nobody has a hypothesis about is not thrift.
-STAGE_VARIANTS = ["full", "conflicting", "fluff_replace", "keyword_flood"]
+#
+# `vague_objective` is here even though the plan's staging text lists only four variants. H2 is
+# about `fluff_replace` AND `vague_objective`, so four cells would have left a pre-registered
+# hypothesis half-tested - and the two are not interchangeable: `fluff_replace` swaps real prose
+# for confident-sounding generic prose, while `vague_objective` swaps it for an honest one-liner
+# that names nothing selectable. A reader might well forgive one and not the other. ~$0.94 for a
+# testable hypothesis instead of an untestable one.
+STAGE_VARIANTS = ["full", "conflicting", "fluff_replace", "vague_objective", "keyword_flood"]
 
 STAGE1_ROWS = 2000
 SEED = 0
@@ -176,20 +184,15 @@ def cells(sample: pd.DataFrame, names: list[str], shuffled: bool) -> list[dict]:
         out.append({"name": name, "brief_map": bm, "brief_tag": f"spec-{name}"})
     if shuffled:
         # The floor. A derangement of the real briefs: no collection keeps its own. It returned
-        # AUC 0.498 / F2 0.000 on set A, so it is a known-good calibration of "the reader is
-        # genuinely reading" rather than pattern-matching paper quality. `CONTEXT.md` L258-260
-        # requires this seam on anything claiming to read a brief.
-        real = {uc: render_brief(g.iloc[0])
-                for uc, g in sample.groupby("use_case_key", sort=True)}
-        keys = sorted(real)
-        rng = np.random.default_rng(SEED)
-        for _ in range(100):
-            perm = list(rng.permutation(keys))
-            if all(a != b for a, b in zip(keys, perm)):
-                break
-        else:
-            raise RuntimeError("no derangement found in 100 tries")
-        out.append({"name": "shuffled", "brief_map": {k: real[p] for k, p in zip(keys, perm)},
+        # AUC 0.777 -> 0.498 and F2@own 0.285 -> 0.000 on set A, so it is a known-good calibration
+        # of "the reader is genuinely reading" rather than pattern-matching paper quality.
+        # `CONTEXT.md` L258-260 requires this seam on anything claiming to read a brief.
+        #
+        # Imported rather than re-rolled, and that is not tidiness: a derangement is one of many
+        # permutations, so a different RNG produces a different pairing, different prompts, and a
+        # cache miss on a cell already bought. Rolling my own here scored 36% cached instead of
+        # 100% - and worse, it would not have been the same floor the published 0.498 refers to.
+        out.append({"name": "shuffled", "brief_map": shuffled_brief_map(sample, seed=SEED),
                     "brief_tag": "shuffled"})
     return out
 
@@ -200,6 +203,10 @@ def main() -> None:
     ap.add_argument("--spend", action="store_true",
                     help="actually call the API; without it this is a free dry run")
     ap.add_argument("--variants", nargs="+", default=STAGE_VARIANTS)
+    ap.add_argument("--shuffled", action="store_true",
+                    help="add the derangement floor (implied on stage 2). Free on set A, where "
+                         "that cell is already cached - and without it a null result cannot be "
+                         "told apart from a blind instrument")
     ap.add_argument("--concurrency", type=int, default=12)
     ap.add_argument("--ceiling", type=float, default=10.0, help="hard USD stop for this run")
     args = ap.parse_args()
@@ -211,7 +218,7 @@ def main() -> None:
     h = brief_hashes(sample, args.variants)
     assert_variants_distinct(h, args.variants)
 
-    plan = cells(sample, args.variants, shuffled=(args.stage == 2))
+    plan = cells(sample, args.variants, shuffled=(args.shuffled or args.stage == 2))
 
     est = pd.DataFrame([
         dry_run_frame(sample, MODEL, PROMPT, brief_map=c["brief_map"],
