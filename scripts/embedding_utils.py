@@ -172,7 +172,9 @@ def drop_empty_rows(df: pd.DataFrame, titles: list[str], abstracts: list[str]):
     return df, [titles[i] for i in non_empty], [abstracts[i] for i in non_empty]
 
 
-def build_paper_texts(titles: list[str], abstracts: list[str], sep: str) -> list[str]:
+def build_paper_texts(
+    titles: list[str], abstracts: list[str], sep: str, text_variant: str = "title_abstract"
+) -> list[str]:
     """Join each paper's title+abstract with the separator THIS model expects. Default
     ". " matches academic_research_agent's own embeddings.paper_embedding_text; Specter
     gets "[SEP]" instead, matching its documented training format (see MODEL_CONFIGS).
@@ -181,7 +183,20 @@ def build_paper_texts(titles: list[str], abstracts: list[str], sep: str) -> list
     characters to strip, not a literal substring, so stripping "[SEP]" would eat any
     leading/trailing S/E/P characters off real titles/abstracts. Missing-side handling
     is done explicitly instead.
+
+    `text_variant` is the seam `scripts/run_text_input_precheck.py` (probe P-TX's $0
+    gate) needs and nothing else: "title_abstract" (default) is today's exact join,
+    unchanged for every existing caller. "title_only" drops the abstract entirely — the
+    only other paper-text arm that gate compares against. Deliberately NOT threaded any
+    further than this function and embed_papers below: no cache filename, no
+    embed_benchsets.py corpus pipeline, changes as a result of this parameter existing.
     """
+    if text_variant == "title_only":
+        return [title.strip() for title in titles]
+    if text_variant != "title_abstract":
+        raise ValueError(
+            f"unknown text_variant {text_variant!r}; expected 'title_abstract' or 'title_only'"
+        )
     texts = []
     for title, abstract in zip(titles, abstracts):
         title, abstract = title.strip(), abstract.strip()
@@ -322,9 +337,24 @@ def embed_via_modal(model_name: str, texts: list[str], is_query: bool = False) -
     return np.array(vectors)
 
 
+_local_model_cache: dict[str, object] = {}  # model_name -> loaded TextEmbedding/SentenceTransformer
+
+
 def _raw_embed(model_name: str, backend: str, texts: list[str], is_query: bool = False) -> np.ndarray:
     """Run the actual model forward pass — no prefixing, no timing, just text in,
-    vectors out."""
+    vectors out.
+
+    Local models (fastembed/sentence-transformers) are cached in `_local_model_cache` by
+    name, same pattern as `_modal_worker` above ("kept warm across calls") — this used to
+    construct a fresh `TextEmbedding`/`SentenceTransformer` (full ONNX/torch model load)
+    on every single call, which is invisible on a one-shot script but means a caller that
+    calls embed_papers/embed_texts several times for the SAME model (e.g.
+    run_text_input_precheck.py: one brief + two paper-text arms per collection) pays that
+    load cost repeatedly for no reason — measured at several minutes of wall-clock across
+    a handful of small collections, almost all of it reloading, not embedding. Caching
+    changes nothing about the output (same model, same weights, same call), only when the
+    constructor runs.
+    """
     if model_name == "tfidf":
         vectorizer = TfidfVectorizer(max_features=20_000, stop_words="english")
         sparse = vectorizer.fit_transform(texts)
@@ -335,23 +365,31 @@ def _raw_embed(model_name: str, backend: str, texts: list[str], is_query: bool =
     if backend == "openrouter":
         return embed_via_openrouter(model_name, texts)
     if backend == "sentence-transformers":
-        from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer(model_name)
-        return np.asarray(model.encode(texts, show_progress_bar=False))
-    from fastembed import TextEmbedding
-    model = TextEmbedding(model_name=model_name)
-    return np.array([v for v in model.embed(texts)])
+        if model_name not in _local_model_cache:
+            from sentence_transformers import SentenceTransformer
+            _local_model_cache[model_name] = SentenceTransformer(model_name)
+        return np.asarray(_local_model_cache[model_name].encode(texts, show_progress_bar=False))
+    if model_name not in _local_model_cache:
+        from fastembed import TextEmbedding
+        _local_model_cache[model_name] = TextEmbedding(model_name=model_name)
+    return np.array([v for v in _local_model_cache[model_name].embed(texts)])
 
 
-def embed_papers(model_name: str, titles: list[str], abstracts: list[str]) -> tuple[np.ndarray, float]:
+def embed_papers(
+    model_name: str, titles: list[str], abstracts: list[str],
+    text_variant: str = "title_abstract",
+) -> tuple[np.ndarray, float]:
     """Embed every paper's title+abstract (joined + prefixed per MODEL_CONFIGS) with NO
     accompanying query — for callers that only need paper vectors (e.g. training a
     classifier on them), not a use-case comparison point.
 
+    `text_variant` just forwards to build_paper_texts (see its docstring) — "title_abstract"
+    (default) reproduces every existing call unchanged; "title_only" is P-TX's gate.
+
     Returns (paper_vectors, seconds_elapsed).
     """
     cfg = MODEL_CONFIGS.get(model_name, _UNREGISTERED_MODEL_DEFAULT)
-    paper_texts = build_paper_texts(titles, abstracts, cfg["title_abstract_sep"])
+    paper_texts = build_paper_texts(titles, abstracts, cfg["title_abstract_sep"], text_variant)
     passage_texts = [cfg["passage_prefix"] + t for t in paper_texts]
 
     start = time.monotonic()
