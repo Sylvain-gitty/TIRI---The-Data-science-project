@@ -80,7 +80,18 @@ OUT_MD = REPO / "reports" / "wf_optimised_usecases.md"
 USE_CASES = ["carbon_capture", "cement_binders", "ner", "soil_microbiome", "solar_leo",
              "tech_forecasting"]
 
-MAX_MUST, MIN_NICE = 8, 5
+MIN_MUST, MIN_NICE = 5, 5
+
+# Universal evaluation-metric names. A metric a whole field reports is not a discriminative
+# must-include term: promoting "Precision" into `ner`'s list cost **-0.118** on `lex_bm25_must`
+# because it matches nearly every NLP paper written. Domain-specific physical quantities
+# ("conversion efficiency", "embodied CO2 reduction") are NOT on this list and are still allowed -
+# adding those to `solar_leo`'s two-term list was worth +0.046.
+GENERIC_METRICS = {
+    "precision", "recall", "f1", "f1 score", "f-score", "f score", "accuracy", "auc", "roc-auc",
+    "roc auc", "auroc", "p-value", "error rate", "rmse", "mae", "mse", "sensitivity",
+    "specificity", "throughput", "latency",
+}
 KEYWORD_MAX_TOKENS = 3          # <=3 tokens is a term, not a criterion sentence
 
 _LEADING_IMPERATIVE = re.compile(
@@ -111,6 +122,19 @@ def _dedupe(items: list[str]) -> list[str]:
             seen.add(k)
             out.append(i.strip())
     return out
+
+
+def _near_duplicate(cand: str, existing: list[str]) -> bool:
+    """True if `cand` says essentially what one of `existing` already says.
+
+    Substring either way, case-insensitively, after stripping parenthetical glosses. BM25 splits a
+    phrase into tokens, so "Named Entity Recognition (NER)" beside "Named Entity Recognition"
+    contributes no new coverage and dilutes what is there.
+    """
+    c = re.sub(r"\s*\([^)]*\)", "", cand).strip().lower()
+    if not c:
+        return True
+    return any(c in e.lower() or e.lower() in c for e in existing if e.strip())
 
 
 def _is_subject_matter(note: str) -> bool:
@@ -203,19 +227,55 @@ def optimise(spec: dict, prose_only: bool = False) -> tuple[dict, list[dict]]:
 
     # ---- 2/3/4. term lists ---------------------------------------------------------------
     tech = _lst(domain.get("technology_focus"))
-    perf_metrics = [_txt(p.get("metric")) for p in perf if _txt(p.get("metric"))]
-    must = _dedupe(_lst(terms.get("must_include")) + tech + perf_metrics)[:MAX_MUST]
-    added_must = [m for m in must if m.lower() not in
-                  {x.lower() for x in _lst(terms.get("must_include"))}]
-    if added_must:
-        prov.append({"field": "terms_must_include", "action": "add", "detail": ", ".join(added_must),
-                     "source": "domain.technology_focus + performance_criteria[].metric"})
+    existing_must = _lst(terms.get("must_include"))
+    perf_metrics = [m for m in (_txt(p.get("metric")) for p in perf)
+                    if m and m.lower() not in GENERIC_METRICS]
+    dropped_metrics = [_txt(p.get("metric")) for p in perf
+                       if _txt(p.get("metric")).lower() in GENERIC_METRICS]
 
+    # Fix 1: TOP UP to a floor, never expand past it. The list only grows if the analyst wrote
+    # fewer than MIN_MUST; a spec that already has enough is left exactly alone. The full rewrite
+    # expanded `ner` from 4 to 8 and cost -0.118.
+    # Fix 2: NEVER truncate. "5-8" is a floor and a quality bar, not a cap - capping
+    # `soil_microbiome`'s 10 hand-written terms at 8 cost -0.077.
+    # Fix 3: drop NEAR-duplicates, not just exact ones. `ner`'s technology_focus is
+    # "Named Entity Recognition (NER)" against an existing "Named Entity Recognition"; adding it
+    # dilutes BM25 without adding coverage.
+    must = list(existing_must)
+    if len(must) < MIN_MUST:
+        for cand in tech + perf_metrics:
+            if len(must) >= MIN_MUST:
+                break
+            if not _near_duplicate(cand, must):
+                must.append(cand)
+    must = _dedupe(must)
+    added_must = [m for m in must if m.lower() not in {x.lower() for x in existing_must}]
+    if added_must:
+        prov.append({"field": "terms_must_include", "action": "top up to floor",
+                     "detail": ", ".join(added_must),
+                     "source": "domain.technology_focus + non-generic performance_criteria metrics"})
+    if dropped_metrics:
+        prov.append({"field": "terms_must_include", "action": "SKIPPED metric",
+                     "detail": ", ".join(dropped_metrics),
+                     "source": "performance_criteria[].metric (universal evaluation metric)"})
+    if len(existing_must) >= MIN_MUST:
+        prov.append({"field": "terms_must_include", "action": "left alone",
+                     "detail": f"{len(existing_must)} terms already >= floor of {MIN_MUST}",
+                     "source": "-"})
+
+    # Same three fixes on the nice-to-have list: top up to a floor, never truncate, no near-dupes.
+    existing_nice = _lst(terms.get("nice_to_have"))
     nice_kw = [n for n in _lst(dec.get("nice_to_have")) if len(n.split()) <= KEYWORD_MAX_TOKENS]
-    leftover_tech = [t for t in tech if t.lower() not in {m.lower() for m in must}]
-    nice = _dedupe(_lst(terms.get("nice_to_have")) + nice_kw + leftover_tech)
-    added_nice = [n for n in nice if n.lower() not in
-                  {x.lower() for x in _lst(terms.get("nice_to_have"))}]
+    leftover_tech = [x for x in tech if not _near_duplicate(x, must)]
+    nice = list(existing_nice)
+    if len(nice) < MIN_NICE:
+        for cand in nice_kw + leftover_tech:
+            if len(nice) >= MIN_NICE:
+                break
+            if not _near_duplicate(cand, nice):
+                nice.append(cand)
+    nice = _dedupe(nice)
+    added_nice = [n for n in nice if n.lower() not in {x.lower() for x in existing_nice}]
     if added_nice:
         prov.append({"field": "terms_nice_to_have", "action": "add", "detail": ", ".join(added_nice),
                      "source": "decision_criteria.nice_to_have + leftover technology_focus"})

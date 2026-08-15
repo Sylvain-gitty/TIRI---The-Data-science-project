@@ -22,7 +22,7 @@ Status: **measured.** `scripts/optimise_usecases.py` rewrote TIRI's six specs pe
 
 - `cos_brief_qwen4b [optimised]` r=0.9526
 - `lex_bm25_obj [optimised]` r=0.7565
-- `lex_bm25_must [optimised]` r=0.6402
+- `lex_bm25_must [optimised]` r=0.8193
 - `cos_brief_qwen4b [prose_only]` r=0.9526
 - `lex_bm25_obj [prose_only]` r=0.7565
 - `lex_bm25_must [prose_only]` r=1.0000
@@ -35,14 +35,30 @@ Each brief-reading feature scored **raw**, per use case: no labels, no fitting, 
 |-----------------------|----------|-----------|------------|-------------|--------------|------------------|-------------------|
 | cos_brief_jasper      | 0.693    | 0.698     | 0.698      | 0.005       | 0.005        | 3/6              | 3/6               |
 | cos_brief_qwen4b      | 0.688    | 0.715     | 0.715      | 0.027       | 0.027        | 4/6              | 4/6               |
-| lex_bm25_must         | 0.640    | 0.612     | 0.640      | -0.028      | 0.000        | 2/6              | 0/6               |
-| lex_bm25_nice         | 0.619    | 0.629     | 0.619      | 0.010       | 0.000        | 2/6              | 0/6               |
+| lex_bm25_must         | 0.640    | 0.630     | 0.640      | -0.010      | 0.000        | 2/6              | 1/6               |
+| lex_bm25_nice         | 0.619    | 0.615     | 0.619      | -0.004      | 0.000        | 0/6              | 0/6               |
 | lex_bm25_obj          | 0.574    | 0.577     | 0.577      | 0.003       | 0.003        | 4/6              | 4/6               |
-| lex_overlap_must_frac | 0.595    | 0.604     | 0.595      | 0.009       | 0.000        | 2/6              | 0/6               |
+| lex_overlap_must_frac | 0.595    | 0.606     | 0.595      | 0.011       | 0.000        | 2/6              | 0/6               |
 
 **Hard finding — the two halves of the rewrite pull in opposite directions, and the `prose_only` arm separates them cleanly.** Enriching the objective from the analyst's own unread fields lifts the qwen4b cosine by **+0.027 on average and 4 of 6 use cases, with all four gains clearing the 0.03 floor** (`solar_leo` +0.061, `ner` +0.047, `carbon_capture` +0.036, `soil_microbiome` +0.034). Padding the term lists costs **−0.028** on `lex_bm25_must`. **`prose_only` keeps the entire cosine gain and none of the loss** — every term-derived feature returns to exactly 0.000.
 
-🔴 **The term-list rule was my mistake, and it is the useful half of this result.** `wf_spec_quality_answer.md` §4 asks for "5–8 **precise, discriminative** phrases"; the rule I wrote padded to 8 with whatever `domain_technology_focus` and `performance_criteria[].metric` happened to contain. That is `keyword_flood` with domain words instead of generic ones, and it reproduced that failure mode almost exactly (−0.028 here against −0.031 measured on set B). Two specific mechanisms:
+### The term-list rule, v1 → v2, and where it stopped
+
+The first version of the rule padded `terms_must_include` to 8 with whatever `domain_technology_focus` and `performance_criteria[].metric` contained. It cost **−0.028** on `lex_bm25_must`. Three named fixes brought that to **−0.010**:
+
+| fix | derived from | effect |
+|---|---|---|
+| **Never promote a universal evaluation metric** (`precision`, `recall`, `f1`, `auc`…) | `ner` lost −0.118 with "Precision" in its must-list, matching nearly every NLP paper | `ner` no longer takes Precision/Recall/F1; domain-specific quantities like "conversion efficiency" are still allowed and were worth **+0.046** on `solar_leo` |
+| **Top up to a floor, never expand past it** | a spec with enough terms has nothing to gain and everything to dilute | `soil_microbiome` (10) and `tech_forecasting` (6) are now **left alone**, at exactly 0.000 |
+| **Never truncate** | capping `soil_microbiome`'s 10 hand-written terms at 8 cost −0.077 | "5–8" is a floor and a quality bar, **never a cap** |
+
+🟡 **One regression survives, and I am stopping rather than fixing it.** `ner` still loses **−0.116** from the single term "News text processing". The diagnosis is dilution rather than genericness: its tokens (`news` 0.16, `text` 0.40, `processing` 0.27 document frequency in that pool) are *not* more common than the existing ones (`entity` 0.78, `named` 0.61), but adding three moderately-common tokens to a five-token query raises scores across ~30–40% of the pool and swamps the rare discriminative ones (`disambiguation` 0.055, `linking` 0.109).
+
+🔴 **That points at a document-frequency filter on candidate terms — and I have not built it, deliberately.** This rule has now been iterated twice while watching the same six-use-case measurement. A third fix aimed at `ner` specifically would be tuning the rule on its own evaluation, which is the selection-on-holdout failure `CONTEXT.md` §4 exists to prevent. The df filter is recorded as a **pre-registered proposal** to test on the 28 benchset briefs, a surface not used for any of this — not applied here.
+
+**So the recommended configuration is `prose_only`**: it captures the entire measured gain (+0.027 cosine) with every term-derived feature at exactly 0.000. On this evidence, enrich the objective and **leave the analyst's term lists alone**.
+
+🔴 **The original framing of this section is kept below, because it was my mistake and the record should show it.** `wf_spec_quality_answer.md` §4 asks for "5–8 **precise, discriminative** phrases"; the rule I wrote padded to 8 with whatever `domain_technology_focus` and `performance_criteria[].metric` happened to contain. That is `keyword_flood` with domain words instead of generic ones, and it reproduced that failure mode almost exactly (−0.028 here against −0.031 measured on set B). Two specific mechanisms:
 
 1. **Metric names are terrible must-include terms.** `ner` lost **−0.118** because "Precision" was promoted from `performance_criteria` into `terms_must_include`, where it matches virtually every NLP paper ever written.
 2. **"5–8" must be a floor and a quality bar, never a cap.** `soil_microbiome` lost **−0.077** because its 10 hand-written, precise terms were **truncated to 8** to satisfy a recommendation derived from a corpus whose specs happened to carry 6–8.
@@ -64,15 +80,15 @@ Each brief-reading feature scored **raw**, per use case: no labels, no fitting, 
 | baseline   | test/soil_microbiome  | 71   | 0.254    | 0.816   | 0.702         | 0.488 | 0.571 | 0.444  | 0.800     | 0.141         |
 | baseline   | test/solar_leo        | 72   | 0.764    | 0.746   | 0.852         | 0.870 | 0.865 | 0.873  | 0.857     | 0.778         |
 | baseline   | test/tech_forecasting | 54   | 0.593    | 0.818   | 0.881         | 0.742 | 0.780 | 0.719  | 0.852     | 0.500         |
-| optimised  | train                 | 1478 | 0.577    | 0.902   | 0.920         | 0.841 | 0.846 | 0.837  | 0.856     | 0.564         |
-| optimised  | validate              | 1478 | 0.577    | 0.868   | 0.875         | 0.823 | 0.821 | 0.824  | 0.817     | 0.581         |
-| optimised  | test                  | 370  | 0.576    | 0.869   | 0.876         | 0.784 | 0.813 | 0.765  | 0.867     | 0.508         |
-| optimised  | test/carbon_capture   | 58   | 0.500    | 0.877   | 0.877         | 0.750 | 0.792 | 0.724  | 0.875     | 0.414         |
-| optimised  | test/cement_binders   | 52   | 0.654    | 0.940   | 0.958         | 0.868 | 0.892 | 0.853  | 0.935     | 0.596         |
-| optimised  | test/ner              | 63   | 0.714    | 0.752   | 0.888         | 0.781 | 0.786 | 0.778  | 0.795     | 0.698         |
-| optimised  | test/soil_microbiome  | 71   | 0.254    | 0.827   | 0.682         | 0.494 | 0.593 | 0.444  | 0.889     | 0.127         |
-| optimised  | test/solar_leo        | 72   | 0.764    | 0.749   | 0.856         | 0.858 | 0.862 | 0.855  | 0.870     | 0.750         |
-| optimised  | test/tech_forecasting | 54   | 0.593    | 0.844   | 0.890         | 0.747 | 0.793 | 0.719  | 0.885     | 0.481         |
+| optimised  | train                 | 1478 | 0.577    | 0.902   | 0.921         | 0.837 | 0.840 | 0.835  | 0.845     | 0.569         |
+| optimised  | validate              | 1478 | 0.577    | 0.869   | 0.877         | 0.822 | 0.820 | 0.823  | 0.818     | 0.580         |
+| optimised  | test                  | 370  | 0.576    | 0.869   | 0.874         | 0.796 | 0.824 | 0.779  | 0.874     | 0.513         |
+| optimised  | test/carbon_capture   | 58   | 0.500    | 0.876   | 0.878         | 0.775 | 0.800 | 0.759  | 0.846     | 0.448         |
+| optimised  | test/cement_binders   | 52   | 0.654    | 0.944   | 0.962         | 0.874 | 0.906 | 0.853  | 0.967     | 0.577         |
+| optimised  | test/ner              | 63   | 0.714    | 0.737   | 0.869         | 0.804 | 0.809 | 0.800  | 0.818     | 0.698         |
+| optimised  | test/soil_microbiome  | 71   | 0.254    | 0.821   | 0.724         | 0.494 | 0.593 | 0.444  | 0.889     | 0.127         |
+| optimised  | test/solar_leo        | 72   | 0.764    | 0.753   | 0.858         | 0.873 | 0.873 | 0.873  | 0.873     | 0.764         |
+| optimised  | test/tech_forecasting | 54   | 0.593    | 0.857   | 0.900         | 0.747 | 0.793 | 0.719  | 0.885     | 0.481         |
 | prose_only | train                 | 1478 | 0.577    | 0.902   | 0.923         | 0.834 | 0.837 | 0.832  | 0.842     | 0.570         |
 | prose_only | validate              | 1478 | 0.577    | 0.869   | 0.879         | 0.815 | 0.817 | 0.815  | 0.818     | 0.574         |
 | prose_only | test                  | 370  | 0.576    | 0.867   | 0.873         | 0.796 | 0.822 | 0.779  | 0.869     | 0.516         |
@@ -87,12 +103,12 @@ Each brief-reading feature scored **raw**, per use case: no labels, no fitting, 
 
 | fold                  | f2 [optimised] | roc_auc [optimised] | recall [optimised] | f2 [prose_only] | roc_auc [prose_only] | recall [prose_only] |
 |-----------------------|----------------|---------------------|--------------------|-----------------|----------------------|---------------------|
-| train                 | 0.003          | 0.000               | 0.002              | -0.004          | 0.001                | -0.002              |
-| validate              | 0.005          | -0.001              | 0.007              | -0.002          | 0.001                | -0.002              |
-| test                  | -0.007         | 0.004               | -0.009             | 0.006           | 0.003                | 0.005               |
-| test/carbon_capture   | 0.005          | 0.002               | 0.000              | 0.000           | 0.004                | 0.000               |
-| test/cement_binders   | -0.025         | -0.002              | -0.029             | -0.019          | -0.002               | -0.029              |
-| test/ner              | -0.007         | 0.010               | 0.000              | 0.015           | 0.007                | 0.022               |
-| test/soil_microbiome  | 0.006          | 0.011               | 0.000              | 0.006           | -0.002               | 0.000               |
-| test/solar_leo        | -0.012         | 0.003               | -0.018             | 0.015           | 0.001                | 0.018               |
-| test/tech_forecasting | 0.005          | 0.026               | 0.000              | 0.005           | 0.018                | 0.000               |
+| train                 | -0.001         | 0.000               | 0.000              | -0.004          | 0.001                | -0.002              |
+| validate              | 0.004          | 0.000               | 0.006              | -0.002          | 0.001                | -0.002              |
+| test                  | 0.006          | 0.005               | 0.005              | 0.006           | 0.003                | 0.005               |
+| test/carbon_capture   | 0.030          | 0.001               | 0.035              | 0.000           | 0.004                | 0.000               |
+| test/cement_binders   | -0.019         | 0.003               | -0.029             | -0.019          | -0.002               | -0.029              |
+| test/ner              | 0.015          | -0.005              | 0.022              | 0.015           | 0.007                | 0.022               |
+| test/soil_microbiome  | 0.006          | 0.005               | 0.000              | 0.006           | -0.002               | 0.000               |
+| test/solar_leo        | 0.003          | 0.007               | 0.000              | 0.015           | 0.001                | 0.018               |
+| test/tech_forecasting | 0.005          | 0.038               | 0.000              | 0.005           | 0.018                | 0.000               |
