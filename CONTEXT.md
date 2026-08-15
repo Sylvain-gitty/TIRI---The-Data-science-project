@@ -181,6 +181,9 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | **`nemotron-3-super` on DeepInfra at corpus scale** | 4 rows/min measured (42 h/cell) from rate-limit backoff, despite a healthy 3.9s p50. Throughput is a capability; benchmark it at target scale |
 | **The foreign-brief margin as a brief-quality alarm** (`own_brief_auc − best_foreign_brief_auc`) | `wf_foreign_brief_detector.md` — rebuilt in BM25 space, **8 collections flag that the embedding called healthy** against a pre-registered ≤2, and the two margins correlate at rho 0.33. It is a property of one embedding's geometry, not of the text. Its fallback caption (a labelling-cost forecast) also died: rho −0.929 on set A → **−0.464 on set B with the sign flipping to +0.143** under prevalence control, and never embedding-independent even on A (qwen4b −0.571, CI crossing zero). `wf_foreign_brief_validity_setb.md`. **`NUMBERS.md` N33 should be removed** |
 | **Criterion checkability / evidence availability as an automatability score** | `wf_checkability_audit.md` — pooled IQR **0.055** against a pre-registered 0.2, and it ranks `tech_forecasting` (no performance criteria, hardest use case here) 3rd of 6 instead of last. Half the metric's own definition never fired: the broad judgement lexicon scored all 34 use cases **identically**. Do not re-derive this without reading §3 of that report |
+| **Rewriting a use-case spec to lift the *fitted* baseline** | `wf_optimised_usecase_baseline.md` — applying the whole spec-quality answer to TIRI's six specs moves held-out F2 by **+0.003** and ROC-AUC by **+0.002**, while the five validation folds of the *unchanged* baseline disagree with each other by ±0.017 / ±0.011. Predicted, not surprising: the model is fitted on 1,478 labels, 24× the budget at which brief quality stops mattering. **Brief quality is a cold-start lever; do not expect it to pay after labelling starts** |
+| **Topping up an analyst's `terms_must_include` to a recommended count** | Same report — averages **−0.010** on `lex_bm25_must` and **+0.011** on `lex_overlap_must_frac` (the two disagree in sign, both inside the floor), while costing `ner` **−0.116** from one added phrase. No expected gain, large one-sided downside. Enrich the objective; **leave the term lists alone** |
+| **"Fill in every empty spec field" as advice** | Same report §1b — decomposed, the enriched `objective` carries **+0.0135 of the +0.0139** total, filling empty `domain_*` carries +0.0029 (all on one use case), and on `solar_leo` filling them is *mildly negative*. Consistent with §6b's "`domain_*` is decoration" |
 | **A single spec-quality *score* of any kind** | Three independent attempts, three failures (the two above plus `NUMBERS.md` N23's criteria-populated count, which measures presence not quality). There is a structural reason: the cost of a defect **inverts** between label regimes — prose damage is ~0.17 at 0 labels and ~0.01 fitted, term damage the mirror — so any single number must average regimes that disagree. `wf_spec_quality_answer.md` §5. **Ship a priced linter instead** (`scripts/spec_linter.py`) |
 
 ### 6b. Spec quality — what is settled, so it is not re-litigated
@@ -212,6 +215,23 @@ set B (clean, and now spent), and **TIRI's own six use cases**, spanning 1.87% t
   of 8 collections**, while a *fitted* matcher sees nothing at all. S-AL's −0.056 AUC is **not**
   reproduced; the effect is real and AUC was the wrong instrument.
 - **The completion test that survived everything** is the shuffled-brief control, not any score.
+- **Applied end-to-end, the advice is worth +0.014 mean cold-start ROC-AUC on TIRI's six specs, and
+  nothing at all to the fitted baseline.** It clears the 0.03 floor on 2 of 6 (`carbon_capture`
+  +0.045, `solar_leo` +0.032) and **nothing available predicts which two** — not how much text was
+  added (the two biggest gainers grew *least*), not baseline headroom. Treat "rewrite your
+  objective" as advice with a one-in-three hit rate until that is understood.
+  [`wf_optimised_usecase_baseline.md`](reports/wf_optimised_usecase_baseline.md).
+
+⚠️ **Two harness traps, both found by instrument checks, both bigger than they look.** (i) The brief
+embedded by `cos_brief_*` is the five `USE_CASE_COLS` **values joined by spaces, with no field
+names** (`wf_embedding_model_bakeoff.ipynb` cell 6). Any other formatting produces a different
+vector and a fake effect. (ii) **The `*.usecase.json` files on disk are not what the corpus
+carries** — `01_data_compile.ipynb` takes `use_case_name` from its own hand-written registry, and
+for `solar_leo` the two differ in capitalisation, which moves that brief's vector by cosine 0.991,
+about **five times** the effect size anything here is trying to measure. Read brief fields from
+`papers_combined.parquet`, not from the JSON. ⚪ Separately, `lex_rank_bm25_must` is **not
+bit-reproducible across processes**: BM25 sums in Python set-iteration order, so `PYTHONHASHSEED`
+flips 0–2 tied ranks out of 1,848.
 
 ---
 
