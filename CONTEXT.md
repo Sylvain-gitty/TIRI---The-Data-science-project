@@ -230,7 +230,18 @@ set B (clean, and now spent), and **TIRI's own six use cases**, spanning 1.87% t
   the mean as the explanation. Thin prose is not the trigger either (`objective_words` −0.20:
   `solar_leo` had the longest objective and gained; `cement_binders` the shortest and did not).
   ⚠️ n=6 from one team — the linter was never calibrated to predict payoff, and this does not
-  establish that it can. **Port the rewrite to the 28 benchset specs before relying on it.**
+  establish that it can.
+- 🔴 **That n=6 caveat cannot be discharged on any data we have, so treat it as the ceiling, not as
+  a to-do.** Porting the rewrite to the 28 benchset briefs was tried and is **not runnable**, for
+  two independent reasons: (i) `linter_findings` is **0 on all 28** — the predictor is constant, so
+  it cannot order anything, and `n_terms` has 1/7th of TIRI's spread; the 28 are machine-generated
+  from one source and uniform by construction. (ii) Their reservoir is **empty** —
+  `performance_criteria`, `decision_criteria` and `constraints` are 0/28 — and the only populated
+  substitute, `*.spec.json`, is stamped `drafted_from: "review_abstract+labels"` and carries
+  `exemplars` (accepted paper *titles*) and `near_misses` (rejected ones). Using it writes the
+  answer key into the question. **Do not re-attempt; the variance this test needs is a property of
+  humans writing specs, so only new analyst-written specs can supply it.**
+  [`wf_benchset_rewrite_feasibility.md`](reports/wf_benchset_rewrite_feasibility.md).
 - **It is not a convergence.** Spread across the six use cases is flat on jasper (sd −0.004) and
   *widens* on both Qwen encoders (+0.004, +0.008); the worst-scoring use case goes backwards on 2 of
   3 encoders. A level shift on two use cases, not the laggards catching up.
