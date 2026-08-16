@@ -217,10 +217,23 @@ set B (clean, and now spent), and **TIRI's own six use cases**, spanning 1.87% t
 - **The completion test that survived everything** is the shuffled-brief control, not any score.
 - **Applied end-to-end, the advice is worth +0.014 mean cold-start ROC-AUC on TIRI's six specs, and
   nothing at all to the fitted baseline.** It clears the 0.03 floor on 2 of 6 (`carbon_capture`
-  +0.045, `solar_leo` +0.032) and **nothing available predicts which two** — not how much text was
-  added (the two biggest gainers grew *least*), not baseline headroom. Treat "rewrite your
-  objective" as advice with a one-in-three hit rate until that is understood.
+  +0.045, `solar_leo` +0.032).
   [`wf_optimised_usecase_baseline.md`](reports/wf_optimised_usecase_baseline.md).
+- 🔴 **That gain lives at 50–75% read depth and there is none of it at the top of the list.** Change
+  in recall at 5 / 10 / 20% depth is −0.000 / −0.003 / −0.001; at 50% it is +0.010. It is real and
+  it is where nobody reads, so it is **not a screening improvement** — it would only pay where the
+  whole ranking is consumed. This is also why `wss_at_95` was the one held-out metric that got
+  *worse* (0.180 → 0.172). [`wf_optimised_gain_source.md`](reports/wf_optimised_gain_source.md) §3a.
+- **Which specs benefit is predictable from the spec text, and NOT from their score.** Gain orders
+  against `spec_linter.py` findings at rho **+0.65** (leave-one-out +0.45 to +0.79), checkability
+  +0.54, term count +0.54 — and against *baseline AUC* at **−0.03**, which rules out regression to
+  the mean as the explanation. Thin prose is not the trigger either (`objective_words` −0.20:
+  `solar_leo` had the longest objective and gained; `cement_binders` the shortest and did not).
+  ⚠️ n=6 from one team — the linter was never calibrated to predict payoff, and this does not
+  establish that it can. **Port the rewrite to the 28 benchset specs before relying on it.**
+- **It is not a convergence.** Spread across the six use cases is flat on jasper (sd −0.004) and
+  *widens* on both Qwen encoders (+0.004, +0.008); the worst-scoring use case goes backwards on 2 of
+  3 encoders. A level shift on two use cases, not the laggards catching up.
 
 ⚠️ **Two harness traps, both found by instrument checks, both bigger than they look.** (i) The brief
 embedded by `cos_brief_*` is the five `USE_CASE_COLS` **values joined by spaces, with no field
