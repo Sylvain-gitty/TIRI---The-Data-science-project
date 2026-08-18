@@ -105,6 +105,42 @@ Three caveats on the 16 that pass:
 | `wf_fold_pca_test.ipynb` | The original fold-design work: holds one question out entirely, builds the `StratifiedGroupKFold` scheme with explicit leakage checks, and tests a stacked ensemble against a plain-embedding baseline. `main/05_validation_design.ipynb` generalises this into the full 6-way rotation. |
 | `sf_logo_fold_pipeline.ipynb` | The LOGO strategy rebuilt on `scripts/fold_pipeline_utils.py`'s config-driven `Pipeline`, scoped to LogisticRegression alone. **Still runs against the older `papers_combined.parquet` feature set**, not `papers_fe.parquet`. Reproduces the strategy notebook's numbers almost exactly (mean holdout AUC 0.536 ± 0.078 vs mean validation 0.760). |
 
+### Ensemble from scratch on benchset_v1 combined with papers_fe — the same architecture, a combined training pool
+
+Two notebooks that retrain `main/08_ensemble_pooled.ipynb`'s exact stacking architecture
+(CatBoost + LogReg + RandomForest → LogReg meta-learner) **from scratch**, training on
+`benchset_v1` — published systematic-review screening collections at realistic (~2%)
+prevalence, not TIRI's own six pooled questions (26–77%) — **concatenated with**
+`papers_fe.parquet` into one combined training pool (`papers_fe.parquet` is training data
+here, not a test surface). No outer holdout: fold validation is a single
+`StratifiedGroupKFold(5)` over the entire combined pool, and `benchset_v1_small_test.parquet`
+(13 collections disjoint from both large sets) is the only test-stage score. Compute routes
+entirely through a dedicated Modal app (`tiri-benchset-v1-ensemble`) and volume
+(`tiri-benchset-v1-data`) — see `scripts/modal_benchset_v1_ensemble.py`'s module docstring for
+the exact setup — and three local parquet files (`data/processed/benchset_v1_large_set_a/b.parquet`,
+`benchset_v1_small_test.parquet`) that are **not tracked in git** (untracked, ignored by
+`data/processed/*` — multiple GB, and their provenance predates this branch). **F2, AUC,
+recall, and precision are reported together at every metrics table in both notebooks** —
+`08_ensemble_pooled.ipynb` itself never computed precision at all.
+
+**A benchset_v1-only design (no `papers_fe.parquet`, an outer holdout, and two external test
+surfaces) was tried first and produced real, executed results, but was deliberately removed
+from this branch** — per the project owner's explicit instruction — once the combined design
+below was confirmed as the one to keep. `scripts/modal_benchset_v1_ensemble.py`'s module
+docstring notes this for anyone wondering why a `run_ensemble` function isn't there anymore.
+
+| Notebook | What it does |
+|---|---|
+| `sf_ensemble_benchset_v1_large_set_a_plus_papers_fe.ipynb` | Trains on `benchset_v1_large_set_a.parquet` (8 collections) concatenated with `papers_fe.parquet`. **Executed:** validation AUC 0.978 (precision 0.272, recall 0.962), test AUC 0.875 (precision **0.028**, recall 0.916) — strong ranking quality, but precision at the frozen threshold collapses well below the healthier validation-stage number. |
+| `sf_ensemble_benchset_v1_large_set_b_plus_papers_fe.ipynb` | Identical design, combining `benchset_v1_large_set_b.parquet` (7 different collections) with `papers_fe.parquet` instead. Not compared against its sibling directly. **Executed:** validation AUC 0.975 (precision 0.198, recall 0.958), test AUC 0.852 (precision **0.020**, recall 0.950) — same validation-vs-test precision collapse as set_a. |
+
+Feature columns are the intersection common to all four parquet files involved (benchset_v1's
+two large sets, its small test set, and `papers_fe.parquet`) — `papers_fe.parquet`'s
+Qwen3-Embedding-8B block, `has_abstract`, and `lex_has_exclude_terms` are dropped (absent from
+benchset_v1), as are benchset_v1's `cos_briefpre_*`/`rank_cos_briefpre_*` columns (absent from
+papers_fe) — confirmed with the project owner, not assumed. Every numeric hyperparameter is
+otherwise untouched.
+
 ---
 
 ## `future_work/` — never executed, by design

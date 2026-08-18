@@ -143,6 +143,7 @@ step. Notebooks assume they're run with their own folder as the working director
 | `main/05_validation_design` — where the collapse is measured | `main/09_ensemble_per_silo` — same, plus Modal |
 | **16 of the 18** `notebooks/experiments/` — the evidence | `experiments/wf_synergy_validation` — needs an OpenRouter key in `.env` |
 | both `notebooks/future_work/` templates (gated, safe to Run All) | `experiments/wf_top_embeddings_generalization` — needs `embeddings_cache/` |
+| | `experiments/sf_ensemble_benchset_v1_large_set_a/b_plus_papers_fe` — need Modal (a dedicated app/volume) plus the ungit-tracked `benchset_v1_*` files; both executed, with real results committed |
 
 The left-hand column is **verified, not asserted**. `git clone` into an empty directory,
 `pip install -r requirements.txt`, Run All on every notebook: the main line passes — 01
@@ -239,6 +240,20 @@ the bulk that's regenerable (~600 MB).
 | `papers_fe.parquet` | 106 MB | `notebooks/main/04_feature_engineering.ipynb` |
 | `papers_fe_synergy*.parquet` | 173 MB | `scripts/run_synergy_recall_validation.py` |
 | `embeddings_cache/` | 295 MB | `scripts/modal_embeddings.py` (GPU) + OpenRouter (paid) |
+| `benchset_v1_large_set_a/b.parquet`, `benchset_v1_small_test.parquet` | ~1.0GB / ~1.4GB / ~0.5GB | not reproducible from a script in this repo (predates `new-dataset-experiments`) — see below |
+
+**`benchset_v1_*` is not part of this repo's own data contract.** These three files (28
+published systematic-review screening collections, split into two training sets by
+collection plus a disjoint small test set, ~2% positive — already feature-engineered to the
+same lexical/cosine-to-brief/embedding schema as `papers_fe.parquet`, minus its Qwen3-8B
+block) exist locally but aren't produced by any script or notebook in this repo, aren't
+tracked in git, and their exact provenance predates the `new-dataset-experiments` branch —
+treat them as a given input, not something `git clone` + a script can regenerate today.
+`notebooks/experiments/sf_ensemble_benchset_v1_large_set_a/b_plus_papers_fe.ipynb` (which fold
+`papers_fe.parquet` into training alongside the benchset_v1 collections) and
+`scripts/modal_benchset_v1_ensemble.py` consume them; see that script's module docstring for
+setup (a dedicated Modal app/volume, since this data is 10-80x `papers_fe.parquet`'s row
+count and unfit to fit locally).
 
 **Why a "slim" feature table.** `papers_fe.parquet` is 1,848 × 8,742 and 106 MB — 101 MB
 of it three raw embedding blocks. Drop those and 38 columns weighing 0.3 MB remain: the
