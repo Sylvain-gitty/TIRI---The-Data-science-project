@@ -109,16 +109,25 @@ mean-centring the embedding (0.532 → 0.529), and adding metadata.
   labels" is safe only if those labels were *actively selected* — e.g. by labelling the top
   of a cosine-to-brief ranking — not randomly sampled. Confirm how the labelling project
   sources them.
-- **The query-conditioned advantage is contingent on brief format, not automatic.** The
-  shuffled-brief control passes decisively on TIRI (5/6 use cases, +0.155) and **fails on
-  SYNERGY** (1/3, −0.012). SYNERGY briefs are a published review's title and abstract —
-  a description of what a review did, not a statement of what to include — and carry no
-  curated term lists. Curated inclusion terminology looks load-bearing. Feed this to the
-  brief-format experiment; re-validate the block against any new brief format.
+- ~~**The query-conditioned advantage is contingent on brief format, not automatic.**~~
+  **CLOSED — it was a brief-format artefact, not a property of SYNERGY.** The original
+  finding stands as measured (shuffled-brief passes on TIRI 5/6, +0.155; fails on old
+  SYNERGY 1/3, −0.012), but `benchset_v1`'s re-briefed SYNERGY collections pass the control
+  **decisively**: AUC 0.777 → **0.498**, F2@own → **0.000**, predicted-positive rate →
+  **0.000** on 8/8 collections (`reports/wf_llm_benchset_a_findings.md` §4). What did *not*
+  survive is the diagnosis. "Curated inclusion terminology looks load-bearing" is true for
+  the lexical block and **false for an LLM reader**: stripping the term lists back to the
+  review's raw abstract leaves ranking identical (0.777 both) and *improves* the operating
+  point (recall 0.559 vs 0.484 at equal reading cost). **Term lists help keyword matchers
+  and hurt readers** — do not generalise "brief quality matters" into "add term lists".
 - **Model ranking is not stable across prevalence regimes.** Qwen3-4B is mid-pack in-repo
   and *last* on SYNERGY; Qwen3-8B wins at realistic prevalence. Recall metrics only
   discriminate where there is room to skip — our 26–77% pools are a poor surface for
-  judging a recall-oriented system.
+  judging a recall-oriented system. **Reproduced a second time, on generative models:** the
+  four-model LLM ranking scrambles completely between TIRI and benchset set A —
+  `gemma-4-31b` goes 2nd of 4 to *last*, `nemotron-3-super-120b` 3rd to *1st*
+  (`wf_llm_benchset_a_findings.md` §2). Treat this as the default expectation, not a
+  surprise: **never carry a model choice across a prevalence regime without re-measuring.**
 - **Selection-on-holdout.** Many decisions (11 embedding models, combination methods,
   calibration methods, PCA on/off) were made against LOGO scores, so LOGO is no longer
   unbiased. **23 unused SYNERGY reviews** are the only clean surface left — ring-fence them.
@@ -164,6 +173,89 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | Per-use-case mean-centring of embeddings | 0.532 → 0.529 LOGO, no effect |
 | **PCA-64 within a silo** | −0.008 to −0.014 WSS on all three models; §6.2's compress-then-concat win was a *transfer* phenomenon and does not carry to production folds |
 | Term overlap as an abstract-length proxy (a suspicion, now closed) | length features alone reach 0.550; removing them costs 0.004 |
+| **Prompted LLM screening as a replacement for the ensemble** | `wf_llm_pilot_findings.md` — loses on ranking by 0.044, ties on oracle-F2. Also rejected as a third ensemble branch (best +0.019 AUC against a 0.03 floor) |
+| **Zero-shot LLM screening as a replacement for the cold-start cosine rung** | `wf_llm_benchset_a_findings.md` §1 — 3 of 8 collections for *every* model from 20B to 397B, against a pre-registered ≥6/8. All four land within 0.030 of each other |
+| **Adding LLM-written `terms_*` lists to a brief, for an LLM reader** | Ranking identical (0.777), operating point *worse* (recall 0.484 vs 0.559). Opposite sign to their effect on the lexical block |
+| **P4, the per-criterion checklist prompt** | Worse AUC on 3 of 4 models, F2@own collapses to 0.24–0.50 — reasoning scaffolding makes a model demand *all* criteria |
+| **Verbalised 0–100 confidence replaced by token logprobs** | Fixed the granularity completely (tie fraction 0.997 → 0.047) and ranking got *worse* (mean AUC −0.035). `wf_llm_logprob_scoring.md` |
+| **`nemotron-3-super` on DeepInfra at corpus scale** | 4 rows/min measured (42 h/cell) from rate-limit backoff, despite a healthy 3.9s p50. Throughput is a capability; benchmark it at target scale |
+| **The foreign-brief margin as a brief-quality alarm** (`own_brief_auc − best_foreign_brief_auc`) | `wf_foreign_brief_detector.md` — rebuilt in BM25 space, **8 collections flag that the embedding called healthy** against a pre-registered ≤2, and the two margins correlate at rho 0.33. It is a property of one embedding's geometry, not of the text. Its fallback caption (a labelling-cost forecast) also died: rho −0.929 on set A → **−0.464 on set B with the sign flipping to +0.143** under prevalence control, and never embedding-independent even on A (qwen4b −0.571, CI crossing zero). `wf_foreign_brief_validity_setb.md`. **`NUMBERS.md` N33 should be removed** |
+| **Criterion checkability / evidence availability as an automatability score** | `wf_checkability_audit.md` — pooled IQR **0.055** against a pre-registered 0.2, and it ranks `tech_forecasting` (no performance criteria, hardest use case here) 3rd of 6 instead of last. Half the metric's own definition never fired: the broad judgement lexicon scored all 34 use cases **identically**. Do not re-derive this without reading §3 of that report |
+| **Rewriting a use-case spec to lift the *fitted* baseline** | `wf_optimised_usecase_baseline.md` — applying the whole spec-quality answer to TIRI's six specs moves held-out F2 by **+0.003** and ROC-AUC by **+0.002**, while the five validation folds of the *unchanged* baseline disagree with each other by ±0.017 / ±0.011. Predicted, not surprising: the model is fitted on 1,478 labels, 24× the budget at which brief quality stops mattering. **Brief quality is a cold-start lever; do not expect it to pay after labelling starts** |
+| **Topping up an analyst's `terms_must_include` to a recommended count** | Same report — averages **−0.010** on `lex_bm25_must` and **+0.011** on `lex_overlap_must_frac` (the two disagree in sign, both inside the floor), while costing `ner` **−0.116** from one added phrase. No expected gain, large one-sided downside. Enrich the objective; **leave the term lists alone** |
+| **"Fill in every empty spec field" as advice** | Same report §1b — decomposed, the enriched `objective` carries **+0.0135 of the +0.0139** total, filling empty `domain_*` carries +0.0029 (all on one use case), and on `solar_leo` filling them is *mildly negative*. Consistent with §6b's "`domain_*` is decoration" |
+| **A single spec-quality *score* of any kind** | Three independent attempts, three failures (the two above plus `NUMBERS.md` N23's criteria-populated count, which measures presence not quality). There is a structural reason: the cost of a defect **inverts** between label regimes — prose damage is ~0.17 at 0 labels and ~0.01 fitted, term damage the mirror — so any single number must average regimes that disagree. `wf_spec_quality_answer.md` §5. **Ship a priced linter instead** (`scripts/spec_linter.py`) |
+
+### 6b. Spec quality — what is settled, so it is not re-litigated
+
+Full answer in [`reports/wf_spec_quality_answer.md`](reports/wf_spec_quality_answer.md); the bars were
+pre-registered in `wf_spec_quality_plan.md`, which also carries a dated Amendment recording five
+premises corrected **before** any probe ran. Measured on **three surfaces** — benchset set A (burned),
+set B (clean, and now spent), and **TIRI's own six use cases**, spanning 1.87% to 57.6% prevalence.
+
+- **Three fields carry essentially all the value.** `objective` (+0.151 / +0.263 / +0.100 above chance
+  at 0 labels — the largest single-field effect measured anywhere), `terms_nice_to_have` (+0.105 /
+  +0.215 / +0.118, and the *largest* effect on TIRI's own corpus), and `terms_must_include` by **count**
+  rather than presence.
+- **Three fields are decoration to every consumer on all three surfaces.** `problem_statement`,
+  `domain_*` and `terms_exclude` measure **0.000 at 0 labels and ≤0.009 fitted**. Keep them for humans;
+  **do not make them required**.
+- 🔴 **Do not quote set A's term-damage magnitudes.** `keyword_flood` −0.072 → −0.031, `no_must`
+  −0.043 → **−0.010** on clean data; set A's means were carried by `leenaars_2020` alone. The
+  *cold-start* findings replicate and strengthen; the *after-labels* term findings roughly halve.
+- 🔴 **"Fluff is worse than an empty field" is set-A-specific.** 0.473/0.441 on A and TIRI's 0.499/0.491,
+  but **0.594/0.569 on set B** where both beat deletion. Any prose beats no prose.
+- **Defects compound, they do not rescue.** 6 of 6 prose×term pairs across two surfaces cost more than
+  the sum of their parts. A strong objective does not license a lazy term list.
+- **A reader is robust to localised spec damage but not to wrong content** — every single-field
+  degradation is inside the noise floor while a deranged brief costs **−0.282**. The signal is
+  redundant across fields.
+- **The one reader-only defect is a prose contradiction**: an objective asserting what `terms_exclude`
+  rejects leaves ranking untouched (+0.001) and moves the operating point **+0.120 fraction-read on 8
+  of 8 collections**, while a *fitted* matcher sees nothing at all. S-AL's −0.056 AUC is **not**
+  reproduced; the effect is real and AUC was the wrong instrument.
+- **The completion test that survived everything** is the shuffled-brief control, not any score.
+- **Applied end-to-end, the advice is worth +0.014 mean cold-start ROC-AUC on TIRI's six specs, and
+  nothing at all to the fitted baseline.** It clears the 0.03 floor on 2 of 6 (`carbon_capture`
+  +0.045, `solar_leo` +0.032).
+  [`wf_optimised_usecase_baseline.md`](reports/wf_optimised_usecase_baseline.md).
+- 🔴 **That gain lives at 50–75% read depth and there is none of it at the top of the list.** Change
+  in recall at 5 / 10 / 20% depth is −0.000 / −0.003 / −0.001; at 50% it is +0.010. It is real and
+  it is where nobody reads, so it is **not a screening improvement** — it would only pay where the
+  whole ranking is consumed. This is also why `wss_at_95` was the one held-out metric that got
+  *worse* (0.180 → 0.172). [`wf_optimised_gain_source.md`](reports/wf_optimised_gain_source.md) §3a.
+- **Which specs benefit is predictable from the spec text, and NOT from their score.** Gain orders
+  against `spec_linter.py` findings at rho **+0.65** (leave-one-out +0.45 to +0.79), checkability
+  +0.54, term count +0.54 — and against *baseline AUC* at **−0.03**, which rules out regression to
+  the mean as the explanation. Thin prose is not the trigger either (`objective_words` −0.20:
+  `solar_leo` had the longest objective and gained; `cement_binders` the shortest and did not).
+  ⚠️ n=6 from one team — the linter was never calibrated to predict payoff, and this does not
+  establish that it can.
+- 🔴 **That n=6 caveat cannot be discharged on any data we have, so treat it as the ceiling, not as
+  a to-do.** Porting the rewrite to the 28 benchset briefs was tried and is **not runnable**, for
+  two independent reasons: (i) `linter_findings` is **0 on all 28** — the predictor is constant, so
+  it cannot order anything, and `n_terms` has 1/7th of TIRI's spread; the 28 are machine-generated
+  from one source and uniform by construction. (ii) Their reservoir is **empty** —
+  `performance_criteria`, `decision_criteria` and `constraints` are 0/28 — and the only populated
+  substitute, `*.spec.json`, is stamped `drafted_from: "review_abstract+labels"` and carries
+  `exemplars` (accepted paper *titles*) and `near_misses` (rejected ones). Using it writes the
+  answer key into the question. **Do not re-attempt; the variance this test needs is a property of
+  humans writing specs, so only new analyst-written specs can supply it.**
+  [`wf_benchset_rewrite_feasibility.md`](reports/wf_benchset_rewrite_feasibility.md).
+- **It is not a convergence.** Spread across the six use cases is flat on jasper (sd −0.004) and
+  *widens* on both Qwen encoders (+0.004, +0.008); the worst-scoring use case goes backwards on 2 of
+  3 encoders. A level shift on two use cases, not the laggards catching up.
+
+⚠️ **Two harness traps, both found by instrument checks, both bigger than they look.** (i) The brief
+embedded by `cos_brief_*` is the five `USE_CASE_COLS` **values joined by spaces, with no field
+names** (`wf_embedding_model_bakeoff.ipynb` cell 6). Any other formatting produces a different
+vector and a fake effect. (ii) **The `*.usecase.json` files on disk are not what the corpus
+carries** — `01_data_compile.ipynb` takes `use_case_name` from its own hand-written registry, and
+for `solar_leo` the two differ in capitalisation, which moves that brief's vector by cosine 0.991,
+about **five times** the effect size anything here is trying to measure. Read brief fields from
+`papers_combined.parquet`, not from the JSON. ⚪ Separately, `lex_rank_bm25_must` is **not
+bit-reproducible across processes**: BM25 sums in Python set-iteration order, so `PYTHONHASHSEED`
+flips 0–2 tied ranks out of 1,848.
 
 ---
 
@@ -177,9 +269,67 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 | Shared fold/metric helpers (use these, do not re-implement) | `scripts/fold_pipeline_utils.py`, `scripts/embedding_utils.py` |
 | Full narrative of the above | `reports/wf_query_conditioned_findings.md` |
 | Ensemble v1 — per-silo CatBoost + LogisticRegression, feature/embedding ablation, and what was cut from the original proposal | `reports/wf_ensemble_v1_candidate.md`, `reports/wf_ensemble_v1_results.md`, `notebooks/main/09_ensemble_per_silo.ipynb` |
-| CatBoost fitting on this machine — route through Modal (`scripts/modal_ensemble_candidate.py`), do not fit locally | `scripts/ensemble_eval_utils.py`'s consumers; see that file's module docstring for the confirmed Apple Silicon thread-oversubscription pathology |
+| CatBoost fitting on this machine — **the rule is "never `thread_count=-1`", not "never local"**. Pass an explicit `thread_count` (`catboost_fn` has always taken one; Modal was passing it all along) and local fitting is fine: measured at **15.5s** for 1,660 rows × 4,625 columns, iterations=50/depth=4, and a full 18-cell per-silo grid over set A ran locally in ~2.5h for **$0**. Route to Modal for genuinely heavy jobs, not on principle | `scripts/run_setA_brief_ensemble.py`; the pathology itself is real and documented in `scripts/run_ensemble_candidate.py`'s docstring |
 | Ensemble v2 — hyperparameter tuning, nested combiner-weight selection, the Qwen3-8B SYNERGY swap, a 3-lever diversity sweep (SVM/lexical-only/k-NN as a third branch, all rejected, each for a documented reason), and a LOGO-based central hyperparameter search (LogReg `C=1.0` found under-regularizing; not adopted for the 6 shipped use cases but recommended as the starting default for new ones) | `reports/wf_ensemble_v2_experiments.md` (the full running log, §1-16); Modal functions consolidated in `scripts/modal_ensemble_experiments.py` — **do not split Modal functions across files**, see that file's docstring |
 | Final, synthesized architecture recommendation — one decision doc pulling together v1 + v2, confidence-graded, with explicit rejects and caveats | `reports/wf_ensemble_final_recommendations.md` |
+
+| LLM screening — the pilot on TIRI (12-cell grid, prompt variants, third-branch blend) and the set-A run at 2.19% prevalence (brief-format ladder, induced rule sets, case-control sampling) | `reports/wf_llm_pilot_findings.md` and `reports/wf_llm_benchset_a_findings.md` are the two decision docs; `scripts/llm_pipeline_utils.py` is the harness, `scripts/benchset_metrics.py` the population-metric layer, `notebooks/main/11_llm_benchset_a.ipynb` the diagnostic |
+
+**🟢 Brief quality is the largest measured lever found so far, and it is not LLM-specific.**
+A rule set induced from 60 in-silo labels (`scripts/induce_rule_set.py`, one $0.006 call per
+collection) is worth, on identical held-out rows at 2.19% prevalence
+(`wf_llm_benchset_a_findings.md` §5, §5b):
+
+| Consumer of the brief | supplied → induced | Δ |
+|---|---|---|
+| BM25 + term-overlap block, fitted on the same 60 labels | 0.733 → **0.798** | **+0.065** |
+| LLM reader, same model and prompt | 0.777 → **0.834** | **+0.057** |
+| `bm25_nice` alone, unfitted | 0.605 → **0.696** | **+0.091** |
+| **cosine-to-brief** (`qwen4b` / `jasper`) | 0.774 → 0.778 / 0.768 → 0.763 | **+0.004 / −0.005** |
+
+For scale, the entire spread across four model families from 20B to 397B is 0.030 — a better
+brief beats a 13× larger model.
+
+**But it is a cold-start lever and nothing else.** Folded into the per-silo CatBoost+LogReg
+ensemble (3 seeds, identical feature width) the same swap is worth **+0.001**, with **0 of 8
+silos** moving past the noise floor on any branch (`wf_llm_benchset_a_findings.md` §5c). The
+whole +0.065 is redundant with the 4,608 embedding dimensions the ensemble already sees; it
+only looked like new information because the isolated block could not see them. **Do not ship
+the induced brief into the ensemble** — it costs an LLM call per collection and buys nothing.
+
+The ladder, every rung on the same held-out rows at 2.19% prevalence:
+
+| labels per silo | method | mean ROC-AUC |
+|---|---|---|
+| 0 | cosine-to-brief | 0.774 |
+| 60 | BM25 + overlap, supplied brief | 0.733 |
+| 60 | BM25 + overlap, **induced** brief | 0.798 |
+| 60 | LLM reader, **induced** brief | **0.834** |
+| 60 | LogReg on the Qwen3-4B embedding | 0.844 |
+| ~80% of the silo | per-silo ensemble | **0.884** |
+
+So §1's rule gains a middle rung: below ~25 labels cosine-to-brief; **at a few dozen labels an
+induced brief is worth +0.060 over it for one $0.006 call**; with enough labels to train, train.
+The crossover between the last two is unmeasured (60 and ~80%-of-silo are the only points), and
+it is the number that decides when to stop paying for a brief.
+
+The split is mechanical and worth remembering: a brief carries **vocabulary** (BM25 and overlap
+consume it directly), **instructions** (only a reader acts on them), and **topic** (all a cosine
+can see, and the shipped brief already had it right because `objective` is the review's own
+abstract — text that looks like the papers). So **the cold-start rung to improve with a better
+brief is the lexical block, not the cosine** — which inverts the intuition, because the cosine is
+the *stronger* cold-start feature on this corpus (0.774 vs 0.733) and the unimprovable one. With
+the induced brief the ordering flips, 0.798 vs 0.778.
+
+Note this does **not** license adding term lists generally: LLM-written `terms_*` are worth
+nothing to a reader and cost it recall, while *label-derived* ones are worth +0.091 to a matcher
+(§4 above, §5b). Term lists are for matchers, and only if derived from labels.
+
+**The bound on it:** `synergy_moran_2021` is a collection where a 60-label linear probe on the
+embedding reaches 0.639 while **no** LLM under any of four briefs — including one distilled
+from those exact labels — exceeds chance. Some inclusion rules are learnable in representation
+space and **not statable as a rule**. Do not read "distil labels into a brief" as a general
+replacement for training.
 
 **The shuffled-brief control is the pattern to copy.** Any feature claiming to read the
 brief must be rebuildable against deliberately wrong briefs. If it still scores well, it is

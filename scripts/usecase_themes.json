@@ -1,0 +1,759 @@
+{
+  "_readme": [
+    "Candidate use-case themes for coverage planning, consumed by scripts/usecase_coverage.py.",
+    "",
+    "THIS FILE IS A HYPOTHESIS SPACE, NOT DATA. Every theme below was written as a plausible",
+    "heavy-industry screening question; none is a real customer and none has a corpus. The tool",
+    "measures where each WOULD sit relative to the use cases you already have, so you can pick",
+    "which to go and acquire. Edit freely: add themes you are actually considering, delete ones",
+    "you never would, and re-run. That is the intended workflow.",
+    "",
+    "Each theme carries the same five fields the brief embedding uses",
+    "(use_case_name, problem_statement, objective, domain_industry, domain_application) in the",
+    "same order and join as embed_benchsets.USE_CASE_COLS, so a candidate vector is directly",
+    "comparable with a real one. Adding a sixth field here would silently break that.",
+    "",
+    "`domain_anchor` defines what 'in domain' means and IS MEANT TO BE EDITED — it is the only",
+    "place the phrase 'heavy industry' is pinned down. `in_domain_reference` names use cases you",
+    "already accept as in-scope; the tool takes the weakest of them as the pass mark rather than",
+    "inventing a threshold."
+  ],
+  "themes": [
+    {
+      "key": "steel_h2_dri",
+      "sector": "Metals & mining",
+      "use_case_name": "Hydrogen Direct Reduction Ironmaking",
+      "problem_statement": "Blast-furnace ironmaking is the single largest industrial CO2 source and hydrogen direct reduction is the leading route away from it, but shaft-furnace behaviour, pellet quality and hydrogen supply economics are unsettled.",
+      "objective": "Find hydrogen-based direct reduction ironmaking research reporting reactor performance, metallisation rates or pellet requirements at pilot scale or above.",
+      "domain_industry": "Steel and primary metals",
+      "domain_application": "Ironmaking process technology"
+    },
+    {
+      "key": "eaf_scrap_quality",
+      "sector": "Metals & mining",
+      "use_case_name": "Electric Arc Furnace Scrap Contamination Control",
+      "problem_statement": "Scrap-based electric arc furnace steelmaking is limited by tramp element build-up, especially copper, which degrades product grades and caps recycled content.",
+      "objective": "Find methods for detecting, sorting or metallurgically tolerating tramp elements in steel scrap feedstock.",
+      "domain_industry": "Steel and primary metals",
+      "domain_application": "Recycling and melt-shop metallurgy"
+    },
+    {
+      "key": "aluminium_inert_anode",
+      "sector": "Metals & mining",
+      "use_case_name": "Inert Anode Aluminium Smelting",
+      "problem_statement": "Carbon anodes in Hall-Heroult aluminium smelting are consumed and emit CO2 directly; inert anode materials promise elimination but face corrosion and cell-stability barriers.",
+      "objective": "Find inert or non-consumable anode materials research reporting cell operation, corrosion rate or current efficiency in aluminium electrolysis.",
+      "domain_industry": "Aluminium and light metals",
+      "domain_application": "Electrolytic smelting technology"
+    },
+    {
+      "key": "copper_hydromet",
+      "sector": "Metals & mining",
+      "use_case_name": "Hydrometallurgical Copper Extraction from Low-Grade Ore",
+      "problem_statement": "Copper grades are falling worldwide and conventional flotation-smelting is uneconomic for low-grade and complex sulphide ores.",
+      "objective": "Find leaching, bioleaching or solvent-extraction routes that recover copper economically from low-grade or refractory sulphide ores.",
+      "domain_industry": "Mining and mineral processing",
+      "domain_application": "Hydrometallurgical extraction"
+    },
+    {
+      "key": "rare_earth_separation",
+      "sector": "Metals & mining",
+      "use_case_name": "Rare Earth Element Separation and Recovery",
+      "problem_statement": "Rare earth separation depends on long solvent-extraction cascades that are chemically intensive and concentrated in few jurisdictions, creating supply risk for magnets and motors.",
+      "objective": "Find separation, recovery or recycling processes for rare earth elements reporting selectivity, recovery yield or reagent intensity.",
+      "domain_industry": "Critical minerals",
+      "domain_application": "Separation and recycling processes"
+    },
+    {
+      "key": "tailings_reprocessing",
+      "sector": "Metals & mining",
+      "use_case_name": "Mine Tailings Reprocessing and Stabilisation",
+      "problem_statement": "Tailings storage facilities are a growing liability and simultaneously contain recoverable metal, but reprocessing economics and dam stability are both unresolved.",
+      "objective": "Find methods for recovering value from or geotechnically stabilising mine tailings at operational scale.",
+      "domain_industry": "Mining and mineral processing",
+      "domain_application": "Waste reprocessing and geotechnical engineering"
+    },
+    {
+      "key": "ore_sorting_sensing",
+      "sector": "Metals & mining",
+      "use_case_name": "Sensor-Based Ore Sorting",
+      "problem_statement": "Comminution consumes the majority of mine site energy, and rejecting barren rock before grinding is the largest available saving but depends on fast, reliable sensing.",
+      "objective": "Find sensor-based bulk or particle ore sorting research reporting throughput, misclassification rate or energy saving.",
+      "domain_industry": "Mining and mineral processing",
+      "domain_application": "Pre-concentration and sensing"
+    },
+    {
+      "key": "mine_automation",
+      "sector": "Metals & mining",
+      "use_case_name": "Autonomous Underground Mining Equipment",
+      "problem_statement": "Underground mining automation is limited by localisation without GNSS, harsh conditions and mixed autonomous-manned operation.",
+      "objective": "Find autonomous navigation, localisation or teleoperation research validated on underground mining equipment.",
+      "domain_industry": "Mining",
+      "domain_application": "Autonomous heavy equipment"
+    },
+    {
+      "key": "calcined_clay_scm",
+      "sector": "Construction materials",
+      "use_case_name": "Calcined Clay Supplementary Cementitious Materials",
+      "problem_statement": "Fly ash and slag supplies are declining as coal and blast furnaces retire, and calcined clays are the main scalable replacement supplementary cementitious material.",
+      "objective": "Find calcined clay and limestone-calcined-clay cement research reporting strength development, calcination energy or durability.",
+      "domain_industry": "Cement and construction materials",
+      "domain_application": "Supplementary cementitious materials"
+    },
+    {
+      "key": "concrete_recycling",
+      "sector": "Construction materials",
+      "use_case_name": "Structural Reuse of Recycled Concrete Aggregate",
+      "problem_statement": "Demolition concrete is largely downcycled to fill because recycled aggregate degrades workability and long-term structural performance.",
+      "objective": "Find recycled concrete aggregate research reporting structural-grade mechanical performance, durability or treatment methods.",
+      "domain_industry": "Construction and demolition",
+      "domain_application": "Circular construction materials"
+    },
+    {
+      "key": "refractory_linings",
+      "sector": "Construction materials",
+      "use_case_name": "High-Temperature Refractory Lining Durability",
+      "problem_statement": "Refractory lining failure drives unplanned downtime in furnaces, kilns and reactors, and new low-carbon process conditions change the wear mechanisms.",
+      "objective": "Find refractory material and lining research reporting wear mechanisms, campaign life or performance under hydrogen or oxy-fuel firing.",
+      "domain_industry": "Industrial furnaces and kilns",
+      "domain_application": "Refractory materials and asset life"
+    },
+    {
+      "key": "green_ammonia",
+      "sector": "Chemicals & process",
+      "use_case_name": "Low-Pressure and Electrochemical Ammonia Synthesis",
+      "problem_statement": "Haber-Bosch ammonia is energy intensive and poorly suited to intermittent renewable power, motivating low-pressure, flexible and electrochemical synthesis routes.",
+      "objective": "Find ammonia synthesis research reporting catalyst activity, faradaic efficiency or flexible operation under variable renewable input.",
+      "domain_industry": "Chemicals and fertiliser",
+      "domain_application": "Catalytic and electrochemical synthesis"
+    },
+    {
+      "key": "methanol_co2",
+      "sector": "Chemicals & process",
+      "use_case_name": "CO2-to-Methanol Catalytic Synthesis",
+      "problem_statement": "Converting captured CO2 to methanol offers a route to store carbon in fuels and chemicals, but catalyst stability and selectivity remain limiting.",
+      "objective": "Find CO2 hydrogenation to methanol research reporting catalyst selectivity, deactivation or demonstrated reactor performance.",
+      "domain_industry": "Chemicals",
+      "domain_application": "Carbon utilisation catalysis"
+    },
+    {
+      "key": "process_intensification",
+      "sector": "Chemicals & process",
+      "use_case_name": "Continuous Flow Process Intensification",
+      "problem_statement": "Batch chemical production carries large capital and energy overheads that continuous, intensified equipment can reduce, but scale-up and fouling are recurring obstacles.",
+      "objective": "Find process intensification research reporting demonstrated continuous operation, footprint reduction or energy saving in chemical manufacturing.",
+      "domain_industry": "Chemicals",
+      "domain_application": "Reactor and process design"
+    },
+    {
+      "key": "membrane_separation",
+      "sector": "Chemicals & process",
+      "use_case_name": "Industrial Membrane Gas Separation",
+      "problem_statement": "Thermal separation dominates industrial energy use and membranes are the leading lower-energy alternative, but selectivity, plasticisation and lifetime limit deployment.",
+      "objective": "Find membrane gas separation research reporting selectivity-permeability performance and stability under industrial feed conditions.",
+      "domain_industry": "Chemicals and gas processing",
+      "domain_application": "Separation technology"
+    },
+    {
+      "key": "solvent_recovery",
+      "sector": "Chemicals & process",
+      "use_case_name": "Industrial Solvent Recovery and Reuse",
+      "problem_statement": "Solvent purchase and disposal are major operating costs and emissions sources across chemical and pharmaceutical manufacturing.",
+      "objective": "Find solvent recovery, purification or substitution research reporting recovery yield, purity or life-cycle impact at production scale.",
+      "domain_industry": "Chemicals and pharmaceuticals",
+      "domain_application": "Solvent management and circularity"
+    },
+    {
+      "key": "chloralkali_efficiency",
+      "sector": "Chemicals & process",
+      "use_case_name": "Chlor-Alkali Electrolysis Efficiency",
+      "problem_statement": "Chlor-alkali is one of the largest single electricity consumers in the chemical industry and small cell efficiency gains translate into large absolute savings.",
+      "objective": "Find chlor-alkali electrode, membrane or cell design research reporting energy consumption per tonne or current efficiency.",
+      "domain_industry": "Chemicals",
+      "domain_application": "Industrial electrochemistry"
+    },
+    {
+      "key": "industrial_heat_electrification",
+      "sector": "Energy & power",
+      "use_case_name": "Electrification of High-Temperature Industrial Heat",
+      "problem_statement": "Process heat above 400 C is the hardest industrial energy demand to decarbonise and electric alternatives face throughput, refractory and cost barriers.",
+      "objective": "Find electric process heating research — induction, plasma, resistive or electric kilns — reporting demonstrated temperature, throughput or efficiency in industrial use.",
+      "domain_industry": "Industrial energy",
+      "domain_application": "Process heating technology"
+    },
+    {
+      "key": "high_temp_heat_pumps",
+      "sector": "Energy & power",
+      "use_case_name": "Industrial High-Temperature Heat Pumps",
+      "problem_statement": "Much industrial heat demand sits below 200 C where heat pumps could displace fuel, but refrigerants, compressors and integration limit commercial units.",
+      "objective": "Find high-temperature industrial heat pump research reporting coefficient of performance, sink temperature or demonstrated plant integration.",
+      "domain_industry": "Industrial energy",
+      "domain_application": "Heat pump technology"
+    },
+    {
+      "key": "waste_heat_recovery",
+      "sector": "Energy & power",
+      "use_case_name": "Industrial Waste Heat Recovery",
+      "problem_statement": "A large share of industrial energy leaves as low-grade waste heat, and recovery is limited by heat exchanger fouling, corrosion and poor economics at low temperature.",
+      "objective": "Find industrial waste heat recovery research reporting recovered duty, payback or performance in dirty or corrosive streams.",
+      "domain_industry": "Industrial energy",
+      "domain_application": "Heat recovery equipment"
+    },
+    {
+      "key": "smr_nuclear",
+      "sector": "Energy & power",
+      "use_case_name": "Small Modular Reactor Deployment",
+      "problem_statement": "Small modular reactors are proposed for firm industrial power and heat, but licensing, fuel cycle and modular construction economics are unproven at fleet scale.",
+      "objective": "Find small modular reactor research reporting design performance, construction or licensing evidence relevant to industrial deployment.",
+      "domain_industry": "Nuclear power",
+      "domain_application": "Reactor technology and deployment"
+    },
+    {
+      "key": "geothermal_drilling",
+      "sector": "Energy & power",
+      "use_case_name": "Deep Geothermal Drilling Technology",
+      "problem_statement": "Deep and enhanced geothermal energy is gated by drilling cost and bit life in hard, hot rock rather than by resource availability.",
+      "objective": "Find deep geothermal drilling research reporting rate of penetration, bit or tool life, or well cost in hard high-temperature formations.",
+      "domain_industry": "Geothermal energy",
+      "domain_application": "Drilling technology"
+    },
+    {
+      "key": "offshore_wind_foundations",
+      "sector": "Energy & power",
+      "use_case_name": "Offshore Wind Foundation Engineering",
+      "problem_statement": "Foundation and mooring design drives offshore wind cost as turbines grow and sites move into deeper water with floating platforms.",
+      "objective": "Find offshore wind foundation or mooring research reporting structural performance, installation method or fatigue behaviour.",
+      "domain_industry": "Offshore renewables",
+      "domain_application": "Marine structural engineering"
+    },
+    {
+      "key": "grid_storage",
+      "sector": "Energy & power",
+      "use_case_name": "Grid-Scale Long-Duration Energy Storage",
+      "problem_statement": "Multi-hour to multi-day storage is needed to firm renewable supply for industrial loads, and no technology yet dominates on cost and durability together.",
+      "objective": "Find long-duration grid storage research reporting round-trip efficiency, cycle life or delivered cost per kilowatt-hour at grid scale.",
+      "domain_industry": "Power and grid",
+      "domain_application": "Energy storage systems"
+    },
+    {
+      "key": "hydrogen_storage_transport",
+      "sector": "Energy & power",
+      "use_case_name": "Hydrogen Storage and Pipeline Transport",
+      "problem_statement": "Industrial hydrogen adoption depends on storage and transport, where embrittlement, leakage and compression energy are unresolved at scale.",
+      "objective": "Find hydrogen storage, pipeline or carrier research reporting material compatibility, leakage rate or delivered energy cost.",
+      "domain_industry": "Hydrogen infrastructure",
+      "domain_application": "Storage and transport engineering"
+    },
+    {
+      "key": "methane_leak_detection",
+      "sector": "Oil, gas & subsea",
+      "use_case_name": "Methane Leak Detection and Quantification",
+      "problem_statement": "Fugitive methane dominates the near-term climate impact of gas operations, and regulation now demands measured rather than estimated emissions.",
+      "objective": "Find methane detection and quantification research reporting detection limit, false alarm rate or validated flux estimates at industrial sites.",
+      "domain_industry": "Oil and gas",
+      "domain_application": "Emissions measurement"
+    },
+    {
+      "key": "flare_reduction",
+      "sector": "Oil, gas & subsea",
+      "use_case_name": "Flare Gas Reduction and Utilisation",
+      "problem_statement": "Routine flaring wastes gas and emits both CO2 and unburned methane, but small, remote and variable streams are hard to capture economically.",
+      "objective": "Find flare gas recovery or conversion research reporting capture efficiency, modular deployment or economics at wellsite scale.",
+      "domain_industry": "Oil and gas",
+      "domain_application": "Gas recovery and conversion"
+    },
+    {
+      "key": "refinery_catalysts",
+      "sector": "Oil, gas & subsea",
+      "use_case_name": "Refinery Hydroprocessing Catalyst Performance",
+      "problem_statement": "Refineries processing heavier and renewable feedstocks face faster catalyst deactivation and tighter sulphur limits.",
+      "objective": "Find hydroprocessing catalyst research reporting activity, deactivation rate or performance on heavy or bio-derived feeds.",
+      "domain_industry": "Refining",
+      "domain_application": "Catalysis"
+    },
+    {
+      "key": "pipeline_integrity",
+      "sector": "Oil, gas & subsea",
+      "use_case_name": "Pipeline Integrity and Corrosion Monitoring",
+      "problem_statement": "Ageing pipeline networks require inspection and corrosion prediction accurate enough to prioritise intervention without over-conservative shutdowns.",
+      "objective": "Find pipeline integrity research reporting inspection accuracy, corrosion growth prediction or remaining-life estimation validated in the field.",
+      "domain_industry": "Pipelines and midstream",
+      "domain_application": "Asset integrity management"
+    },
+    {
+      "key": "subsea_inspection",
+      "sector": "Oil, gas & subsea",
+      "use_case_name": "Subsea Asset Inspection Robotics",
+      "problem_statement": "Subsea inspection is expensive and vessel-dependent, and resident autonomous vehicles must navigate and inspect reliably without human intervention.",
+      "objective": "Find subsea inspection robotics research reporting autonomy, navigation accuracy or defect detection on offshore structures.",
+      "domain_industry": "Offshore energy",
+      "domain_application": "Underwater robotics and inspection"
+    },
+    {
+      "key": "heavy_truck_electrification",
+      "sector": "Transport & logistics",
+      "use_case_name": "Heavy-Duty Truck Electrification and Depot Charging",
+      "problem_statement": "Heavy freight electrification is constrained by battery mass, depot grid capacity and duty-cycle range rather than by vehicle availability alone.",
+      "objective": "Find heavy-duty vehicle electrification research reporting energy consumption, charging infrastructure requirements or total cost of ownership.",
+      "domain_industry": "Road freight",
+      "domain_application": "Vehicle electrification and charging"
+    },
+    {
+      "key": "maritime_alt_fuels",
+      "sector": "Transport & logistics",
+      "use_case_name": "Ammonia and Methanol Marine Engines",
+      "problem_statement": "Shipping decarbonisation depends on alternative fuels whose combustion behaviour, toxicity handling and engine durability are still being established.",
+      "objective": "Find marine engine research on ammonia or methanol fuels reporting combustion performance, emissions or durability at engine scale.",
+      "domain_industry": "Maritime shipping",
+      "domain_application": "Marine propulsion and fuels"
+    },
+    {
+      "key": "rail_freight_efficiency",
+      "sector": "Transport & logistics",
+      "use_case_name": "Rail Freight Energy and Capacity Efficiency",
+      "problem_statement": "Rail freight competitiveness depends on traction energy, train length and network capacity management rather than on any single vehicle technology.",
+      "objective": "Find rail freight research reporting traction energy reduction, capacity utilisation or operational efficiency gains.",
+      "domain_industry": "Rail freight",
+      "domain_application": "Traction and network operations"
+    },
+    {
+      "key": "port_electrification",
+      "sector": "Transport & logistics",
+      "use_case_name": "Port and Terminal Electrification",
+      "problem_statement": "Ports face simultaneous demands for shore power, electrified cargo handling and grid reinforcement within constrained footprints.",
+      "objective": "Find port electrification research reporting shore power performance, equipment electrification or terminal grid integration.",
+      "domain_industry": "Ports and terminals",
+      "domain_application": "Electrification and grid integration"
+    },
+    {
+      "key": "saf_aviation",
+      "sector": "Transport & logistics",
+      "use_case_name": "Sustainable Aviation Fuel Production",
+      "problem_statement": "Aviation fuel substitution is limited by feedstock availability and conversion cost, with several competing production pathways at different maturities.",
+      "objective": "Find sustainable aviation fuel production research reporting conversion yield, feedstock requirement or fuel property compliance.",
+      "domain_industry": "Aviation fuels",
+      "domain_application": "Fuel production pathways"
+    },
+    {
+      "key": "cold_chain_refrigeration",
+      "sector": "Transport & logistics",
+      "use_case_name": "Industrial Cold Chain Refrigeration",
+      "problem_statement": "Refrigerant phase-down and energy costs are forcing redesign of large industrial and logistics refrigeration systems.",
+      "objective": "Find industrial refrigeration research reporting low-GWP refrigerant performance, system efficiency or retrofit results.",
+      "domain_industry": "Cold chain and logistics",
+      "domain_application": "Refrigeration systems"
+    },
+    {
+      "key": "predictive_maintenance_vibration",
+      "sector": "Manufacturing & automation",
+      "use_case_name": "Vibration-Based Predictive Maintenance of Rotating Equipment",
+      "problem_statement": "Unplanned failure of pumps, compressors and gearboxes drives industrial downtime, and vibration diagnostics still generate high false-alarm rates in noisy plants.",
+      "objective": "Find rotating equipment condition monitoring research reporting fault detection accuracy or remaining useful life prediction validated on industrial machines.",
+      "domain_industry": "Industrial maintenance",
+      "domain_application": "Condition monitoring and prognostics"
+    },
+    {
+      "key": "ndt_inspection",
+      "sector": "Manufacturing & automation",
+      "use_case_name": "Non-Destructive Testing of Welds and Castings",
+      "problem_statement": "Weld and casting inspection is a throughput bottleneck and manual interpretation of ultrasonic and radiographic data is inconsistent.",
+      "objective": "Find non-destructive testing research reporting defect detection probability, sizing accuracy or automated interpretation performance.",
+      "domain_industry": "Heavy fabrication",
+      "domain_application": "Inspection and quality assurance"
+    },
+    {
+      "key": "welding_automation",
+      "sector": "Manufacturing & automation",
+      "use_case_name": "Automated and Robotic Welding Process Control",
+      "problem_statement": "Robotic welding of large or variable heavy structures is limited by fit-up variation, seam tracking and in-process quality control.",
+      "objective": "Find robotic welding research reporting seam tracking accuracy, in-process quality control or demonstrated deposition on heavy structures.",
+      "domain_industry": "Heavy fabrication",
+      "domain_application": "Welding automation"
+    },
+    {
+      "key": "additive_manufacturing_metal",
+      "sector": "Manufacturing & automation",
+      "use_case_name": "Metal Additive Manufacturing Qualification",
+      "problem_statement": "Industrial adoption of metal additive manufacturing is blocked less by printing than by qualifying parts with repeatable properties and defect control.",
+      "objective": "Find metal additive manufacturing research reporting mechanical property repeatability, defect detection or qualification methodology.",
+      "domain_industry": "Advanced manufacturing",
+      "domain_application": "Additive manufacturing and qualification"
+    },
+    {
+      "key": "industrial_robotics",
+      "sector": "Manufacturing & automation",
+      "use_case_name": "Industrial Robot Manipulation in Unstructured Environments",
+      "problem_statement": "Industrial robots remain confined to structured cells because grasping and manipulation degrade with variable parts, lighting and clutter.",
+      "objective": "Find robotic manipulation research reporting grasp success or cycle time on variable industrial parts outside structured cells.",
+      "domain_industry": "Industrial automation",
+      "domain_application": "Robotic manipulation"
+    },
+    {
+      "key": "digital_twin_process",
+      "sector": "Manufacturing & automation",
+      "use_case_name": "Digital Twins for Process Plant Operations",
+      "problem_statement": "Process digital twins promise optimisation and operator support but often fail to stay calibrated against a drifting real plant.",
+      "objective": "Find process plant digital twin research reporting model fidelity, online recalibration or demonstrated operational benefit.",
+      "domain_industry": "Process industries",
+      "domain_application": "Simulation and process optimisation"
+    },
+    {
+      "key": "machine_vision_qc",
+      "sector": "Manufacturing & automation",
+      "use_case_name": "Machine Vision Surface Defect Inspection",
+      "problem_statement": "Surface inspection on continuous lines such as steel strip, glass and coatings needs high recall on rare defects at line speed with few labelled examples.",
+      "objective": "Find machine vision surface inspection research reporting defect detection performance on industrial production lines with scarce defect data.",
+      "domain_industry": "Continuous manufacturing",
+      "domain_application": "Automated visual inspection"
+    },
+    {
+      "key": "corrosion_coatings",
+      "sector": "Materials & durability",
+      "use_case_name": "Protective Coatings Against Industrial Corrosion",
+      "problem_statement": "Corrosion is a persistent multi-percent-of-GDP loss and coating selection for aggressive industrial and marine service remains largely empirical.",
+      "objective": "Find protective coating research reporting corrosion protection performance, adhesion or service life under aggressive industrial exposure.",
+      "domain_industry": "Asset protection",
+      "domain_application": "Coatings and corrosion engineering"
+    },
+    {
+      "key": "tribology_lubricants",
+      "sector": "Materials & durability",
+      "use_case_name": "Industrial Lubricants and Tribological Wear",
+      "problem_statement": "Friction and wear consume a large share of industrial energy and drive component replacement, while electrification changes lubrication requirements.",
+      "objective": "Find tribology and lubricant research reporting friction reduction, wear rate or demonstrated component life extension in industrial machinery.",
+      "domain_industry": "Industrial machinery",
+      "domain_application": "Tribology and lubrication"
+    },
+    {
+      "key": "high_temp_alloys",
+      "sector": "Materials & durability",
+      "use_case_name": "High-Temperature Structural Alloys",
+      "problem_statement": "Higher process temperatures for efficiency and hydrogen firing push alloys beyond established creep and oxidation limits.",
+      "objective": "Find high-temperature alloy research reporting creep performance, oxidation resistance or hydrogen compatibility for structural service.",
+      "domain_industry": "Materials engineering",
+      "domain_application": "High-temperature structural materials"
+    },
+    {
+      "key": "structural_composites",
+      "sector": "Materials & durability",
+      "use_case_name": "Fibre-Reinforced Composites for Heavy Structures",
+      "problem_statement": "Composites offer mass and corrosion advantages in heavy structures but face joining, inspection and end-of-life recycling barriers.",
+      "objective": "Find fibre-reinforced composite research reporting structural performance, joining methods or recyclability for large industrial structures.",
+      "domain_industry": "Structural engineering",
+      "domain_application": "Composite materials"
+    },
+    {
+      "key": "weld_fatigue",
+      "sector": "Materials & durability",
+      "use_case_name": "Fatigue Life of Welded Steel Structures",
+      "problem_statement": "Welded joints govern the fatigue life of cranes, bridges, offshore structures and heavy vehicles, and design rules are conservative and poorly matched to modern steels.",
+      "objective": "Find welded joint fatigue research reporting measured fatigue life, improvement treatments or validated life prediction methods.",
+      "domain_industry": "Structural engineering",
+      "domain_application": "Fatigue and structural integrity"
+    },
+    {
+      "key": "industrial_wastewater",
+      "sector": "Water, waste & emissions",
+      "use_case_name": "Industrial Wastewater Treatment and Reuse",
+      "problem_statement": "Industrial effluent is chemically varied and increasingly regulated, while water scarcity is pushing sites toward in-plant reuse and zero liquid discharge.",
+      "objective": "Find industrial wastewater treatment research reporting contaminant removal, reuse quality or energy cost at plant scale.",
+      "domain_industry": "Industrial water",
+      "domain_application": "Effluent treatment and reuse"
+    },
+    {
+      "key": "pfas_treatment",
+      "sector": "Water, waste & emissions",
+      "use_case_name": "PFAS Destruction in Industrial Effluent",
+      "problem_statement": "PFAS regulation is tightening rapidly and conventional treatment concentrates rather than destroys these compounds.",
+      "objective": "Find PFAS destruction or removal research reporting defluorination, destruction efficiency or performance on real industrial effluent.",
+      "domain_industry": "Industrial water",
+      "domain_application": "Persistent contaminant treatment"
+    },
+    {
+      "key": "plastics_chemical_recycling",
+      "sector": "Water, waste & emissions",
+      "use_case_name": "Chemical Recycling of Mixed Plastic Waste",
+      "problem_statement": "Mechanical recycling cannot handle mixed or contaminated plastic streams, and chemical routes face yield, contamination and energy penalties.",
+      "objective": "Find chemical recycling research reporting monomer or oil yield, contaminant tolerance or demonstrated scale for mixed plastic feedstock.",
+      "domain_industry": "Waste and circular economy",
+      "domain_application": "Chemical recycling processes"
+    },
+    {
+      "key": "ewaste_metal_recovery",
+      "sector": "Water, waste & emissions",
+      "use_case_name": "Critical Metal Recovery from Electronic Waste",
+      "problem_statement": "Electronic waste is a concentrated secondary source of critical metals but separation from complex mixed assemblies remains inefficient.",
+      "objective": "Find electronic waste metal recovery research reporting recovery yield, selectivity or process economics.",
+      "domain_industry": "Waste and critical minerals",
+      "domain_application": "Urban mining and recovery"
+    },
+    {
+      "key": "dust_emissions_control",
+      "sector": "Water, waste & emissions",
+      "use_case_name": "Industrial Particulate and Dust Emission Control",
+      "problem_statement": "Particulate limits are tightening and fugitive dust from bulk handling and processing is difficult to capture and measure.",
+      "objective": "Find industrial particulate control research reporting capture efficiency, fugitive dust measurement or abatement performance at operating sites.",
+      "domain_industry": "Industrial emissions",
+      "domain_application": "Particulate abatement"
+    },
+    {
+      "key": "flue_gas_treatment",
+      "sector": "Water, waste & emissions",
+      "use_case_name": "Flue Gas Desulfurisation and NOx Control",
+      "problem_statement": "Post-combustion sulphur and nitrogen oxide control adds cost and energy, and requirements change as plants switch fuels.",
+      "objective": "Find flue gas desulfurisation or NOx abatement research reporting removal efficiency, reagent consumption or performance under alternative fuels.",
+      "domain_industry": "Industrial emissions",
+      "domain_application": "Flue gas treatment"
+    },
+    {
+      "key": "lignin_valorisation",
+      "sector": "Process industries",
+      "use_case_name": "Lignin Valorisation from Pulp and Paper",
+      "problem_statement": "Lignin is produced in enormous volume as a pulping by-product and mostly burned, despite potential as a chemical and materials feedstock.",
+      "objective": "Find lignin valorisation research reporting conversion yield, product quality or demonstrated integration with pulp mill operations.",
+      "domain_industry": "Pulp and paper",
+      "domain_application": "Biorefinery and by-product valorisation"
+    },
+    {
+      "key": "textile_recycling",
+      "sector": "Process industries",
+      "use_case_name": "Fibre-to-Fibre Textile Recycling",
+      "problem_statement": "Textile waste volumes are large and blended fabrics defeat both mechanical and single-polymer chemical recycling routes.",
+      "objective": "Find textile recycling research reporting fibre separation of blends, recovered fibre quality or process scalability.",
+      "domain_industry": "Textiles",
+      "domain_application": "Fibre recycling processes"
+    },
+    {
+      "key": "food_processing_energy",
+      "sector": "Process industries",
+      "use_case_name": "Energy Efficiency in Food and Beverage Processing",
+      "problem_statement": "Food processing uses large amounts of low-grade heat and refrigeration under strict hygiene constraints that limit equipment retrofits.",
+      "objective": "Find food and beverage processing research reporting energy saving, heat integration or efficient drying and refrigeration at plant scale.",
+      "domain_industry": "Food and beverage manufacturing",
+      "domain_application": "Process energy efficiency"
+    },
+    {
+      "key": "pharma_continuous_manufacturing",
+      "sector": "Process industries",
+      "use_case_name": "Continuous Pharmaceutical Manufacturing",
+      "problem_statement": "Pharmaceutical production is shifting from batch to continuous operation, but process analytical control and regulatory qualification are the gating issues.",
+      "objective": "Find continuous pharmaceutical manufacturing research reporting process control, product quality consistency or regulatory qualification evidence.",
+      "domain_industry": "Pharmaceutical manufacturing",
+      "domain_application": "Continuous processing and control"
+    },
+    {
+      "key": "direct_air_capture",
+      "sector": "Carbon removal & capture",
+      "use_case_name": "Direct Air Capture of CO2",
+      "problem_statement": "Direct air capture is the main engineered route to net-negative emissions but energy consumption and sorbent cost per tonne remain far above viable levels.",
+      "objective": "Find direct air capture research reporting energy consumption per tonne CO2, sorbent durability or demonstrated capture at pilot scale or above.",
+      "domain_industry": "Carbon removal",
+      "domain_application": "Capture process technology"
+    },
+    {
+      "key": "enhanced_weathering",
+      "sector": "Carbon removal & capture",
+      "use_case_name": "Enhanced Rock Weathering and Mineral Carbonation",
+      "problem_statement": "Spreading crushed silicate rock could durably remove CO2 at scale, but measurement of actual removal and the fate of the carbon are contested.",
+      "objective": "Find enhanced weathering or mineral carbonation research reporting measured carbon removal rates, verification methods or field-scale results.",
+      "domain_industry": "Carbon removal",
+      "domain_application": "Geochemical carbon storage"
+    },
+    {
+      "key": "biochar_carbon_removal",
+      "sector": "Carbon removal & capture",
+      "use_case_name": "Biochar Production and Carbon Permanence",
+      "problem_statement": "Biochar is among the cheapest available carbon removals, but pyrolysis yields and the permanence of stored carbon in soil vary widely.",
+      "objective": "Find biochar research reporting pyrolysis yield, carbon permanence or measured soil carbon retention.",
+      "domain_industry": "Carbon removal",
+      "domain_application": "Pyrolysis and soil storage"
+    },
+    {
+      "key": "co2_concrete_curing",
+      "sector": "Carbon removal & capture",
+      "use_case_name": "CO2 Mineralisation and Curing in Concrete",
+      "problem_statement": "Injecting or curing CO2 into concrete stores carbon permanently in a product already made at gigatonne scale, but strength and dosage limits are unsettled.",
+      "objective": "Find CO2 curing or mineralisation in concrete research reporting stored CO2 per tonne, compressive strength effect or process integration.",
+      "domain_industry": "Construction materials",
+      "domain_application": "Carbon utilisation in materials"
+    },
+    {
+      "key": "cement_kiln_ccs",
+      "sector": "Carbon removal & capture",
+      "use_case_name": "Cement Kiln Carbon Capture",
+      "problem_statement": "Cement process emissions are chemically unavoidable, so capture on the kiln is the only route to deep abatement, and retrofit energy penalties are the obstacle.",
+      "objective": "Find cement kiln carbon capture research reporting capture rate, energy penalty or retrofit feasibility at plant scale.",
+      "domain_industry": "Cement",
+      "domain_application": "Post-combustion and oxyfuel capture"
+    },
+    {
+      "key": "green_hydrogen_electrolysis",
+      "sector": "Clean energy carriers",
+      "use_case_name": "Water Electrolysis Stack Performance and Durability",
+      "problem_statement": "Green hydrogen cost is dominated by electrolyser capital cost, stack efficiency and degradation under variable renewable power.",
+      "objective": "Find water electrolysis research reporting stack efficiency, degradation rate or performance under intermittent operation.",
+      "domain_industry": "Hydrogen production",
+      "domain_application": "Electrolyser technology"
+    },
+    {
+      "key": "methane_pyrolysis",
+      "sector": "Clean energy carriers",
+      "use_case_name": "Methane Pyrolysis for Hydrogen and Solid Carbon",
+      "problem_statement": "Methane pyrolysis produces hydrogen with solid carbon instead of CO2, but reactor coking and carbon product value are unresolved.",
+      "objective": "Find methane pyrolysis research reporting hydrogen yield, reactor stability or solid carbon product quality.",
+      "domain_industry": "Hydrogen production",
+      "domain_application": "Pyrolysis reactor technology"
+    },
+    {
+      "key": "efuels_synthesis",
+      "sector": "Clean energy carriers",
+      "use_case_name": "E-Fuel Synthesis from Captured CO2",
+      "problem_statement": "Synthetic hydrocarbon fuels from captured CO2 and green hydrogen could serve hard-to-electrify sectors, but conversion efficiency and cost are prohibitive today.",
+      "objective": "Find e-fuel or Fischer-Tropsch synthesis research reporting conversion efficiency, catalyst performance or demonstrated production from captured CO2.",
+      "domain_industry": "Synthetic fuels",
+      "domain_application": "Fuel synthesis processes"
+    },
+    {
+      "key": "biomethane_upgrading",
+      "sector": "Clean energy carriers",
+      "use_case_name": "Anaerobic Digestion and Biomethane Upgrading",
+      "problem_statement": "Biomethane displaces fossil gas in industry, but digestate handling, upgrading cost and fugitive methane undercut the climate benefit.",
+      "objective": "Find anaerobic digestion or biogas upgrading research reporting methane yield, upgrading energy cost or measured fugitive losses.",
+      "domain_industry": "Bioenergy",
+      "domain_application": "Digestion and gas upgrading"
+    },
+    {
+      "key": "thermal_energy_storage",
+      "sector": "Industrial energy systems",
+      "use_case_name": "Industrial Thermal Energy Storage",
+      "problem_statement": "Storing heat lets industry run on intermittent renewable electricity, but high-temperature storage media, containment and discharge rates limit deployment.",
+      "objective": "Find industrial thermal energy storage research reporting storage temperature, round-trip efficiency or discharge performance.",
+      "domain_industry": "Industrial energy",
+      "domain_application": "Heat storage technology"
+    },
+    {
+      "key": "industrial_demand_response",
+      "sector": "Industrial energy systems",
+      "use_case_name": "Industrial Demand-Side Flexibility",
+      "problem_statement": "Flexible industrial load is a large untapped grid resource, but process constraints and product quality limit how far production can be modulated.",
+      "objective": "Find industrial demand response research reporting achievable load flexibility, process impact or demonstrated grid participation.",
+      "domain_industry": "Industrial energy",
+      "domain_application": "Load flexibility and control"
+    },
+    {
+      "key": "industrial_symbiosis",
+      "sector": "Industrial energy systems",
+      "use_case_name": "Industrial Symbiosis and Waste Heat Networks",
+      "problem_statement": "Exchanging heat and by-products between co-located plants cuts emissions cheaply, but matching, contracting and network design are the barriers.",
+      "objective": "Find industrial symbiosis or waste heat network research reporting realised energy or emissions savings at cluster scale.",
+      "domain_industry": "Industrial clusters",
+      "domain_application": "Energy and material exchange networks"
+    },
+    {
+      "key": "solar_thermal_industrial",
+      "sector": "Industrial energy systems",
+      "use_case_name": "Concentrated Solar Heat for Industrial Processes",
+      "problem_statement": "Solar thermal can supply mid-temperature process heat directly, but intermittency, land use and integration with existing steam systems limit uptake.",
+      "objective": "Find industrial solar thermal research reporting delivered temperature, capacity factor or demonstrated process integration.",
+      "domain_industry": "Industrial energy",
+      "domain_application": "Solar process heat"
+    },
+    {
+      "key": "fgas_abatement",
+      "sector": "Non-CO2 emissions",
+      "use_case_name": "SF6 and Fluorinated Gas Alternatives",
+      "problem_statement": "SF6 and related F-gases have global warming potentials thousands of times CO2 and are embedded in switchgear and industrial processes.",
+      "objective": "Find research on SF6 or F-gas alternatives and abatement reporting dielectric or process performance and leakage reduction.",
+      "domain_industry": "Electrical equipment and chemicals",
+      "domain_application": "Non-CO2 greenhouse gas abatement"
+    },
+    {
+      "key": "n2o_abatement",
+      "sector": "Non-CO2 emissions",
+      "use_case_name": "Nitrous Oxide Abatement in Chemical Production",
+      "problem_statement": "Nitric and adipic acid plants emit nitrous oxide with ~270x the warming potential of CO2, and catalyst performance governs abatement.",
+      "objective": "Find nitrous oxide abatement research reporting destruction efficiency, catalyst lifetime or plant-scale results.",
+      "domain_industry": "Chemicals",
+      "domain_application": "Catalytic abatement"
+    },
+    {
+      "key": "battery_recycling",
+      "sector": "Circularity & materials",
+      "use_case_name": "Lithium-Ion Battery Recycling",
+      "problem_statement": "Battery volumes reaching end of life are rising steeply and hydrometallurgical and direct recycling routes compete on recovery rate and cost.",
+      "objective": "Find lithium-ion battery recycling research reporting material recovery rates, purity or process energy and cost.",
+      "domain_industry": "Battery value chain",
+      "domain_application": "Recycling processes"
+    },
+    {
+      "key": "critical_mineral_substitution",
+      "sector": "Circularity & materials",
+      "use_case_name": "Critical Mineral Substitution in Clean Technology",
+      "problem_statement": "Clean technology deployment is exposed to cobalt, lithium and rare earth supply, making substitution and thrifting a strategic research priority.",
+      "objective": "Find critical mineral substitution research reporting equivalent performance with reduced or replaced critical material content.",
+      "domain_industry": "Clean technology supply chain",
+      "domain_application": "Materials substitution"
+    },
+    {
+      "key": "circular_product_design",
+      "sector": "Circularity & materials",
+      "use_case_name": "Design for Disassembly and Remanufacturing",
+      "problem_statement": "Remanufacturing retains far more embodied energy than recycling, but products are rarely designed to be taken apart economically.",
+      "objective": "Find design for disassembly or remanufacturing research reporting recovery rates, labour cost or retained embodied impact.",
+      "domain_industry": "Manufacturing",
+      "domain_application": "Circular product design"
+    },
+    {
+      "key": "lca_industrial",
+      "sector": "Measurement & accounting",
+      "use_case_name": "Life Cycle Assessment of Industrial Products",
+      "problem_statement": "Procurement and regulation increasingly demand product-level footprints, but LCA results vary enormously with boundary and allocation choices.",
+      "objective": "Find industrial life cycle assessment research reporting methodology, boundary sensitivity or validated product footprints.",
+      "domain_industry": "Sustainability assessment",
+      "domain_application": "Life cycle methodology"
+    },
+    {
+      "key": "carbon_mrv",
+      "sector": "Measurement & accounting",
+      "use_case_name": "Industrial Emissions Monitoring, Reporting and Verification",
+      "problem_statement": "Regulation and carbon markets are shifting from estimated to measured emissions, and measurement infrastructure at industrial sites is immature.",
+      "objective": "Find emissions monitoring, reporting and verification research reporting measurement accuracy, reconciliation with inventories or verification methods.",
+      "domain_industry": "Sustainability assessment",
+      "domain_application": "Emissions measurement and verification"
+    },
+    {
+      "key": "industrial_water_energy",
+      "sector": "Measurement & accounting",
+      "use_case_name": "Water and Energy Nexus in Industrial Decarbonisation",
+      "problem_statement": "Many decarbonisation routes such as electrolysis and carbon capture increase water demand, often in water-stressed regions.",
+      "objective": "Find research quantifying water consumption trade-offs of industrial decarbonisation technologies or reporting water reduction methods.",
+      "domain_industry": "Industrial sustainability",
+      "domain_application": "Resource trade-off analysis"
+    }
+  ],
+  "anchors": {
+    "heavy_industry": {
+      "use_case_name": "Heavy Industry Process and Asset Technology Screening",
+      "problem_statement": "Heavy industrial operators — steel, cement, chemicals, mining, power, shipping, heavy manufacturing — must find, evaluate and adopt process, materials and equipment technologies that cut energy, emissions, cost or downtime at industrial scale under real plant constraints.",
+      "objective": "Identify applied engineering and materials research that demonstrably improves industrial process efficiency, asset reliability, emissions performance or production economics at or near commercial scale.",
+      "domain_industry": "Heavy industry, manufacturing, energy, mining, chemicals, transport infrastructure",
+      "domain_application": "Industrial process technology, plant equipment, engineering materials, asset integrity, emissions abatement",
+      "in_domain_reference": [
+        "cement_binders",
+        "carbon_capture"
+      ]
+    },
+    "cleantech": {
+      "use_case_name": "Industrial Clean Technology, Sustainability and Decarbonisation Screening",
+      "problem_statement": "Industrial operators must cut greenhouse gas emissions, energy and resource intensity across production, and need to find technologies that deliver measurable abatement, cleaner energy carriers, circular material flows or carbon removal at industrial scale and acceptable cost.",
+      "objective": "Identify research on clean industrial technology that demonstrably reduces greenhouse gas emissions, energy or resource consumption, or removes and permanently stores carbon, with evidence of abatement potential, efficiency gain or life-cycle impact at or near commercial scale.",
+      "domain_industry": "Clean technology, industrial decarbonisation, sustainability, circular economy",
+      "domain_application": "Emissions abatement, low-carbon process technology, clean energy carriers, carbon capture and removal, resource circularity",
+      "in_domain_reference": [
+        "carbon_capture",
+        "cement_binders"
+      ]
+    }
+  },
+  "default_anchor": "heavy_industry"
+}
