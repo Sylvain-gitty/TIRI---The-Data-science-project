@@ -1,0 +1,65 @@
+# Tool configuration only.
+#
+# This file deliberately does NOT declare a package. `scripts/` is a directory of shared
+# libraries and experiment drivers that every notebook reaches via `sys.path.insert`, and
+# converting it into an installable package would mean editing the import preamble of ~40
+# scripts and all 43 notebooks. That is a large, output-invalidating change for no gain to
+# anything here, so the existing convention stands.
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+filterwarnings = [
+    # Fail on anything unexpected, so a deprecation in pandas/sklearn surfaces here rather
+    # than three months later inside a notebook run.
+    "error",
+    # numpy/pandas interop noise that is not ours to fix.
+    "default::DeprecationWarning:pandas",
+    "default::DeprecationWarning:numpy",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv", "data", "reports", "catboost_info", ".ipynb_checkpoints"]
+
+[tool.ruff.lint]
+# ---------------------------------------------------------------------------
+# A deliberately narrow gate: rules that catch things which are *wrong*, not things
+# which are untidy.
+#
+# WHY NOT MORE. Ruff's default set flags 278 findings across `scripts/`. Essentially all
+# of them are style in working, already-executed analysis code whose outputs are committed
+# and verified — unsorted imports, f-strings without placeholders, semicolons in
+# matplotlib setup blocks. Auto-fixing 278 findings across 60 files to satisfy a linter
+# would churn every file in the repo and risk changing behaviour in code whose results are
+# already published, in exchange for tidiness.
+#
+# So the gate is set to defects: syntax errors, undefined names, redefinitions, identity
+# comparisons against literals, and malformed format strings. These are green today and
+# would each represent a real bug if they ever went red.
+#
+# KNOWN, DEFERRED BACKLOG (measured 2026-08-19, not hidden):
+#   F401  9  unused imports
+#   F841  9  unused local variables
+#   F541 30  f-strings with no placeholders
+#   E702 17  semicolon-separated statements (plotting setup blocks)
+# Worth clearing opportunistically when a file is being touched for another reason.
+# Not worth a repo-wide sweep. New code should avoid all four.
+# ---------------------------------------------------------------------------
+select = [
+    "E9",     # syntax / IO errors
+    "F821",   # undefined name
+    "F811",   # redefinition of unused name
+    "F632",   # `is` comparison against a literal
+    "F701", "F702", "F704", "F706", "F707",   # misplaced statements
+    "F502", "F503", "F506", "F522", "F524",   # malformed % / .format strings
+    "F602", "F622", "F631", "F633", "F634",   # broken assert / except / print constructs
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Every script inserts `scripts/` on sys.path before importing its siblings, so
+# module-level imports legitimately follow executable code.
+"scripts/*.py" = ["E402"]
+"tests/*.py" = ["E402"]

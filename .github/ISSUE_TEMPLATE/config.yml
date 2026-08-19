@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security or data-exposure report
+    url: https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/security/advisories/new
+    about: >-
+      Do not open a public issue for a leaked credential or personal data found in the shipped
+      dataset. Use private vulnerability reporting — see SECURITY.md.
+  - name: What has already been measured and rejected
+    url: https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/blob/main/CONTEXT.md
+    about: >-
+      CONTEXT.md §6 is the negative-results register. Most modelling suggestions on this
+      project have already been tried; it records what happened and why.
