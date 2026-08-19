@@ -59,3 +59,8 @@ reports/wf_llm_pilot_per_use_case.csv
 # Same rule, same reason. Regenerating this is $0 - every row is served from
 # `data/processed/llm_cache/`, which is where the paid-for responses actually live.
 reports/wf_spec_quality_reader_*_responses.parquet
+
+# Node dependencies for scripts/md2docx.js (the whitepaper -> .docx renderer). The project
+# itself is Python; this is document tooling only. `npm install` restores it from
+# package-lock.json.
+node_modules/

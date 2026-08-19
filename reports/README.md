@@ -1,10 +1,15 @@
 # Reports — the decision trail
 
-Twenty write-ups covering what was tried, what was measured, and what was rejected.
-They were written over four weeks and **they do not all still hold**, so every one now
-opens with a `Status:` line. This index is the same information, sorted.
+57 write-ups covering what was tried, what was measured, and what was rejected. They were
+written over four weeks and **they do not all still hold**. This index is the map; every
+report in the folder is listed somewhere below.
 
-A note on what the statuses mean — and which critic is speaking. `current` /
+**On `Status:` lines.** 13 of the 57 carry one. The convention started partway through and
+was never applied retrospectively, so the absence of a `Status:` line means nothing — read
+the section heading here instead, which is where the current/historical/superseded judgement
+actually lives for every report.
+
+A note on what those judgements mean — and which critic is speaking. `current` /
 `historical` / `superseded` are **navigational judgements made when tidying the repo**,
 not measurements. The numbers inside each report are unchanged and remain what they
 were when measured; what these labels tell you is whether a later document revised the
@@ -16,13 +21,10 @@ were when measured; what these labels tell you is whether a later document revis
 
 | Report | What it is |
 |---|---|
+| [`tiri_whitepaper.md`](tiri_whitepaper.md) | **The whole project as one narrative document**, written for a reader who has not seen the repo: the problem, why F2, the data, the finding that reshaped the work, what ships, the external validation, and appendices covering the metrics in plain English and the rejected list with measurements. Start here if you want the argument rather than the decision trail. Renders to `.docx` with `npm run whitepaper`. |
 | [`wf_ensemble_final_recommendations.md`](wf_ensemble_final_recommendations.md) | **The single decision doc.** Every architecture choice, its evidence, and a confidence grade — plus an explicit "do not re-propose these" list. If you read one file in this folder, read this. |
 
 ## Spec and brief quality — the 2026-08-13/14 block
-
-⚠️ **This index predates the nine `wf_llm_*` reports and the two `wf_usecase_coverage_*` reports**,
-which are not listed anywhere below. The rows here cover only the spec-quality work; the rest of the
-backlog is a known gap, not a claim that those reports do not exist.
 
 | Report | Answers |
 |---|---|
@@ -110,6 +112,54 @@ quality, ORCID lookup, spaCy over regex, prediction-level stacking, PCA-64 withi
 silo — precisely so nobody spends a week re-running them. A superseded report is still
 the evidence for why something was tried and dropped; it just needs a label saying so,
 which is what the `Status:` lines are for.
+
+## LLM screening — the pilot on TIRI, then set A at 2.19% prevalence
+
+The two decision docs are **`wf_llm_pilot_findings.md`** (TIRI's own pools) and
+**`wf_llm_benchset_a_findings.md`** (the external benchmark). Everything else in this section
+is the evidence behind them. Read the two findings docs in that order; the benchmark run
+retired several of the pilot's conclusions, and the reason is prevalence.
+
+| Report | What it is |
+|---|---|
+| [`wf_llm_screening_plan.md`](wf_llm_screening_plan.md) | The pre-registration. Every bar lives here, including the ≥6/8 zero-shot bar the run then failed. |
+| [`wf_llm_pilot_findings.md`](wf_llm_pilot_findings.md) | **The pilot's decision doc.** A prompted LLM does not replace the ensemble, and is rejected as a third branch. |
+| [`wf_llm_pilot_results.md`](wf_llm_pilot_results.md) | The pilot's raw results table. |
+| [`wf_llm_split_results.md`](wf_llm_split_results.md) | F2 across train / test / validate, all six questions pooled. |
+| [`wf_llm_branch_experiment.md`](wf_llm_branch_experiment.md) | Does a prompted-LLM branch earn a place in the ensemble? (variant P2) |
+| [`wf_llm_brief_control.md`](wf_llm_brief_control.md) | The shuffled-brief control — is the LLM reading the brief at all? |
+| [`wf_llm_logprob_scoring.md`](wf_llm_logprob_scoring.md) | Token logprobs vs a verbalised 0–100 score. Fixed the granularity completely and made ranking **worse**. |
+| [`wf_llm_benchset_a.md`](wf_llm_benchset_a.md) | Set A — the run itself, at 2.19% prevalence. |
+| [`wf_llm_benchset_a_findings.md`](wf_llm_benchset_a_findings.md) | **The benchmark decision doc.** Zero-shot clears the free cosine baseline on 3 of 8 against a pre-registered ≥6/8; the model ranking scrambles versus TIRI's pools; an induced brief is worth +0.057 ROC-AUC for one $0.006 call — at cold start only. |
+| [`wf_llm_benchset_a_summary.md`](wf_llm_benchset_a_summary.md) | Every method and metric side by side, one table. |
+| [`wf_llm_benchset_a_baselines.md`](wf_llm_benchset_a_baselines.md) | The cold-start baselines, and the case-control sampling gate that had to pass before any spend. |
+| [`wf_llm_benchset_a_low_label.md`](wf_llm_benchset_a_low_label.md) | What 60 labels per collection buy, spent three ways. |
+| [`wf_llm_benchset_a_induced_features.md`](wf_llm_benchset_a_induced_features.md) | Does the induced brief help features that do **not** read it? |
+| [`wf_llm_benchset_a_ensemble.md`](wf_llm_benchset_a_ensemble.md) | Does the induced brief survive into the per-silo ensemble? **+0.001 — no.** |
+
+## Label budget, coverage, and input pre-checks
+
+| Report | What it is |
+|---|---|
+| [`wf_label_budget_shape.md`](wf_label_budget_shape.md) · [`_set_b`](wf_label_budget_shape_set_b.md) | How many positives, how many negatives, and what the query costs. Set A, then set B as the check. |
+| [`wf_text_input_precheck.md`](wf_text_input_precheck.md) | What text the embedding actually sees — the $0 pre-check for probe P-TX. |
+| [`wf_usecase_coverage_cleantech_jasper.md`](wf_usecase_coverage_cleantech_jasper.md) · [`_qwen4b`](wf_usecase_coverage_cleantech_qwen4b.md) | Where new data would diversify the training set, run under two encoders. Read both — an answer that holds on only one is a property of that encoder. |
+
+## Spec quality — the remaining per-surface ablations and the linter
+
+Companion tables to the spec-quality block above, split by surface. The consolidated answer
+is [`wf_spec_quality_answer.md`](wf_spec_quality_answer.md); these are its working.
+
+| Report | What it is |
+|---|---|
+| [`wf_spec_quality_ablation_a_combos.md`](wf_spec_quality_ablation_a_combos.md) · [`_b_combos`](wf_spec_quality_ablation_b_combos.md) · [`_tiri_combos`](wf_spec_quality_ablation_tiri_combos.md) | Field-combination ablations on set A, set B, and TIRI's own six. |
+| [`wf_spec_linter_benchset.md`](wf_spec_linter_benchset.md) | The linter run over the 28 benchset specs — **0 findings on all 28**, which is what makes the benchset confirmation unrunnable (see the feasibility report above). |
+
+## Hand-offs
+
+| Report | What it is |
+|---|---|
+| [`wf_sibling_repo_corrections.md`](wf_sibling_repo_corrections.md) | Five claims in the sibling `academic_agent` repo that this week's measurements changed. A hand-off for that repo's owner; nothing here acts on it. |
 
 ## Figures and tables
 
