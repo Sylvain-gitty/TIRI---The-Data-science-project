@@ -160,6 +160,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -178,7 +179,17 @@ TIRI_DIR = REPO / "data" / "raw"
 TIRI_KEYS = [
     "carbon_capture", "cement_binders", "ner", "soil_microbiome", "solar_leo", "tech_forecasting",
 ]
-BENCHSET_SPEC_DIR = Path("/Users/warrenfauvel/academic_agent/evals/data/benchsets")
+# The benchset specs live in the sibling `academic_agent` repo, which is not vendored here
+# (see this file's header: the n=28 stratum is read from `<key>.spec.json`, not from
+# `data/benchsets_v1/briefs.parquet`, which carries no criteria fields). Point the env var at
+# that checkout; the default assumes it sits next to this repo.
+#
+# Resolved lazily rather than globbed at import time on purpose: `Path.glob` on a directory
+# that does not exist returns empty instead of raising, which would silently produce a
+# TIRI-only 6-row audit where the whole construct-validity claim needs all 34.
+BENCHSET_SPEC_DIR = Path(
+    os.environ.get("TIRI_BENCHSET_SPEC_DIR", REPO.parent / "academic_agent" / "evals" / "data" / "benchsets")
+)
 
 PAPERS_TIRI = REPO / "data" / "processed" / "papers_combined.parquet"
 PAPERS_BENCHSET = REPO / "data" / "processed" / "papers_benchset_v1.parquet"
@@ -439,6 +450,15 @@ def load_tiri() -> dict[str, dict]:
 
 
 def load_benchsets() -> dict[str, dict]:
+    if not BENCHSET_SPEC_DIR.is_dir():
+        raise FileNotFoundError(
+            f"benchset spec directory not found: {BENCHSET_SPEC_DIR}\n"
+            "This is the n=28 stratum, read from the sibling `academic_agent` repo, which is "
+            "not vendored in TIRI. Set TIRI_BENCHSET_SPEC_DIR to that checkout's "
+            "evals/data/benchsets directory.\n"
+            "Without it this audit can only cover TIRI's own 6 use cases, which does not "
+            "support the pooled-vs-within-stratum comparison this script exists to make."
+        )
     out = {}
     for path in sorted(BENCHSET_SPEC_DIR.glob("*.spec.json")):
         with open(path) as f:

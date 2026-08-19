@@ -90,7 +90,7 @@ Nothing under ~9B is served for these families, and the sub-5B tier is where the
 
 ## 4. The benchset corpus
 
-🟢 On disk at `/Users/warrenfauvel/academic_agent/exports/benchsets_v1/`.
+🟢 On disk at `<academic_agent>/exports/benchsets_v1/`.
 181,199 rows · 3,374 positive (1.86%) · 28 collections. Read-only from TIRI sessions.
 
 ### 4.1 Quarantine — three collections are already burned
