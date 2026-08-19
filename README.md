@@ -1,5 +1,9 @@
 # TIRI — The Data Science Project
 
+[![CI](https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/actions/workflows/ci.yml/badge.svg)](https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/actions/workflows/ci.yml)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![Code of Conduct](https://img.shields.io/badge/code%20of%20conduct-Contributor%20Covenant%202.1-blueviolet.svg)](CODE_OF_CONDUCT.md)
+
 Turning a labelled corpus of academic literature into a working relevance-screening
 model: clean → feature-engineer → validate → model → ensemble → evaluate.
 
@@ -167,6 +171,11 @@ pip install -r requirements.txt
 python -m spacy download en_core_web_sm   # only for the NER comparison script
 ```
 
+`requirements.txt` carries documented version *floors*, which is what you want for
+development. To reproduce the exact environment the main line was last verified in — pandas
+pinned, everything pinned — use [`requirements-lock.txt`](requirements-lock.txt) instead;
+its header says precisely what that set is and is not certified to reproduce.
+
 **The data you need is in the repo.** Clone and run — no API keys, no GPU, no export
 step. Notebooks assume they're run with their own folder as the working directory.
 
@@ -185,6 +194,13 @@ The left-hand column is **verified, not asserted**. `git clone` into an empty di
 (3s), 02 (5s), 03 (37s), 05 (124s) — and 16 of the 18 supporting notebooks pass. `01`
 reproduces the committed `papers_combined.parquet` frame-for-frame, so the cleaning step
 is checkable rather than trusted.
+
+Re-verified on **Windows, Python 3.11.3, pandas 3.0.5** (2026-08-19): 01, 02, 03 and 05 all
+run clean, and 01 still reproduces `papers_combined.parquet` frame-for-frame — 2,873 × 50,
+identical dtypes and values. Worth stating because the first pass was macOS-only, and it
+turned out that `01` did **not** run on Windows: text I/O inherited the platform's default
+encoding, so the three briefs containing an en-dash failed to read. That is fixed
+throughout, and CI now guards the class.
 
 **Install everything, not just the light half.** `fastembed` and `sentence-transformers`
 (which pulls PyTorch) are `requirements.txt`'s two heaviest entries and the easiest to
@@ -230,6 +246,10 @@ notebooks can be run in any order once the data exists.
 
 ### Where to start reading
 
+0. Prefer one continuous narrative to a repo tour?
+   [`reports/tiri_whitepaper.md`](reports/tiri_whitepaper.md) is the whole project written up
+   for a reader who has not seen the code — problem, data, the finding, what ships, external
+   validation, plus the metrics in plain English and the rejected list with measurements.
 1. This file, then [`CONTEXT.md`](CONTEXT.md) for the findings that shaped the work.
 2. [`main/02_eda_quickstart.ipynb`](notebooks/main/02_eda_quickstart.ipynb) — the
    5-minute tour of the corpus.
@@ -413,3 +433,33 @@ filenames carry the same prefix, so the two work streams stay legible in a share
 CatBoost → ensemble modelling line. WF: data compilation, the feature-engineering track
 (query-conditioned lexical features, embedding bake-off), the per-silo ensemble, and
 external validation on SYNERGY.
+
+The conventions above, plus what a pull request is expected to clear and how to run the
+checks, are set out in full in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+---
+
+## Contributing, conduct, and security
+
+| | |
+|---|---|
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | The conventions, why each exists, and what a PR needs to clear |
+| [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 |
+| [`SECURITY.md`](SECURITY.md) | How to report a leaked credential or a data-exposure problem — **privately**, not as a public issue |
+| [`CITATION.cff`](CITATION.cff) | Citation metadata |
+
+A negative result, clearly measured, is a welcome contribution here — see
+[`CONTEXT.md`](CONTEXT.md) §6, which is the register of everything already tried and
+rejected.
+
+## Licence
+
+**Not yet licensed.** No licence file has been chosen, which means default copyright
+applies and the code and data here are **not** yet reusable by others, whatever this
+repository's visibility. A licence needs to be added before that changes.
+
+Note also that `data/` redistributes third-party academic metadata (Crossref, OpenAlex,
+arXiv, PubMed, Europe PMC, CORE, Semantic Scholar) alongside this project's own analyst
+labels. The terms attaching to that metadata are a separate question from the licence on
+the code, and both need settling before anyone should treat this repository as
+open source.
