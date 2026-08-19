@@ -28,7 +28,7 @@ exercise applied to NER-derived representations instead of embeddings.
 ## 1. Priority properties (why these, for THIS workflow)
 
 Not a generic embedding-benchmark checklist — grounded in `academic_research_agent`'s own
-constraints (`embeddings.py`, `model.py`, `CLAUDE.md`).
+constraints (`embeddings.py`, `model.py`, and the working conventions now in `CONTRIBUTING.md`).
 
 | # | Property | Why it matters for the academic-agent workflow | Priority |
 |---|---|---|---|

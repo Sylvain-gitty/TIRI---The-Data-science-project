@@ -14,7 +14,7 @@ and neither survives 181,199 papers unattended:
 So this script adds the one thing missing, durability, and nothing else. Every actual
 embedding call still goes through `embedding_utils.embed_papers` / `embed_texts`, so the
 per-model title/abstract join, prefixes and query/passage asymmetry stay defined in
-exactly one place (CLAUDE.md's shared-core rule). If a model's handling needs to change,
+exactly one place (CONTRIBUTING.md §7, the shared-core rule). If a model's handling needs to change,
 it changes there, not here.
 
 MODEL CHOICE

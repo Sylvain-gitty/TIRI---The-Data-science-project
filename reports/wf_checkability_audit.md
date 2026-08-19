@@ -42,7 +42,7 @@ now that we can see it.*
 run. The figure is query-conditioned: a number in an abstract only counts as evidence if it sits
 in the same sentence as a metric this use case actually asked for. Those three name no performance
 criteria, so there is no metric vocabulary to condition on, and the honest output is **NULL, not
-0.0** (`CLAUDE.md`: "never found out" and "found nothing" are different facts). It is also the
+0.0** (`CONTRIBUTING.md` §1: "never found out" and "found nothing" are different facts). It is also the
 sharpest thing this probe found: the use cases whose corpora we most want to assess for evidence
 are exactly the ones whose specs do not say what evidence they want.
 

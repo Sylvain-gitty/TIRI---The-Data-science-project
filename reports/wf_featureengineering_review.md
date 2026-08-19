@@ -73,7 +73,7 @@ build-list into a mostly-don't-build list.
 > second is false — one paper with 26,000 citations drags an average around, but it's still
 > just one paper. That is exactly what happened here.
 
-**Two rules we held to** (both from `CLAUDE.md`):
+**Two rules we held to** (both now in `CONTRIBUTING.md`):
 
 - **NULL is not 0.** A missing citation count means "we never looked it up", not "it has
   zero citations". These are different facts and we never filled one in as the other.

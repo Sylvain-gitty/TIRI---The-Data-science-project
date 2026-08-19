@@ -101,7 +101,7 @@ topical-fit signal, not just an age artifact, and it should be read as such (pap
 be *simultaneously* impactful and off-target).
 
 **Never** `fillna(0)` on `citation_count` — null means "never looked up," 0 means
-"looked up, found nothing." They're different facts (`CLAUDE.md`'s NULL ≠ 0 rule) and
+"looked up, found nothing." They're different facts (the NULL ≠ 0 rule, `CONTRIBUTING.md` §1) and
 conflating them changes the actual meaning of the column. Add a
 `citation_count_missing` boolean instead of imputing.
 

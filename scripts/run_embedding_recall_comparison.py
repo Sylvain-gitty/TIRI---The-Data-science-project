@@ -24,7 +24,7 @@ Its own ceiling is 0.95*(1-prevalence), reported alongside so a number is never 
 though 1.0 were reachable.
 
 Metric helpers come from scripts/fold_pipeline_utils.py rather than being redefined --
-same reason that module exists (CLAUDE.md: one implementation, so the two pipelines
+same reason that module exists (CONTRIBUTING.md §7: one implementation, so the two pipelines
 cannot drift apart).
 
 Usage:

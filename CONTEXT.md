@@ -1,6 +1,6 @@
 # CONTEXT.md — what a new agent needs to know before touching this repo
 
-`CLAUDE.md` says how to work here. This file says **what is true here**, and it exists
+`CONTRIBUTING.md` says how to work here. This file says **what is true here**, and it exists
 because several of the facts below are not derivable from the code, the data, or the git
 history — they came out of a working session and would otherwise have to be rediscovered
 (expensively, and in at least two cases wrongly).

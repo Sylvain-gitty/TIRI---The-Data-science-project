@@ -2,7 +2,7 @@
 
 WHY VENDORED RATHER THAN IMPORTED. `academic_agent` is read-only from here and lives at a
 sibling path (`../academic_agent`), not a package on this repo's path. A `sys.path` hop across
-repos is exactly the kind of cross-repo coupling `CLAUDE.md`'s "Sibling repo location" note
+repos is exactly the kind of cross-repo coupling `CONTRIBUTING.md` §8's sibling-repo rule
 warns against — it would silently break the day the sibling repo moves or refactors a private
 name. Copying four small, already-frozen regex objects is cheaper than that fragility, and it is
 copying, not reimplementing: every object below is unchanged from its source, byte for byte
