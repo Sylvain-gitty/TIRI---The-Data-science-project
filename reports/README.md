@@ -168,3 +168,14 @@ write. They are named after whatever produced them (`wf_ensemble_fold_pipeline_*
 `eda_quickstart_*`), so each one traces back to its source. Anything carrying a
 **`benchset_v1`** prefix belongs to the benchmark corpus, not the six TIRI questions —
 see the section above before comparing it with anything else here.
+
+**Three renamed files, and what they were.** `soil_microbiome_fullrun_baseline_*`
+(`.png` / `.json` / `.csv`) were originally
+`high-quality-microbial-and-fungal-community-in-soil-labelledFULLRUN_baseline_*` —
+`future_work/train_baseline_classifier.py` names its outputs after the input file's stem, and
+the early exports used the review's full title before the short
+`soil_microbiome` keys were settled on. At 97–105 characters those names broke `git clone`
+on Windows, where the whole path must fit in 260 characters, so they were shortened to the
+use-case key every other file here uses. Older reports that mention the long form are
+referring to the *input* data under its old name, which is a different thing and was left
+alone.
