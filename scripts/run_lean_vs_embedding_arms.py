@@ -186,7 +186,7 @@ def main() -> None:
          "and can contribute to an ensemble even while scoring lower alone.")
     emit()
 
-    OUT.write_text("\n".join(lines) + "\n")
+    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nWritten to {OUT.relative_to(REPO)}")
 
 

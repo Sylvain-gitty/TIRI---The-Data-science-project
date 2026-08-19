@@ -113,7 +113,7 @@ def main() -> None:
         logreg_cur_oof[seed] = within_silo_oof(X, y, use_case, groups, seed, logreg_c_fn(cols, C=1.0))
         print(f"  done: logreg(C=1.0) seed={seed}")
 
-    chosen_2way = json.loads(WEIGHTS_JSON.read_text())
+    chosen_2way = json.loads(WEIGHTS_JSON.read_text(encoding="utf-8"))
 
     lines: list[str] = []
 
@@ -231,7 +231,7 @@ def main() -> None:
     syn_groups = pd.Series(np.arange(len(syn_df)))
     syn_y_by_review = {r: syn_y[(syn_uc == r).to_numpy()] for r in SYNERGY_REVIEWS}
 
-    cached = json.loads(SYNERGY_OOF_JSON.read_text())
+    cached = json.loads(SYNERGY_OOF_JSON.read_text(encoding="utf-8"))
     syn_catboost_oof = {int(s): {uc: np.array(v) for uc, v in d.items()} for s, d in cached["catboost"].items()}
     syn_logreg_cur_oof = {int(s): {uc: np.array(v) for uc, v in d.items()} for s, d in cached["logreg"].items()}
 
@@ -323,7 +323,7 @@ def main() -> None:
              f"C={NEW_C})` in its place going forward, a deliberate call for a human to make, "
              f"not a silent script edit.")
         new_weights_out = {k: round(v, 2) for k, v in new_weights.items()}
-        NEW_WEIGHTS_JSON.write_text(json.dumps(new_weights_out, indent=2))
+        NEW_WEIGHTS_JSON.write_text(json.dumps(new_weights_out, indent=2), encoding="utf-8")
         print(f"New weights written to {NEW_WEIGHTS_JSON.relative_to(REPO)}")
     else:
         verdict = "MIXED — not a clean adopt"
@@ -339,8 +339,8 @@ def main() -> None:
              f"`wf_ensemble_v2_chosen_weights.json` are left unchanged. New weights are NOT "
              f"saved to `{NEW_WEIGHTS_JSON.name}` given the mixed result.")
 
-    existing = OUT_MD.read_text() if OUT_MD.exists() else ""
-    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n")
+    existing = OUT_MD.read_text(encoding="utf-8") if OUT_MD.exists() else ""
+    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nAppended to {OUT_MD.relative_to(REPO)}")
 
 

@@ -192,7 +192,7 @@ def main() -> None:
         "classification_report": report,
     }
     args.out_metrics.parent.mkdir(parents=True, exist_ok=True)
-    with open(args.out_metrics, "w") as f:
+    with open(args.out_metrics, "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=2)
     print(f"Saved metrics to {args.out_metrics}")
 

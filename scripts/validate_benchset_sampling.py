@@ -169,7 +169,7 @@ def main() -> None:
             "The sample does NOT reproduce the corpus. Do not buy LLM responses against it."))
     emit()
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     full_df.to_csv(REPO / "reports" / "wf_llm_benchset_a_baselines.csv", index=False)
     print(f"\nwrote {OUT_MD}")
     if not ok:

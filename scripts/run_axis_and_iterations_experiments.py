@@ -29,7 +29,7 @@ JOBS = [
 
 
 def main() -> None:
-    results = json.loads(OUT_JSON.read_text()) if OUT_JSON.exists() else {}
+    results = json.loads(OUT_JSON.read_text(encoding="utf-8")) if OUT_JSON.exists() else {}
 
     calls = []
     for key, fn_name, args in JOBS:
@@ -59,7 +59,7 @@ def main() -> None:
                 continue
             print(f"  done: {key} seed={seed}")
             results.setdefault(key, {})[str(seed)] = res
-            OUT_JSON.write_text(json.dumps(results))
+            OUT_JSON.write_text(json.dumps(results), encoding="utf-8")
 
     print(f"\nWritten to {OUT_JSON.relative_to(REPO)}")
 

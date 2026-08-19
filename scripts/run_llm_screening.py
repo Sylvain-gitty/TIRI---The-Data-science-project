@@ -237,7 +237,7 @@ def resolve_briefs(corpus: str, brief: str, df: pd.DataFrame) -> tuple[dict | No
         path = Path("reports/wf_llm_setA_rules_v1.json")
         if not path.exists():
             raise SystemExit(f"{path} missing - run scripts/induce_rule_set.py first")
-        blob = json.loads(path.read_text())
+        blob = json.loads(path.read_text(encoding="utf-8"))
         return blob["briefs"], f"induced-{blob['rule_set_version']}"
     raise ValueError(brief)
 

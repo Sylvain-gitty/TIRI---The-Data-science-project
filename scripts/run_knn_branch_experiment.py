@@ -146,7 +146,7 @@ def main() -> None:
         knn_oof[seed] = within_silo_oof(X, y, use_case, groups, seed, knn_fn(cols, n_neighbors=best_k))
         print(f"  done: knn seed={seed}")
 
-    chosen_2way = json.loads(WEIGHTS_JSON.read_text()) if WEIGHTS_JSON.exists() else {}
+    chosen_2way = json.loads(WEIGHTS_JSON.read_text(encoding="utf-8")) if WEIGHTS_JSON.exists() else {}
 
     lines: list[str] = []
 
@@ -325,8 +325,8 @@ def main() -> None:
          "exception, which is a single-use-case question, not a general third-branch one.")
     emit()
 
-    existing = OUT_MD.read_text() if OUT_MD.exists() else ""
-    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n")
+    existing = OUT_MD.read_text(encoding="utf-8") if OUT_MD.exists() else ""
+    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nAppended to {OUT_MD.relative_to(REPO)}")
 
 

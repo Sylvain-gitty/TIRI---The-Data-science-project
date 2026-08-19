@@ -123,7 +123,7 @@ def main() -> None:
         svm_oof[seed] = within_silo_oof(X, y, use_case, groups, seed, svm_fn(cols, kernel="rbf"))
         print(f"  done: svm(rbf) seed={seed}")
 
-    chosen_2way = json.loads(WEIGHTS_JSON.read_text()) if WEIGHTS_JSON.exists() else {}
+    chosen_2way = json.loads(WEIGHTS_JSON.read_text(encoding="utf-8")) if WEIGHTS_JSON.exists() else {}
 
     lines: list[str] = []
 
@@ -261,8 +261,8 @@ def main() -> None:
          f"problem (genuinely decorrelated but the gain still doesn't clear noise).")
     emit()
 
-    existing = OUT_MD.read_text() if OUT_MD.exists() else ""
-    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n")
+    existing = OUT_MD.read_text(encoding="utf-8") if OUT_MD.exists() else ""
+    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nAppended to {OUT_MD.relative_to(REPO)}")
 
 

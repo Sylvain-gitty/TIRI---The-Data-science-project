@@ -151,14 +151,14 @@ def main() -> None:
          f"from the earlier rounds.")
     emit()
 
-    existing = OUT_MD.read_text() if OUT_MD.exists() else ""
-    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n")
+    existing = OUT_MD.read_text(encoding="utf-8") if OUT_MD.exists() else ""
+    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nAppended to {OUT_MD.relative_to(REPO)}")
 
     # Save the chosen weights for the SYNERGY step (or any downstream use).
     import json
     weights_out = {row["use_case"]: row["chosen_w"] for row in rows}
-    (REPO / "reports" / "wf_ensemble_v2_chosen_weights.json").write_text(json.dumps(weights_out))
+    (REPO / "reports" / "wf_ensemble_v2_chosen_weights.json").write_text(json.dumps(weights_out), encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -173,7 +173,7 @@ def collect() -> pd.DataFrame:
             add(name, 60, uc, te.y.to_numpy().astype(int), s, te.w.to_numpy())
 
     # ---------- full-label ensemble ----------
-    raw = json.loads(ENSEMBLE_OOF.read_text())
+    raw = json.loads(ENSEMBLE_OOF.read_text(encoding="utf-8"))
     held = (feats.split != "train").to_numpy()
     cells: dict[tuple, dict] = {}
     for k, per_uc in raw.items():
@@ -310,7 +310,7 @@ def main() -> None:
          "relevance.")
     emit()
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     res.to_csv(REPORTS / "wf_llm_benchset_a_summary.csv", index=False)
     agg.round(4).to_csv(REPORTS / "wf_llm_benchset_a_summary_agg.csv")
     print(f"\nwrote {OUT_MD}")

@@ -444,7 +444,7 @@ def evidence_availability(
 def load_tiri() -> dict[str, dict]:
     out = {}
     for key in TIRI_KEYS:
-        with open(TIRI_DIR / f"{key}.usecase.json") as f:
+        with open(TIRI_DIR / f"{key}.usecase.json", encoding="utf-8") as f:
             out[key] = json.load(f)
     return out
 
@@ -461,7 +461,7 @@ def load_benchsets() -> dict[str, dict]:
         )
     out = {}
     for path in sorted(BENCHSET_SPEC_DIR.glob("*.spec.json")):
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             out[path.stem.replace(".spec", "")] = json.load(f)
     return out
 
@@ -864,10 +864,10 @@ def write_report(*, df, reportable, dropped, pooled_iqr_val, jackknife_min, tiri
 
     lines.append("## 5. Findings checked for, as pre-registered\n")
     ner_targets = [
-        c["target"] for c in json.load(open(TIRI_DIR / "ner.usecase.json"))["performance_criteria"]
+        c["target"] for c in json.load(open(TIRI_DIR / "ner.usecase.json", encoding="utf-8"))["performance_criteria"]
     ]
     solar_targets = [
-        c["target"] for c in json.load(open(TIRI_DIR / "solar_leo.usecase.json"))["performance_criteria"]
+        c["target"] for c in json.load(open(TIRI_DIR / "solar_leo.usecase.json", encoding="utf-8"))["performance_criteria"]
     ]
     lines.append(
         f"- `ner` and `solar_leo` both have `performance_criteria` populated (3 and 2 entries "
@@ -878,7 +878,7 @@ def write_report(*, df, reportable, dropped, pooled_iqr_val, jackknife_min, tiri
         f"\"3 of 6 populated\" (the old field-presence count) overstates the real predicate "
         f"count — confirmed, and it is exactly why this probe counts spans instead.\n"
     )
-    tf = json.load(open(TIRI_DIR / "tech_forecasting.usecase.json"))
+    tf = json.load(open(TIRI_DIR / "tech_forecasting.usecase.json", encoding="utf-8"))
     lines.append(
         f"- `tech_forecasting.decision_criteria.must_have` = "
         f"`{tf['decision_criteria']['must_have']!r}` — a relabelled term list (two bare nouns), "
@@ -919,7 +919,7 @@ def write_report(*, df, reportable, dropped, pooled_iqr_val, jackknife_min, tiri
         "correlation, per S-UCQ Q5's own pre-registration.\n"
     )
 
-    OUT_MD.write_text("\n".join(lines))
+    OUT_MD.write_text("\n".join(lines), encoding="utf-8")
 
 
 if __name__ == "__main__":

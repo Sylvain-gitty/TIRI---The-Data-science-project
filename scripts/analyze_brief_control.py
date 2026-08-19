@@ -112,7 +112,7 @@ def main() -> None:
     emit("## Summary")
     emit()
     emit(to_md(pd.DataFrame(summary).round(3), ""))
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nwrote {OUT_MD}")
 
 

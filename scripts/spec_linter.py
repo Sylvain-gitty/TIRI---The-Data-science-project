@@ -348,7 +348,7 @@ def escalation(fired: list[Check]) -> str | None:
 def load_tiri_specs() -> dict[str, dict]:
     out = {}
     for path in sorted((REPO / "data" / "raw").glob("*.usecase.json")):
-        out[path.name.split(".")[0]] = json.loads(path.read_text())
+        out[path.name.split(".")[0]] = json.loads(path.read_text(encoding="utf-8"))
     return out
 
 
@@ -443,7 +443,7 @@ def main() -> None:
         raise SystemExit(0 if self_test() else 1)
 
     if args.json:
-        spec = json.loads(args.json.read_text())
+        spec = json.loads(args.json.read_text(encoding="utf-8"))
         fired = lint(spec)
         print(f"{args.json.name}: {len(fired)} finding(s)\n")
         for c in fired:

@@ -76,7 +76,7 @@ def pct_rank(values: np.ndarray) -> np.ndarray:
 
 
 def main() -> None:
-    fields = json.loads(RULES.read_text())["fields"]
+    fields = json.loads(RULES.read_text(encoding="utf-8"))["fields"]
     base = load_set_a()
     sample = case_control_sample(base).reset_index(drop=True)
     print(f"{len(sample):,} rows / {sample.use_case_key.nunique()} silos / "

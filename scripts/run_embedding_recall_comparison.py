@@ -283,7 +283,7 @@ def main() -> None:
     emit(to_md(piv.round(3), "variant"))
     emit()
 
-    OUT.write_text("\n".join(lines) + "\n")
+    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nWritten to {OUT.relative_to(REPO)}")
 
 

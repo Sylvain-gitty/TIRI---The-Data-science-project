@@ -43,7 +43,7 @@ THRESHOLDS = np.linspace(0.01, 0.99, 99)
 
 def main() -> None:
     df = pd.read_parquet(FEATURES, columns=["use_case_key", "y", "w", "first_author", "split"])
-    raw = json.loads(OOF.read_text())
+    raw = json.loads(OOF.read_text(encoding="utf-8"))
 
     # branch OOF -> per (variant, seed) blend. Plain 50/50: learned blending has tied plain
     # averaging twice in this repo, and a fitted weight would add a second fitted quantity
@@ -228,7 +228,7 @@ def main() -> None:
              "on every rung.")
         emit()
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     res.to_csv(REPO / "reports" / "wf_llm_benchset_a_ensemble.csv", index=False)
     print(f"\nwrote {OUT_MD}")
 

@@ -152,7 +152,7 @@ def brief_text(fields: dict) -> str:
 
 def load_specs(arm: str) -> dict[str, dict]:
     d = SPEC_DIRS[arm]
-    return {k: _flat(json.loads((d / f"{k}.usecase.json").read_text())) for k in USE_CASES}
+    return {k: _flat(json.loads((d / f"{k}.usecase.json").read_text(encoding="utf-8"))) for k in USE_CASES}
 
 
 def corpus_fields() -> dict[str, dict]:

@@ -153,7 +153,7 @@ def main() -> None:
          "three ways to spend the same 60 labels, not a fitted method against an unfitted one.")
     emit()
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     res.to_csv(REPO / "reports" / "wf_llm_benchset_a_low_label.csv")
     print(f"\nwrote {OUT_MD}")
 

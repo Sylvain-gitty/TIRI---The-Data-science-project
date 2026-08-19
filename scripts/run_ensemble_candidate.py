@@ -282,7 +282,7 @@ def main() -> None:
              f"(mean delta {delta[name].mean():+.3f}).")
     emit()
 
-    OUT.write_text("\n".join(lines) + "\n")
+    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nWritten to {OUT.relative_to(REPO)}")
 
 

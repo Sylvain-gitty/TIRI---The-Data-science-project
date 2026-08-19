@@ -180,7 +180,7 @@ def main() -> None:
          "`f2_train` column, not the `f2_test` one.")
     emit()
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     res.to_csv(REPO / "reports" / "wf_llm_split_results.csv", index=False)
     print(f"\nwrote {OUT_MD}")
 

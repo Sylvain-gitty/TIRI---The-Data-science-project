@@ -157,7 +157,7 @@ def main() -> None:
           f"on Modal (parallelized) ...")
     cb_grid = {}
     if GRID_JSON.exists():
-        cached = json.loads(GRID_JSON.read_text())
+        cached = json.loads(GRID_JSON.read_text(encoding="utf-8"))
         cb_grid = {tuple(map(int, k.split("_"))): v for k, v in cached.get("catboost", {}).items()}
     remaining = [(it, d) for it, d in configs if (it, d) not in cb_grid]
     if remaining:
@@ -172,7 +172,7 @@ def main() -> None:
             print(f"  done: iterations={it} depth={d}")
             GRID_JSON.write_text(json.dumps({
                 "catboost": {f"{it}_{d}": v for (it, d), v in cb_grid.items()},
-            }))
+            }), encoding="utf-8")
 
     cb_rows = []
     for (it, d), res in cb_grid.items():
@@ -298,8 +298,8 @@ def main() -> None:
              "in this pass.")
     emit()
 
-    existing = OUT_MD.read_text() if OUT_MD.exists() else ""
-    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n")
+    existing = OUT_MD.read_text(encoding="utf-8") if OUT_MD.exists() else ""
+    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nAppended to {OUT_MD.relative_to(REPO)}")
 
     return cb_verdict, best_it, best_d, lr_verdict, best_C

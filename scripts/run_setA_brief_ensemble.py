@@ -96,7 +96,7 @@ def main() -> None:
 
     results: dict[str, dict] = {}
     if OUT_JSON.exists():
-        results = json.loads(OUT_JSON.read_text())
+        results = json.loads(OUT_JSON.read_text(encoding="utf-8"))
 
     for variant in args.variants:
         cols = variants[variant]
@@ -116,7 +116,7 @@ def main() -> None:
                 print(f"  {key}: {time.time() - t0:.0f}s", flush=True)
                 # Written after every cell: an hour of fits should never be lost to a
                 # crash in the next one, and re-running skips what is already on disk.
-                OUT_JSON.write_text(json.dumps(results))
+                OUT_JSON.write_text(json.dumps(results), encoding="utf-8")
 
     print(f"\nwrote {OUT_JSON}  ({len(results)} cells)")
 

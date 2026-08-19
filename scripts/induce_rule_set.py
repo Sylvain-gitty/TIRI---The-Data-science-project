@@ -163,7 +163,7 @@ def main() -> None:
         "briefs": briefs,
         "fields": fields,
         "per_use_case": meta,
-    }, indent=2, ensure_ascii=False))
+    }, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nwrote {OUT}  (total ${sum(m['cost'] or 0 for m in meta):.4f})")
 
 

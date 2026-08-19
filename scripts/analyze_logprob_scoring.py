@@ -139,7 +139,7 @@ def main() -> None:
          "other two models required.")
     emit()
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nwrote {OUT_MD}")
 
 

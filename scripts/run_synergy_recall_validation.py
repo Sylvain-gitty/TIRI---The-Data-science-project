@@ -236,7 +236,7 @@ def main() -> None:
                               values="wss_at_95").round(3), "variant"))
     emit()
 
-    OUT.write_text("\n".join(lines) + "\n")
+    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nWritten to {OUT.relative_to(REPO)}")
 
 
