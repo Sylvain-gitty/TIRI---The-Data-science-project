@@ -9,7 +9,7 @@ name: CI
 # It does NOT execute notebooks. The four light main-line notebooks take ~170s combined, and
 # every other notebook needs up to 600 MB of untracked data, a GPU via Modal, or a paid
 # OpenRouter key. Notebook health is verified by hand and recorded in the README's run table
-# instead — see CONTRIBUTING.md. A CI job that cannot run most of the repo's substance
+# instead — see README.md. A CI job that cannot run most of the repo's substance
 # should say so rather than imply coverage it does not have.
 
 on:
@@ -55,7 +55,7 @@ jobs:
         run: ruff check .
 
       - name: Everything parses
-        run: python -m compileall -q scripts/ future_work/ tests/ .github/scripts/
+        run: python -m compileall -q scripts/ tests/ .github/scripts/
 
       - name: Shared libraries import cleanly
         run: |

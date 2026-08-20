@@ -1,12 +1,11 @@
 # Notebooks
 
-Three folders, one rule each:
+Two folders, one rule each:
 
 | Folder | What's in it | Writes to `data/`? |
 |---|---|---|
 | **`main/`** | Two lines: the **11-notebook TIRI main line** (`01`–`11`), numbered in reading order — start here — and a parallel **4-notebook `*_benchset_v1` line** over the benchmark corpus, described in its own section below. | Yes — `01` and `04` of each line only |
 | **`experiments/`** | Supporting evidence: viability checks, model bake-offs, superseded passes. Mostly **negative results**, kept deliberately. | Never |
-| **`future_work/`** | Templates that have never been executed, by design. | Never |
 
 Every notebook is committed **with its outputs intact**, so results are readable
 without re-running anything.
@@ -184,20 +183,11 @@ otherwise untouched.
 
 ---
 
-## `future_work/` — never executed, by design
-
-| Notebook | Status |
-|---|---|
-| `sf_catboost_fold_pipeline.ipynb` | **Template — `CONFIG["run_training"] = False`.** Every cell that would fit a model is gated and prints a skip message, so it's safe to Run All today. Superseded for actual results by `main/07_advanced_catboost.ipynb`; kept because it's the config-driven version. |
-| `sf_llm_fold_pipeline.ipynb` | **Template — `call_llm_stub` raises `NotImplementedError` regardless of config.** A prompted-LLM classifier reading each question's brief plus the paper's title/abstract — no embedding, no training data, so it would work on a genuinely new question. §3 builds and prints one real prompt end-to-end with no model call, so the template is verifiably functional without training anything. **Not a result — a scaffold.** |
-
----
-
 ## Running a notebook
 
 Every notebook resolves data via `../../data/...`, so **open it from inside its own
-folder** (`notebooks/main/`, `notebooks/experiments/`, `notebooks/future_work/`), not
-from `notebooks/` itself. All three sit at the same depth for exactly this reason.
+folder** (`notebooks/main/` or `notebooks/experiments/`), not from `notebooks/` itself.
+Both sit at the same depth for exactly this reason.
 
 Which ones run from a fresh clone, and which need regenerated data, is in the root
 [`README.md`](../README.md#quick-start).

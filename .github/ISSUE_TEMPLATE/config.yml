@@ -4,7 +4,8 @@ contact_links:
     url: https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/security/advisories/new
     about: >-
       Do not open a public issue for a leaked credential or personal data found in the shipped
-      dataset. Use private vulnerability reporting — see SECURITY.md.
+      dataset. Use GitHub's private vulnerability reporting instead, so the details stay
+      visible only to the maintainers.
   - name: What has already been measured and rejected
     url: https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/blob/main/CONTEXT.md
     about: >-

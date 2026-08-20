@@ -51,14 +51,23 @@ data/benchsets_v1
 # CatBoost's own per-fit training-log directory, written wherever a fit runs locally
 catboost_info/
 
-# Per-run LLM screening artifacts. `reports/` holds decision-trail .md files, not
-# per-run outputs (same convention the comparison scripts already follow).
-reports/wf_llm_*_responses.parquet
-reports/wf_llm_*_summary.csv
-reports/wf_llm_pilot_per_use_case.csv
-# Same rule, same reason. Regenerating this is $0 - every row is served from
-# `data/processed/llm_cache/`, which is where the paid-for responses actually live.
-reports/wf_spec_quality_reader_*_responses.parquet
+# ---------------------------------------------------------------------------
+# reports/ is now an OUTPUT DIRECTORY ONLY.
+#
+# The 57 written-up reports that used to live here were removed to slim the repo (see
+# README § "Removed reports"; they are recoverable from git history at 75c14de). What
+# remains is a directory that notebooks and scripts write into: `02_eda_quickstart` and
+# `03_eda_full` save their figures here, and ~76 scripts write .md/.csv/.json outputs.
+#
+# So everything in here is ignored and only `.gitkeep` is tracked. That .gitkeep is
+# load-bearing, not decoration: notebook 02 does `REPORTS_DIR = Path("../../reports")`
+# with no mkdir, so without a tracked file holding the directory open, a fresh clone
+# would fail when the notebook tries to save.
+#
+# To commit a write-up again, force-add it: `git add -f reports/<file>`.
+# ---------------------------------------------------------------------------
+reports/*
+!reports/.gitkeep
 
 # Node dependencies for scripts/md2docx.js (the whitepaper -> .docx renderer). The project
 # itself is Python; this is document tooling only. `npm install` restores it from

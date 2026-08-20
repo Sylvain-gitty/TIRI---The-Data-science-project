@@ -30,7 +30,7 @@ def test_normalise_folds_hyphens_and_slashes():
 
 @pytest.mark.parametrize("empty", [None, np.nan, float("nan"), ""])
 def test_normalise_maps_missing_to_empty_string_not_the_word_nan(empty):
-    """NULL is not 0, and it is not the string "nan" either (CONTRIBUTING.md 1).
+    """NULL is not 0, and it is not the string "nan" either (README.md, conventions).
 
     `str(np.nan)` is `'nan'`, which would tokenise to a real term and quietly pollute
     every BM25 pool with a token that means "this field was missing".
@@ -126,7 +126,7 @@ def test_collect_briefs_keys_on_use_case_and_carries_term_lists():
 def test_derangements_never_leaves_a_use_case_its_own_brief():
     """The falsification control is only valid if no key keeps its own brief.
 
-    CONTRIBUTING.md 4: anything claiming to read the brief must be rebuildable against
+    README.md's conventions: anything claiming to read the brief must be rebuildable against
     deliberately wrong briefs. A shuffle with one fixed point would leak a correct pairing
     into the control and understate the effect it exists to detect.
     """

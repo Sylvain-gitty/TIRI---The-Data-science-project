@@ -124,7 +124,7 @@ a unit for a reason unrelated to the actual metric, so this over-counts somewhat
 is preferred over the phrase match, which under-counts almost to zero, is stated in the
 docstring of `evidence_availability` itself, and the choice is a judgement call, labelled as one.
 
-NULL != 0 (`CONTRIBUTING.md` §1, a non-negotiable convention, restated because it binds this metric
+NULL != 0 (a non-negotiable convention, see `README.md`, restated because it binds this metric
 directly): `papers_benchset_v1.parquet` has 4,733 of 181,199 rows with a null abstract. Those
 rows are **excluded from both numerator and denominator**, not counted as "no evidence" — "never
 digitised" and "digitised and silent" are different facts. Likewise, when a use case's own

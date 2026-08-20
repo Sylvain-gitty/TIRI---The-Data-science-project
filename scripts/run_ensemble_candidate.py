@@ -210,7 +210,7 @@ def main() -> None:
     use_case = df["use_case_key"]
     groups = df["first_author"]
     # Int64 (pandas nullable) -> float64: sklearn/CatBoost expect plain float arrays, and
-    # NaN must survive the cast (never fillna - NULL is not 0, CONTRIBUTING.md §1).
+    # NaN must survive the cast (never fillna - NULL is not 0 - see README.md).
     df = df.copy()
     for col in ("year", "paper_age", "citation_count"):
         df[col] = df[col].astype("float64")

@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/actions/workflows/ci.yml/badge.svg)](https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/actions/workflows/ci.yml)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
-[![Code of Conduct](https://img.shields.io/badge/code%20of%20conduct-Contributor%20Covenant%202.1-blueviolet.svg)](CODE_OF_CONDUCT.md)
 
 Turning a labelled corpus of academic literature into a working relevance-screening
 model: clean → feature-engineer → validate → model → ensemble → evaluate.
@@ -119,7 +118,7 @@ in labelling, at realistic prevalence (1.7–14.8% positive, vs 26–77% in our 
 measured here.
 
 The full architecture decision doc — every choice, its evidence, and its confidence
-grade — is [`reports/wf_ensemble_final_recommendations.md`](reports/wf_ensemble_final_recommendations.md).
+grade — was `reports/wf_ensemble_final_recommendations.md` (see **Removed reports** below).
 
 ### Can a prompted LLM do this instead? (`notebooks/main/11`, `reports/wf_llm_*`)
 
@@ -150,9 +149,9 @@ and 30 irrelevant papers and asking it to write the screening rule it infers is 
 (0.030). It is a **cold-start lever only**: folded into the trained ensemble it is worth
 **+0.001**, because the embedding block already encodes it.
 
-Decision doc: [`reports/wf_llm_benchset_a_findings.md`](reports/wf_llm_benchset_a_findings.md).
-Every method and metric side by side:
-[`reports/wf_llm_benchset_a_summary.md`](reports/wf_llm_benchset_a_summary.md).
+Decision doc: `reports/wf_llm_benchset_a_findings.md`. Every method and metric side by
+side: `reports/wf_llm_benchset_a_summary.md`. Both were removed — see **Removed reports**
+below.
 
 ### A note on what counts as a result here
 
@@ -234,11 +233,11 @@ notebooks/
   experiments/      supporting evidence: feature viability checks, embedding
                     bake-offs, external validation, superseded passes. Mostly
                     negative results, kept on purpose. Never writes to data/
-  future_work/      two templates that have never been executed, by design
 
 scripts/            shared libraries (embedding, folds, lexical features, metrics) + experiment drivers
-future_work/        train_baseline_classifier.py — parked, not wired into the workflow
-reports/            the decision trail — what we tried, what we measured, what we rejected
+tests/              invariants of the shared libraries
+reports/            empty. Notebooks and scripts write their outputs here; the
+                    written-up decision trail was removed (see below)
 ```
 
 Only `main/01` and `main/04` write to `data/`. Everything else is read-only, so
@@ -246,10 +245,6 @@ notebooks can be run in any order once the data exists.
 
 ### Where to start reading
 
-0. Prefer one continuous narrative to a repo tour?
-   [`reports/tiri_whitepaper.md`](reports/tiri_whitepaper.md) is the whole project written up
-   for a reader who has not seen the code — problem, data, the finding, what ships, external
-   validation, plus the metrics in plain English and the rejected list with measurements.
 1. This file, then [`CONTEXT.md`](CONTEXT.md) for the findings that shaped the work.
 2. [`main/02_eda_quickstart.ipynb`](notebooks/main/02_eda_quickstart.ipynb) — the
    5-minute tour of the corpus.
@@ -354,8 +349,7 @@ that code is what every downstream report will call it.
 ## Future work
 
 **Continued experimentation with the advanced model** — the near-term list, in priority
-order (full reasoning in
-[`reports/wf_ensemble_final_recommendations.md`](reports/wf_ensemble_final_recommendations.md)):
+order (full reasoning was in `reports/wf_ensemble_final_recommendations.md`):
 
 - **Replace the ~6,000-dim embedding block with a single supervised discriminant
   direction.** Scored statistically identical (F2 0.897 vs 0.892) at a fraction of the
@@ -367,8 +361,8 @@ order (full reasoning in
   (no embedding) beat *both* production branches standalone there (ROC-AUC 0.933 vs
   0.912/0.876). It's the one question where dropping the embedding wins.
 
-**From the LLM screening work** (full list in
-[`reports/wf_llm_benchset_a_findings.md`](reports/wf_llm_benchset_a_findings.md) §10):
+**From the LLM screening work** (full list was in `reports/wf_llm_benchset_a_findings.md`
+§10):
 
 - **Run the induced brief on the collections that are too small to train on.** 12 of the
   benchmark's 28 collections are too small to split, which is exactly the cold-start
@@ -434,23 +428,31 @@ CatBoost → ensemble modelling line. WF: data compilation, the feature-engineer
 (query-conditioned lexical features, embedding bake-off), the per-silo ensemble, and
 external validation on SYNERGY.
 
-The conventions above, plus what a pull request is expected to clear and how to run the
-checks, are set out in full in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 
-## Contributing, conduct, and security
+## Removed reports
 
-| | |
-|---|---|
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | The conventions, why each exists, and what a PR needs to clear |
-| [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 |
-| [`SECURITY.md`](SECURITY.md) | How to report a leaked credential or a data-exposure problem — **privately**, not as a public issue |
-| [`CITATION.cff`](CITATION.cff) | Citation metadata |
+`reports/` held 57 written-up reports — the decision trail behind every number above,
+including the two architecture decision docs this README cites. They were removed to slim
+the working tree and the directory is now empty except for a `.gitkeep`, because notebooks
+`02` and `03` write their figures there.
 
-A negative result, clearly measured, is a welcome contribution here — see
-[`CONTEXT.md`](CONTEXT.md) §6, which is the register of everything already tried and
-rejected.
+**Nothing is lost.** Every one is in git history and recoverable individually:
+
+```bash
+git show 75c14de:reports/wf_ensemble_final_recommendations.md
+git checkout 75c14de -- reports/          # restore the whole folder
+```
+
+The consequence worth stating plainly: claims in this README and in `CONTEXT.md` now cite
+evidence that is not in the working tree. The measurements behind them were not revised —
+the write-ups were removed — but a reader taking this repository at face value can no
+longer check them without going to history.
+
+Citation metadata is in [`CITATION.cff`](CITATION.cff). A negative result, clearly
+measured, is a welcome contribution — see [`CONTEXT.md`](CONTEXT.md) §6, the register of
+everything already tried and rejected.
 
 ## Licence
 

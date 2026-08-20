@@ -1,5 +1,5 @@
 <!--
-Keep this short. The repo's conventions are in CONTRIBUTING.md; this template is only
+Keep this short. The repo's conventions are in README.md § "How we work"; this template is only
 here so a reviewer does not have to ask the same four questions every time.
 
 Delete any section that genuinely does not apply.
@@ -34,16 +34,16 @@ If the change adds or modifies a feature that reads the brief, confirm the falsi
 control:
 
 - [ ] Rebuilt against deliberately wrong briefs, and it does **not** still score well
-      (`CONTRIBUTING.md` §4)
+      (README.md, "Non-negotiable conventions")
 
 ---
 
 ## Checks
 
-- [ ] `python -m compileall -q scripts/ future_work/` passes
+- [ ] `python -m compileall -q scripts/ tests/` passes
 - [ ] `python -m pytest -q` passes
 - [ ] `ruff check .` passes
-- [ ] No `fillna(0)` over a sparse field — NULL is not 0 (`CONTRIBUTING.md` §1)
+- [ ] No `fillna(0)` over a sparse field — NULL is not 0 (`README.md`)
 - [ ] Nothing fitted outside its fold (scaler / PCA / imputer / threshold)
 - [ ] No new hardcoded absolute path; sibling-repo paths come from an env var
 - [ ] Notebooks committed **with outputs**, and no notebook output contains a local
