@@ -1,0 +1,411 @@
+/* ══════════════════════════════════════════════════════════════════════════
+  TIRI · SHARED VISUALISATIONS
+  Every chart both surfaces draw: the pool map / tune scatter, the Sankey, the
+  use-case bubbles, the Compare frame and its similarity table, the operating-
+  point radio row, the welcome diagrams, and the three landing graphics (radar,
+  low-fi labelling, stakeholder flow).
+
+  These are here rather than in landing.css because the landing page shows the
+  REAL interface — the same renderers, over the same fixture, at a fully
+  labelled state. A second copy of the scatter styling is how the marketing page
+  and the product drift apart.
+  ══════════════════════════════════════════════════════════════════════════ */
+/* expanded map */
+.mapStage{position:relative;background:hsl(75,16%,96%);border-bottom:1px solid var(--line2)}
+.mapStage svg{display:block;width:100%;height:auto}
+.mapTip{position:absolute;z-index:5;display:none;background:var(--ink);color:hsl(75,20%,95%);
+  padding:10px 12px;max-width:290px;box-shadow:0 8px 26px rgba(0,0,0,.3);pointer-events:none}
+.mapTip.on{display:block}
+.mapTip .mtT{font:600 12.5px/1.4 var(--bd);margin-bottom:5px}
+.mapTip .mtM{font:400 11px/1.4 var(--mn);color:hsl(75,10%,68%)}
+.mapTip .mtL{font:400 11px/1.4 var(--mn);color:hsl(75,10%,68%);margin-top:4px;display:flex;justify-content:space-between;gap:9px}
+.mapTip .mtS{color:var(--amber)}
+.mapLegend{display:flex;flex-wrap:wrap;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line2);
+  background:var(--paper);font-size:12px;color:var(--ink2)}
+.mapLegend span{display:flex;align-items:center;gap:7px}
+.lg{width:10px;height:10px;flex:none}
+.lg.pos{background:hsl(145,38%,23%)}
+.lg.neg{background:hsl(150,10%,52%)}
+.lg.none{background:hsl(150,20%,42%);opacity:.3}
+.lg.ring{border:1px dashed hsl(145,38%,23%);background:hsla(145,38%,23%,.13)}
+/* the miss swatch must be the same hollow orange the scatter draws for a false
+   negative — a green dashed square in that row said "your own label", which is
+   what .lg.ring means in the app's map and a different fact entirely */
+.lg.miss{background:var(--miss)}
+.mapCols{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:16px 20px;background:var(--paper)}
+.mapCols .pt{font:600 10px/1 var(--bd);letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);
+  margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.mapNote{padding:12px 20px 16px;background:var(--paper);font-size:11.5px;color:var(--ink3);line-height:1.55}
+.mapwrap{position:relative;background:hsl(75,16%,96%);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.mapwrap svg{display:block;width:100%;height:auto}
+.mapcap{padding:7px 13px;font-size:10.5px;color:var(--ink3);line-height:1.45;border-bottom:1px solid var(--line)}
+/* labels above the circles, on one baseline, so the eye compares the discs and
+   not the text — and so nothing reflows when a disc changes size */
+.uca-nm{font:600 12px var(--bd);fill:hsl(150,35%,10%);text-anchor:middle}
+.uca-v{font:500 11px var(--mn);fill:hsl(150,15%,35%);text-anchor:middle}
+.uca-r{font:400 10.5px var(--bd);fill:hsl(150,10%,55%);text-anchor:middle}
+/* lean: the figure owns a whole screen, so the labels are read from further away.
+   Sized in the SVG's own user units, which the viewBox then scales with the frame
+   — a px size here would shrink as the chart grows, which is backwards.
+
+   ONE FAMILY FOR ALL THREE LINES. They were serif name / mono number / sans note,
+   which is three typefaces inside one label and made the block harder to read than
+   any one of them alone. All sans now, and the hierarchy is carried by size, weight
+   and tone — which is what those three are for. The numbers keep tabular figures so
+   the three discs' digits line up under each other. */
+.ucaBig .uca-nm{font:600 26px var(--bd);letter-spacing:-.012em;fill:hsl(150,35%,10%)}
+.ucaBig .uca-v{font:600 22px var(--bd);fill:hsl(150,35%,10%);
+  font-variant-numeric:tabular-nums;letter-spacing:-.008em}
+.ucaBig .uca-r{font:400 17px var(--bd);fill:hsl(150,15%,38%)}
+.cmpBar{display:flex;align-items:center;gap:12px;padding:12px 22px;border-bottom:1px solid var(--line2);
+  background:var(--paper);flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.cmpGrid{display:grid;grid-template-columns:250px 1fr;gap:0;background:var(--paper)}
+.cmpPick{border-right:1px solid var(--line2);background:var(--paper2);max-height:390px;overflow:auto}
+.cmpPick .hd{padding:9px 14px;font:600 9.5px/1 var(--bd);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink3);background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:0}
+.cmpItem{display:grid;grid-template-columns:16px 1fr;gap:9px;width:100%;padding:9px 14px;
+  border-bottom:1px solid var(--line);text-align:left;align-items:start;font-size:12px;color:var(--ink2)}
+.cmpItem:hover{background:var(--paper)}
+.cmpItem.on{background:var(--brand-soft);color:var(--ink)}
+.cmpItem .mk{margin-top:1px;color:var(--line3)}
+.cmpItem.on .mk{color:var(--brand)}
+.cmpItem b{display:block;font-weight:600;line-height:1.35;margin-bottom:2px}
+.cmpItem span{display:block;font:400 10.5px/1.4 var(--mn);color:var(--ink3)}
+.cmpItem.full{opacity:.45}
+.cmpStage{position:relative;background:hsl(75,16%,96%)}
+.cmpStage svg{display:block;width:100%;height:auto}
+.cmpKey{display:flex;flex-wrap:wrap;gap:14px;padding:11px 22px;border-top:1px solid var(--line2);
+  background:var(--paper);font-size:11.5px;color:var(--ink2);align-items:center}
+.cmpKey .kk{display:flex;align-items:center;gap:6px}
+/* THE LANDING PAGE'S KEY, INSIDE ITS OWN PLOT. Absolute in the stage's bottom-left —
+   the emptiest corner of the six-cluster layout — and set at the size the plot is read
+   at, which is the whole reason it moved out from underneath. Semi-opaque ground so a
+   stray point behind it does not eat a word. */
+.cmpInKey{position:absolute;left:18px;bottom:18px;z-index:3;display:flex;
+  flex-direction:column;gap:12px;padding:15px 20px;
+  background:hsla(80,15%,95%,.9);border:1px solid var(--line2)}
+.cmpInKey span{display:flex;align-items:center;gap:12px;font:500 19px/1 var(--bd);color:var(--ink)}
+.cmpInKey .lg{width:20px;height:20px;border-radius:50%;flex:none}
+.cmpKey svg{width:13px;height:13px}
+.cmpKey .kn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
+  border:1.5px solid;font:600 10px/1 var(--mn);flex:none}
+.cmpNum{font:600 11px var(--mn)}
+/* the name ON the centroid: the lean plot's only legend */
+.cmpName{font:600 15px var(--bd)}
+.cmpStage.lean svg{height:100%}
+.cmpFoot{padding:9px 20px;border-top:1px solid var(--line2);background:var(--paper);
+  font:400 11.5px var(--mn);color:var(--ink3)}
+.flowNote.lean{padding:10px 20px;font:600 13px var(--bd);color:var(--ink2);
+  display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
+.flowNote.lean span{font:400 11.5px var(--bd);color:var(--ink3)}
+.cmpSim{padding:14px 22px 6px;background:var(--paper)}
+.simT{border-collapse:collapse;font:500 11px/1 var(--mn)}
+.simT th,.simT td{padding:7px 9px;border:1px solid var(--line);text-align:center;white-space:nowrap}
+.simT th{font:600 9.5px/1 var(--bd);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);
+  background:var(--paper2)}
+/* `white-space:normal` — the shared `th,td{nowrap}` above clipped a long use case
+   name by 77px with no scrollbar and no ellipsis, so the name just stopped. A row
+   header is prose; only the numbers need to stay on one line. */
+.simT th.rw{text-align:left;max-width:230px;text-transform:none;font-size:11px;letter-spacing:0;
+  color:var(--ink2);font-weight:600;white-space:normal;line-height:1.35}
+.simT th.rw em{display:block;font:400 9.5px/1.3 var(--bd);color:var(--ink3);
+  font-style:normal;margin-top:3px;text-transform:none;letter-spacing:0}
+.simT td.hi{background:hsla(145,38%,23%,.16);color:var(--brand-hi);font-weight:600}
+.simT td.mid{background:hsla(145,38%,23%,.07)}
+.simT td.self{background:var(--paper2);color:var(--ink3)}
+.flowStage{background:hsl(75,16%,96%);padding:6px 0 0;border-bottom:1px solid var(--line2)}
+.flowStage svg{display:block;width:100%;height:auto}
+.fw-col{font:600 9.5px var(--bd);letter-spacing:.13em;fill:hsl(150,10%,55%);text-transform:uppercase}
+.fw-nm{font:500 11px var(--bd);fill:hsl(150,35%,10%)}
+.fw-v{font:600 11px var(--mn);fill:hsl(150,15%,35%)}
+.fw-null{font:400 10px var(--bd);fill:hsl(150,10%,58%);font-style:italic}
+.flowNote{padding:14px 22px 16px;background:var(--paper);font-size:11.5px;color:var(--ink3);line-height:1.6}
+.flowNote b{color:var(--ink2);font-weight:600}
+.flowKey{display:flex;flex-wrap:wrap;gap:15px;padding:11px 22px;border-bottom:1px solid var(--line2);
+  background:var(--paper);font-size:11.5px;color:var(--ink2)}
+.flowKey span{display:flex;align-items:center;gap:7px}
+/* LEGIBILITY IS THE POINT OF THE LANDING PAGE'S SANKEY, so lean gives every label
+   a real size. Keyed off `.lean` rather than the section id, so the sizing travels
+   with the presentation instead of with where it happens to be mounted.
+   These are SVG user units in a 920-wide viewBox: scaled to a 1,500px frame a 17
+   here renders at ~28px, which is why they look small written down. */
+.flowStage.lean .fw-nm{font:700 22px var(--bd);fill:hsl(150,30%,14%)}
+.flowStage.lean .fw-keyed{font:700 25px var(--bd)}
+.flowStage.lean .fw-v{font:600 20px var(--bd);fill:hsl(150,20%,28%);font-variant-numeric:tabular-nums}
+.flowStage.lean .fw-col{font:700 16px var(--bd);letter-spacing:.1em;fill:hsl(150,18%,34%)}
+.flowStage.lean .fw-null{font:400 17px var(--bd)}
+
+/* ══════════ TUNE · the operating point, as a thing you can move ══════════ */
+.tuneTop{display:flex;align-items:center;gap:14px;padding:13px 22px;border-bottom:1px solid var(--line2);
+  background:var(--paper);flex-wrap:wrap}
+.tuneTop .lbl{font:600 12px/1 var(--bd);color:var(--ink2)}
+.tuneTop .auc{font:500 12px/1 var(--mn);color:var(--ink2);white-space:nowrap}
+.tuneTop .auc b{font-weight:600;color:var(--brand)}
+.tuneProv{padding:9px 22px;background:var(--paper2);border-bottom:1px solid var(--line2);
+  font-size:11.5px;color:var(--ink3);line-height:1.55}
+.tuneProv b{color:var(--ink2);font-weight:600}
+.tuneGrid{display:grid;grid-template-columns:1fr 292px;gap:0;background:var(--paper)}
+.tuneMap{position:relative;background:hsl(75,16%,96%);border-right:1px solid var(--line2)}
+.tuneMap svg{display:block;width:100%;height:auto}
+.tuneSide{padding:16px 18px}
+.tuneSide .pt{font:600 10px/1 var(--bd);letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px}
+.tuneNums{border:1px solid var(--line2);background:var(--paper2);margin-bottom:15px}
+.tn{display:flex;justify-content:space-between;gap:9px;align-items:baseline;padding:9px 11px;border-bottom:1px solid var(--line)}
+.tn:last-child{border-bottom:none}
+.tn .k{font-size:12px;color:var(--ink2)}
+.tn .v{font:600 15px/1 var(--hd);color:var(--ink)}
+.tn .v.sm{font:500 12.5px/1 var(--mn)}
+.tuneWho{font-size:11.5px;color:var(--ink3);line-height:1.55}
+
+.sldWrap{padding:16px 22px 20px;border-top:1px solid var(--line2);background:var(--paper2)}
+.tuneSave{padding:15px 22px;border-top:1px solid var(--line2);background:var(--paper);
+  display:flex;gap:11px;align-items:center;flex-wrap:wrap}
+.tuneSave .sp{flex:1}
+.tuneSave .warn{font-size:11.5px;color:var(--gold-ink);line-height:1.45;max-width:46ch}
+.tuneConf{border-left:3px solid var(--gold);background:hsla(38,60%,50%,.1);padding:14px 16px;
+  margin:0 22px 16px;font-size:13px;line-height:1.62;color:var(--ink2)}
+.tuneConf b{color:var(--ink)}
+.tuneConf .big{font:700 22px/1 var(--hd);color:var(--ink);display:block;margin-bottom:9px}
+.tuneDone{border-left:3px solid var(--brand);background:var(--brand-soft);padding:13px 16px;
+  margin:0 22px 16px;font-size:13px;line-height:1.6;color:var(--ink2)}
+.lofi{height:280px}
+.lcard{width:230px}
+.lflow{margin:6px 0 24px}
+
+/* five settings as a row of radio cards: each one shows what it costs, so the
+   choice is made on the numbers rather than on the adjective */
+/* THE COLUMN COUNT IS A CUSTOM PROPERTY, not an inline grid-template. It used to
+   be set inline by the renderer, which meant the narrow-screen media query below
+   could never win — an inline style beats any stylesheet rule, so five settings
+   stayed in five 60px columns on a phone and every label wrapped to four lines. */
+.radioRow{display:grid;grid-template-columns:repeat(var(--cols,5),1fr);gap:0;
+  border:1px solid var(--line2);background:var(--paper)}
+.fOpt{padding:12px 13px;border-right:1px solid var(--line2);display:block;text-align:left}
+.fOpt:last-child{border-right:none}
+.fOpt:hover{background:var(--paper2)}
+.fOpt.on{background:var(--brand);color:hsl(75,25%,96%)}
+.fOpt .fk{display:block;font:600 13.5px/1 var(--bd);margin-bottom:5px}
+.fOpt .fs{display:block;font-size:11.5px;color:var(--ink3);line-height:1.4;margin-bottom:8px;min-height:31px}
+/* inside a full-screen chart frame the row is read from further away than in a
+   modal, so every part of it steps up. Scoped to `.cfCtl` rather than to the page,
+   because it is the FRAME that sets the reading distance, not which document it is. */
+.cfCtl .fOpt{padding:14px 16px}
+.cfCtl .fOpt .fk{font:600 19px/1.15 var(--hd);letter-spacing:-.015em;margin-bottom:6px}
+.cfCtl .fOpt .fs{font-size:13px;line-height:1.4;margin-bottom:10px;min-height:36px}
+.cfCtl .fOpt .fn{font:600 13px/1 var(--mn)}
+.cfCtl .fOpt .fd{font-size:11.5px;margin-top:7px}
+.fOpt.on .fs{color:hsla(75,25%,96%,.8)}
+.fOpt .fn{display:block;font:500 11px/1 var(--mn);color:var(--ink2)}
+.fOpt.on .fn{color:#fff}
+/* a stop that shares its cut-off with the one before is still shown — the scale
+   is the subject — but it says so rather than looking like a distinct choice */
+.fOpt .fd{display:block;margin-top:6px;font:400 10px/1.3 var(--mn);color:var(--ink3)}
+.fOpt.on .fd{color:hsla(75,25%,96%,.7)}
+.fOpt.dup .fk{color:var(--ink2)}
+.fOpt.dup.on .fk{color:hsl(75,25%,96%)}
+/* BARE: one line of type per card, so the card is sized by the name and nothing else.
+   `.fs`/`.fn` carried a 31px min-height to keep five cards level when their glosses
+   wrapped to different line counts; with the glosses gone that reservation was 31px of
+   empty paper under every name. */
+.radioRow.bare .fOpt{padding:15px 16px;text-align:center}
+.radioRow.bare .fOpt .fk{margin-bottom:0}
+.cfCtl .radioRow.bare .fOpt{padding:17px 16px}
+.cfCtl .radioRow.bare .fOpt .fk{font:600 24px/1.1 var(--hd);letter-spacing:-.02em;margin-bottom:0}
+.radioRow.bare .fOpt .fd{margin-top:6px}
+.radioEnds{display:flex;justify-content:space-between;margin-top:9px;font-size:11.5px;color:var(--ink3)}
+.tuneTop .im{margin-left:-4px}
+.wdia{border:1px solid var(--line2);background:var(--paper2);height:172px;margin-bottom:17px;
+  display:flex;align-items:center;justify-content:center;padding:14px}
+.wdia svg{max-height:144px;width:auto;display:block}
+.dg-l{fill:none;stroke:hsl(150,15%,35%);stroke-opacity:.45;stroke-width:1.3}
+.dg-b{fill:hsla(150,30%,15%,.13)}
+.dg-g{fill:hsl(145,38%,23%);fill-opacity:.7}
+.dg-r{fill:hsl(0,0%,0%);fill-opacity:.14}
+.dg-t{font:600 9px var(--bd);letter-spacing:.1em;fill:hsl(150,10%,55%)}
+.dg-d{fill:none;stroke:hsl(145,38%,23%);stroke-width:1.4;stroke-dasharray:4 3}
+
+/* ══════════ USE CASE ANALYSIS ══════════ */
+.ucaTop{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line2);
+  background:var(--paper);flex-wrap:wrap}
+.ucaTop .lbl{font:600 12px/1 var(--bd);color:var(--ink2)}
+.ucaStage{background:var(--bg);padding:16px 10px 6px;position:relative}
+.ucaStage svg{display:block;width:100%;height:auto}
+.uca-lbl{font:600 11px var(--bd);fill:hsl(150,35%,10%);text-anchor:middle}
+.uca-sub{font:400 10px var(--mn);fill:hsl(150,10%,55%);text-anchor:middle}
+.uca-ring{fill:none;stroke:hsl(150,10%,55%);stroke-opacity:.6;stroke-width:1.3;stroke-dasharray:5 4}
+.ucaKey{display:flex;flex-wrap:wrap;gap:15px;padding:11px 22px;border-top:1px solid var(--line2);
+  border-bottom:1px solid var(--line2);background:var(--paper);font-size:12px;color:var(--ink2)}
+.ucaKey span{display:flex;align-items:center;gap:7px}
+.ucaT{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--paper)}
+.ucaT th{text-align:right;font:600 9.5px/1 var(--bd);letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink3);padding:11px 14px;border-bottom:1px solid var(--line2)}
+.ucaT th:first-child,.ucaT td:first-child{text-align:left}
+.ucaT td{text-align:right;padding:11px 14px;border-bottom:1px solid var(--line);font-family:var(--mn)}
+.ucaT td:first-child{font-family:var(--bd)}
+.ucaT td b{font-weight:600;color:var(--brand)}
+.ucaT tr.soon td{color:var(--ink3);font-style:italic}
+.ucaNote{padding:13px 22px 16px;background:var(--paper);font-size:11.5px;color:var(--ink3);line-height:1.6}
+.ucaNote b{color:var(--ink2);font-weight:600}
+
+/* the radar, behind the hero */
+.radarWrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;z-index:1}
+.radarWrap svg{width:min(86vh,860px);height:auto;opacity:.9}
+.rgrid{fill:none;stroke:hsla(145,38%,23%,.16);stroke-width:1}
+.rspoke{stroke:hsla(145,38%,23%,.10);stroke-width:1}
+.rblip{fill:hsl(150,12%,48%);opacity:.16}
+.rblip.hot{fill:hsl(145,38%,23%)}
+.rsweepg{transform-origin:50% 50%;animation:rsweep 7s linear infinite}
+@keyframes rsweep{to{transform:rotate(360deg)}}
+/* Each blip lights as the sweep crosses it: same 7s clock, delayed by its own
+   bearing. Negative delays start the cycle mid-flight, so nothing waits a full
+   revolution before the page looks alive. */
+@keyframes rlight{0%,10%,100%{opacity:var(--o)}1.5%{opacity:1}4%{opacity:var(--o)}}
+.rblip{animation:rlight 7s linear infinite}
+.rblip.hot{--o:.34}
+.rblip{--o:.13}
+
+/* the low-fi labelling animation — deliberately NOT our UI */
+.lofi{position:relative;height:190px;width:min(700px,100%);margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center}
+/* The two bins carry the only two strong colours on the page: orange for "not
+   interesting", green for "interesting". They are the same pair the scatter uses
+   for a false positive and a correct keep, and the same pair the Compare frame
+   uses for a label — one decision, one palette, everywhere it appears. */
+.lofiBin{position:absolute;top:50%;transform:translateY(-50%);display:flex;align-items:center;
+  gap:8px;font:600 13px/1 var(--bd);padding:13px 16px;background:var(--bg);border:1.5px solid}
+.lofiBin.no{left:0;color:var(--no);border-color:hsla(26,72%,45%,.55)}
+.lofiBin.yes{right:0;color:var(--brand);border-color:hsla(145,38%,23%,.55)}
+.lofiBin .ic{width:16px;height:16px}
+.lofiBin b{font:600 20px/1 var(--hd);letter-spacing:-.02em;padding-left:9px;margin-left:4px;
+  border-left:1px solid currentColor;opacity:.75}
+/* the card is a PAPER: journal line, title, author rule, abstract */
+.lcard{position:absolute;width:206px;background:var(--paper);border:1px solid var(--line3);
+  padding:0 0 13px;box-shadow:0 1px 0 var(--line2);animation:lswipeR 6s linear infinite}
+.lcHd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  padding:8px 13px;border-bottom:1px solid var(--line2);background:var(--paper2);
+  font:600 9.5px/1 var(--mn);letter-spacing:.06em;color:var(--ink3);text-transform:uppercase}
+.lcHd em{font-style:normal;font-weight:500;opacity:.7}
+.lcard i{display:block;height:5px;background:hsla(150,30%,15%,.14);margin:0 13px 6px}
+.lcard i.sh{width:54%}
+.lcard i.lcT{height:8px;background:hsla(150,30%,15%,.34);margin-top:13px}
+.lcard i.lcT.sh{width:62%;margin-bottom:0}
+.lcAu{display:block;height:1px;background:var(--line2);margin:11px 13px 11px}
+/* the destination tints the card's own edge, so a card in flight already says
+   which way it went — the bin is only the confirmation */
+.lcard.toNo{border-left:2.5px solid hsla(26,72%,45%,.7)}
+.lcard.toYes{border-right:2.5px solid hsla(145,38%,23%,.7)}
+/* THE REST WINDOW HAS TO BE SHORTER THAN THE PHASE GAP. Five cards on one 6s
+   clock are 20% apart; a card that rested from 7% to 62% therefore had three of
+   them sitting on the centre at once, and the animation read as an untidy pile
+   rather than a stack being worked through. Rest for 16% and at most two are
+   ever on screen — one leaving, one arriving. The travel is 250px against a
+   206px card, so a card meets the bin's edge and is already at zero opacity
+   before it could overlap the label. */
+@keyframes lswipeR{
+  0%{opacity:0;transform:translate(0,18px) scale(.94)}
+  6%{opacity:1;transform:none}
+  22%{opacity:1;transform:none}
+  33%{opacity:0;transform:translate(250px,-8px) rotate(7deg)}
+  100%{opacity:0;transform:translate(250px,-8px) rotate(7deg)}}
+@keyframes lswipeL{
+  0%{opacity:0;transform:translate(0,18px) scale(.94)}
+  6%{opacity:1;transform:none}
+  22%{opacity:1;transform:none}
+  33%{opacity:0;transform:translate(-250px,-8px) rotate(-7deg)}
+  100%{opacity:0;transform:translate(-250px,-8px) rotate(-7deg)}}
+
+/* ── section 3: the stakeholders ── */
+.lflow{border:1px solid var(--line2);background:var(--bg);margin:6px 0 26px}
+.lflow>svg{display:block;width:100%;height:auto}
+/* LARGER, DARKER, HEAVIER. At 10px/55%-lightness these were the faintest text on
+   the page and they carry the whole argument of the section. The diagram sits in a
+   1000-unit viewBox scaled to the full section width, so a unit here is roughly a
+   pixel at the size it is shown. */
+.fl-lbl{font:700 15px var(--bd);letter-spacing:.09em;fill:hsl(150,25%,22%);text-transform:uppercase}
+.fl-coin{font:700 14px var(--bd);fill:hsl(145,38%,23%);fill-opacity:.85}
+.fl-sub{font:600 15px var(--bd);fill:hsl(150,20%,26%)}
+.fl-t{fill:hsl(150,12%,42%);opacity:.62}
+.fl-miss{fill:var(--no);opacity:.95}
+.fl-lbl.bad,.fl-sub.bad{fill:var(--no)}
+.fl-coinR{fill:none;stroke:hsl(145,38%,23%);stroke-opacity:.8;stroke-width:2.2}
+.fl-coinR.bad{stroke:var(--no);stroke-opacity:.5}
+.fl-coin.bad{fill:var(--no);fill-opacity:.55}
+.fl-strike{stroke:var(--no);stroke-width:2.4;stroke-opacity:.9;fill:none}
+.fl-line.bad{stroke:hsla(26,72%,45%,.78)}
+.fl-brk{stroke-dasharray:2 5}
+.fl-plant.bad .fl-fac{stroke:var(--no);stroke-opacity:.8}
+.fl-line{fill:none;stroke:hsla(145,38%,23%,.72);stroke-width:2.6;stroke-dasharray:4 8;
+  animation:flowdash 1.6s linear infinite}
+@keyframes flowdash{to{stroke-dashoffset:-20}}
+.fl-fac{fill:none;stroke:hsl(145,38%,23%);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.fl-rise{stroke-width:2.6;stroke-opacity:.55}
+.fl-puff{fill:none;stroke:var(--no);stroke-width:2.2;stroke-opacity:.8;stroke-linecap:round}
+.fl-crack{fill:none;stroke:var(--no);stroke-width:2.2;stroke-opacity:.85;stroke-linecap:round}
+.fl-drip{fill:none;stroke:var(--no);stroke-width:2.4;stroke-opacity:.75;stroke-linecap:round}
+
+
+/* ── responsive: narrow first, so these come last ── */
+@media (max-width:700px){ .mapCols{grid-template-columns:1fr} }
+@media (max-width:820px){ .cmpGrid{grid-template-columns:1fr} }
+@media (max-width:860px){ .tuneGrid{grid-template-columns:1fr} }
+@media (max-width:900px){ .radioRow{--cols:2} .fOpt:nth-child(2n){border-right:none}
+  .fOpt{border-bottom:1px solid var(--line2)} }
+@media (prefers-reduced-motion:reduce){
+  .rsweepg{animation:none}.rblip{animation:none;opacity:var(--o)}
+}
+@media (prefers-reduced-motion:reduce){ .lcard{animation:none} .lcard:not(:first-child){display:none} }
+@media (prefers-reduced-motion:reduce){ .fl-line{animation:none} }
+
+/* ══════════ THE CONFUSION MATRIX ══════════
+   Two columns, two rows, and the axis labels sit OUTSIDE the cells so the four
+   numbers stay the largest thing in the block. The two mistakes are the two
+   orange cells; the two correct outcomes are deliberately quiet, because a table
+   where all four cells shout tells you nothing about which two you are trading. */
+/* THE CELL CLASS IS `cmC`, NOT `cm`, AND THE FOUR OUTCOMES ARE `ctp/cfp/cfn/ctn`.
+   The first version used `.cm.tn` for the correct-pass cell and `.tn` is already
+   the tune panel's number row — `display:flex` from three hundred lines away
+   flattened one cell of four and nothing else, which reads as a content bug
+   rather than a naming one. Short class names in a shared stylesheet collide. */
+.cmGrid{display:grid;grid-template-columns:auto 1fr 1fr;gap:1px;background:var(--line2);
+  border:1px solid var(--line2)}
+.cmCorner{background:var(--paper2)}
+.cmAx{background:var(--paper2);padding:8px 11px;font:600 10px/1.3 var(--bd);
+  letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);align-self:end}
+.cmRow{background:var(--paper2);padding:12px 10px;font:600 10px/1.3 var(--bd);
+  letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center}
+.cmC{background:var(--paper);padding:12px 13px}
+.cmC b{display:block;font:600 25px/1 var(--hd);letter-spacing:-.02em;margin-bottom:5px;
+  color:var(--ink)}
+/* the name stays in ordinary ink; the SWATCH carries the colour, in the same shape
+   and hue as the mark it stands for on the plot */
+.cmC .cmk{display:flex;align-items:center;gap:7px;font:600 11.5px/1.2 var(--bd);
+  color:var(--ink2);margin-bottom:4px}
+.cmC .cmd{display:block;font-size:11.5px;color:var(--ink3);line-height:1.4}
+.cmDot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+.cmDot.ctp{background:var(--yes)}
+.cmDot.cfp{background:var(--no)}
+.cmDot.cfn{background:var(--miss)}
+.cmDot.ctn{background:hsl(150,10%,52%);opacity:.5}
+.cmC.cfp{background:var(--no-soft)}
+.cmC.cfn{background:var(--miss-soft)}
+
+/* LEAN: a bare 2x2, no axis strips. The four names are the quadrants — "false
+   positive" IS "predicted yes, actually not" — so the strips restated the cells in
+   eight more words on two more rows. Two columns, four cells, four dots. */
+.cmGrid.lean{grid-template-columns:1fr 1fr}
+.cmGrid.lean .cmC{padding:13px 15px}
+.cmGrid.lean .cmC b{font:600 36px/1 var(--hd);margin-bottom:5px}
+.cmGrid.lean .cmC .cmk{font-size:13px;margin-bottom:0}
+.cmGrid.lean .cmDot{width:11px;height:11px}
+/* WHITE, NOT TINTED — in lean only. The tint was doing the swatch's job a second time,
+   and two coloured cells beside two plain ones read as two rows of importance rather
+   than as four counts of equal standing. The dot carries the colour; the cell carries
+   the number. The app's own panel keeps its tints: there the table is a report on a
+   decision already made, and highlighting what it cost is the point of it. */
+.cmGrid.lean .cmC.cfp,.cmGrid.lean .cmC.cfn{background:var(--paper)}
+.cmSum.lean{gap:5px 22px;margin-top:10px;font-size:13.5px}
+.cmSum.lean b{font:600 19px var(--hd);letter-spacing:-.02em}
+.cmSum{display:flex;flex-wrap:wrap;gap:6px 26px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.cmSum b{font:600 14px var(--bd);color:var(--ink)}
+.cmSum em{font-style:normal;color:var(--ink3);font-size:11.5px}

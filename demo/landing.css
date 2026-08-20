@@ -1,0 +1,589 @@
+/* ══════════════════════════════════════════════════════════════════════════
+  TIRI · LANDING
+  Only the narrative surface: the full-viewport sections, the hero, the team,
+  the two-column problem/solution, the section chrome. The charts it embeds are
+  styled by shared/charts.css.
+  ══════════════════════════════════════════════════════════════════════════ */
+/* the mark replaces the repeated wordmark; it is the only raster on the page */
+.lff{display:block;width:min(340px,58vw);height:auto;margin:0 auto 30px}
+.lhero h1{margin-bottom:38px}
+/* Duotone by blend mode rather than by filter: `luminosity` keeps the photo's
+   light and takes its hue from the brand green behind it, which is the one CSS
+   route to a real duotone. A hue-rotate filter cannot do it — it rotates what is
+   already there, so a grey studio backdrop stays grey. */
+.lpimg{width:168px;height:168px;flex:none;background:var(--brand);overflow:hidden;display:block}
+.lpimg img{width:100%;height:100%;object-fit:cover;display:block;
+  mix-blend-mode:luminosity;filter:contrast(1.04) brightness(1.22)}
+.lsec.wide .lin{width:min(1240px,96vw)}
+/* the same radar as the hero, dropped to a background wash. Opacity on the
+   wrapper rather than a second, paler set of colours inside the SVG — one
+   diagram, two intensities, and no chance of the two drifting apart. */
+.radarWrap.faint{opacity:.24}
+
+/* ══════════ LANDING · the only surface here that is not part of the loop ══════════
+   It shares the tokens and shares no components. Three sections, each a full
+   viewport, snapped — so "next" lands somewhere exact rather than somewhere near.
+   scroll-snap does the work; the buttons just call scrollIntoView, which means
+   a trackpad and the buttons cannot disagree about where a section starts. */
+#land{padding-top:0;overflow:hidden;background:var(--bg)}
+.bar.hide{display:none}
+/* PROXIMITY, NOT MANDATORY — and the reason is the four instrument sections.
+   Sections 01-03 and 08 fit a viewport; 04-07 embed the real interface and run
+   1.2 to 1.8 screens, because a Sankey of 4,120 papers and a five-column stack
+   list cannot be made legible in 860px and shrinking them to fit would defeat the
+   point of showing the real thing. Under `mandatory` the browser fights you the
+   moment you try to read inside a tall section — it drags you back to the section
+   start. `proximity` keeps the deck feel where a section fits and gets out of the
+   way where it does not. */
+.lscroll{height:100%;overflow-y:auto;scroll-snap-type:y proximity;scroll-behavior:smooth}
+/* column flow, so the next button is IN the flow rather than pinned. Pinned at
+   `bottom:44px` it sat at the bottom of a 1,500px section — that is 640px below
+   the fold, which is a button nobody can find. */
+.lsec{min-height:100%;scroll-snap-align:start;position:relative;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:76px 34px 60px;overflow:hidden}
+.lsec.alt{background:var(--paper)}
+.lin{width:min(1060px,94vw);position:relative;z-index:2}
+.lbar{position:absolute;top:0;left:0;right:0;height:48px;display:flex;align-items:center;
+  gap:12px;padding:0 20px;z-index:12}
+.lmark{font:700 17px/1 var(--hd);letter-spacing:-.02em;display:inline-flex;align-items:center}
+.lmark em{font:500 10px/1 var(--bd);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink3);margin-left:9px;font-style:normal}
+.lbar .sp{flex:1}
+.lsecn{font:600 10px/1 var(--mn);color:var(--ink3);letter-spacing:.12em}
+
+.lhero{text-align:center}
+.lhero h1{font-size:clamp(38px,6.4vw,74px);line-height:1.03;letter-spacing:-.03em;margin-bottom:20px}
+.lhero h1 span{display:block}
+
+.lteam{display:flex;gap:22px;justify-content:center;flex-wrap:wrap}
+/* The card is a FRAME round the portrait, not a box with a portrait in it: the
+   photo runs to three of the four edges and only the caption side has room. */
+.lp{display:flex;align-items:center;gap:16px;background:hsla(75,20%,98%,.86);
+  border:1px solid var(--line2);padding:5px 22px 5px 5px;text-align:left}
+/* was a 60px placeholder box, and it sat BELOW the duotone rule so it silently
+   won — the real photos were being drawn at two thirds of their intended size.
+   One definition now, and it is the big one. */
+/* A FLOOR UNDER THE CAPTION, so the two cards come out the same width. Without it each
+   is sized by its own longest string and a deliberately mirrored pair sits off centre
+   from itself, which reads as a mistake rather than as a mirror. */
+.lp figcaption{flex:1;min-width:214px}
+/* THE NAMES CARRY THE CARD. With the four URLs gone the caption holds two lines, so
+   both can be read from the back of a room — which is the only thing slide 01 is for. */
+.lp b{display:block;font:600 27px/1.15 var(--hd);letter-spacing:-.02em;margin-bottom:7px}
+.lp span{display:block;font-size:18px;color:var(--ink3)}
+/* MIRRORED, so the two portraits meet in the middle. Reversing the row alone leaves a
+   left-aligned caption hanging off the right of its own photo, which reads as a bug —
+   the text alignment and the padding have to turn with it. */
+.lp.flip{flex-direction:row-reverse;padding:5px 5px 5px 22px;text-align:right}
+.lp.flip .lsoc{align-items:flex-end}
+
+.lnext{margin-top:38px;z-index:12;flex:none;
+  display:flex;align-items:center;gap:9px;border:1px solid var(--line3);background:var(--paper);
+  padding:11px 17px;font:600 12.5px/1 var(--bd);color:var(--ink2)}
+.lnext:hover{border-color:var(--brand);color:var(--brand)}
+.lnext i{font-style:normal;display:inline-flex}
+
+/* ── section 2: the goal ── */
+.lhead{margin-bottom:30px}
+.lhead h2{font-size:clamp(27px,3.6vw,40px);letter-spacing:-.026em;margin:9px 0 10px}
+.lhead p{font-size:15px;color:var(--ink2);max-width:56ch;line-height:1.6}
+/* MAX WIDTH. At 1560px the two columns ran to 700px each and three four-word items
+   sat in a line of type built for sixty characters — the eye had to travel the whole
+   width to read "Complex language". A column is as wide as its longest item needs. */
+.lgoal{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;
+  max-width:940px;margin:0 auto}
+/* The two columns take the label pair: the problem is what "not interesting"
+   costs, the solution is what "interesting" buys, and the reader has just watched
+   five cards sort into exactly those two colours above. */
+.lcol{border-top:3px solid var(--line3);padding-top:17px}
+.lcol.no{border-top-color:var(--no)}
+.lcol.yes{border-top-color:var(--yes)}
+.lcol h3{font:600 22px/1 var(--hd);letter-spacing:-.02em;text-transform:none;
+  color:var(--ink);margin-bottom:16px}
+.lcol.no h3{color:var(--no)}
+.lcol.yes h3{color:var(--yes)}
+.lcol ul{list-style:none}
+.lcol li{display:grid;grid-template-columns:24px 1fr;gap:11px;padding:12px 0;
+  border-bottom:1px solid var(--line);font-size:16.5px;color:var(--ink);align-items:baseline}
+.lcol li:last-child{border-bottom:none}
+.lcol li em{font-style:normal;font:600 11px/1 var(--mn);color:var(--ink3)}
+.lcol.no li em{color:var(--no);opacity:.75}
+.lcol.yes li em{color:var(--yes);opacity:.75}
+/* the footnote to the headline: italic serif, centred, and large — it is the definition
+   the whole section rests on, not a disclaimer. `--hd` italic is the one voice on this
+   page that reads as an aside without reading as small print. */
+.lDefn{margin:38px auto 0;text-align:center;font:400 italic 27px/1.3 var(--hd);
+  color:var(--ink2);letter-spacing:-.01em}
+.lDefn em{font-style:italic;color:var(--ink);font-weight:600}
+.lhead h2 sup{font-size:.5em;vertical-align:super;color:var(--no);font-weight:600;
+  margin-left:2px}
+.lfoot{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.lfoot .lnote{font-size:12.5px;color:var(--ink3);max-width:44ch;line-height:1.5}
+
+
+/* ── a heading that carries a control on its right ── */
+.lheadRow{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
+.lheadRow .sp{flex:1}
+.lfootEnd{margin-top:26px}
+
+
+/* ══════════ 06 · what builds it ══════════
+   Five columns, at most seven rows each. The cap is the point: a stack list that
+   grows without one stops being a claim anybody can check. */
+/* names only. The subtitles were the honest version for a page with room; in a
+   section that must also hold a Sankey and a button inside one viewport they were
+   400px of height buying a detail nobody reads standing up. */
+
+/* ══════════ 08 · baseline against advanced ══════════ */
+.pc-g{stroke:hsla(150,30%,15%,.12);stroke-width:1.4}
+/* sized in the SVG's own 1000x520 user units, so the type scales WITH the frame
+   rather than against it — a px size on an svg child shrinks as the chart grows */
+/* darker than --ink3: axis numbers at 55% lightness on a 93%-lightness ground is
+   about 2.6:1, which is under the 3:1 floor for large text and visibly grey-on-grey
+   when the chart is read from across a room */
+.pc-ax{font:500 17px var(--mn);fill:hsl(150,18%,34%)}
+.pc-unit{font:600 15px var(--bd);fill:var(--ink2)}
+.pc-x{font:600 24px var(--hd);fill:var(--ink);letter-spacing:-.01em}
+.pc-xs{font:400 15px var(--mn);fill:hsl(150,15%,40%)}
+/* the series labels, boxed. `pc-box` is filled in the series' colour at low opacity
+   with a solid border of the same, so the block reads as belonging to its line. */
+.pc-nm{font:600 20px var(--bd)}
+.pc-sub{font:400 12.5px var(--mn)}
+.pc-box{stroke-width:1.6}
+.pc-nm.adv{fill:var(--yes)}
+.pc-sub.adv{fill:hsl(145,32%,32%)}
+.pc-box.adv{fill:var(--yes);fill-opacity:.09;stroke:var(--yes);stroke-opacity:.55}
+/* BASELINE IS YELLOW, NOT GREY. Grey read as "no data" beside a green series, and the
+   two lines are two models — both real, one simply worse. A dark yellow keeps enough
+   contrast on the paper background to be legible as text, which a bright one does not. */
+.pc-nm.base{fill:hsl(40,72%,26%)}
+.pc-sub.base{fill:hsl(40,44%,34%)}
+.pc-box.base{fill:hsl(44,86%,52%);fill-opacity:.14;stroke:hsl(40,72%,38%);stroke-opacity:.6}
+.pc-l{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.pc-l.adv{stroke:var(--yes)}
+.pc-l.base{stroke:hsl(40,74%,42%);stroke-dasharray:9 7}
+.pc-d.adv{fill:var(--yes)}
+.pc-d.base{fill:hsl(40,74%,40%)}
+.pc-v{font:600 19px var(--mn)}
+.pc-v.adv{fill:var(--yes)}
+.pc-v.base{fill:hsl(40,66%,28%)}
+
+
+/* ══════════ THE FULL-BLEED SECTIONS ══════════
+   Four of the eight give a chart the whole screen. The section is a flex column
+   of three fixed-ish rows — a tight header, the chart, the next button — and the
+   chart takes whatever is left. `min-height:0` on the middle row is the part that
+   is easy to forget and impossible to work around: without it a flex child refuses
+   to shrink below its content, the chart keeps its natural height, and the next
+   button is pushed off the bottom of the viewport. */
+.lsec.full{padding:64px 26px 26px;justify-content:flex-start}
+.lsec.full .lin{width:min(1560px,98vw);flex:1;display:flex;flex-direction:column;min-height:0}
+.lfill{flex:1;min-height:0;display:flex;flex-direction:column}
+.lhead.tight{margin-bottom:14px}
+.lhead.tight h2{margin:5px 0 0}
+.lsec.full .lnext{margin-top:18px}
+.lsec.full .lnext.btn{border-color:var(--brand)}
+
+/* the chart frame: everything the reader needs is INSIDE this border — the plot,
+   its key, and its control. A key two hundred pixels under a plot is a second
+   reading, and on a screen this size the eye does not make the trip. */
+.chartFrame{flex:1;min-height:0;display:flex;flex-direction:column;
+  border:1px solid var(--line2);background:var(--bg)}
+/* THE SVG IS ABSOLUTE, AND THIS IS THE WHOLE TRICK. An `<svg>` with a viewBox is a
+   replaced element with an intrinsic aspect ratio: as a flex item stretched to the
+   container's width it CONTRIBUTES a height back, and `height:100%` on it makes
+   that circular — the browser resolves the loop from the aspect ratio and every
+   full-bleed section came out 50-500px taller than the viewport, pushing the next
+   button off screen. Taking the svg out of flow removes it from the height
+   calculation entirely, so the stage is sized by its flex parent and the svg fits
+   whatever it is given. `min-height:0` alone does not do it; the svg is not the
+   flex item being asked to shrink, it is the content inside one. */
+.cfStage{flex:1;min-height:0;position:relative;background:hsl(75,16%,96%);overflow:hidden}
+.cfStage>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cfStage.plain{background:var(--bg)}
+.cfCtl{flex:none;border-top:1px solid var(--line2);background:var(--paper2);padding:12px 14px}
+/* the 2x2, floated into the plot's own top-left corner. NO FRAME OF ITS OWN: the grid
+   already draws a border and its four cells are opaque, so the panel's border plus
+   11px of padding was a second frame around a framed thing — which at full screen
+   reads as chrome rather than as the plot's key. */
+.cfPanel{position:absolute;top:16px;left:16px;z-index:3;width:min(340px,42%);
+  background:none;border:none;padding:0}
+.cfStamp{position:absolute;bottom:11px;right:14px;z-index:3;font:400 11px var(--mn);
+  color:var(--ink3);background:hsla(80,15%,93%,.86);padding:3px 7px}
+/* bottom-LEFT on the performance frame: the x-axis's own "20%" sublabel lives in
+   the bottom-right corner of that chart and the two were printing over each other */
+.cfStamp.left{right:auto;left:14px}
+.cfStamp .mn{font-family:var(--mn)}
+
+/* the shared renderers' own surrounds, inside a full-bleed frame */
+/* same absolute-svg treatment for the three shared renderers' own stages */
+.lfill .ucaStage,.lfill .cmpStage,.lfill .flowStage{flex:1;min-height:0;position:relative;
+  border:none;overflow:hidden}
+.lfill .ucaStage>svg,.lfill .cmpStage>svg,.lfill .flowStage>svg{position:absolute;inset:0;
+  width:100%;height:100%}
+.lfill #dsBody,.lfill #caBody{flex:1;min-height:0;display:flex;flex-direction:column}
+.lfill #caBody{border:1px solid var(--line2);background:hsl(75,16%,96%)}
+.lfill .ucaKey,.lfill .cmpKey,.lfill .cmpBar,.lfill .cmpFoot,.lfill .flowNote{flex:none}
+/* the key sits under a full-screen chart, so it is read at the chart's distance and
+   not a modal's. Bigger swatches, real type, and the two labels carry the same
+   weight as the thing they name. */
+.lfill .ucaKey{font:500 14.5px/1 var(--bd);color:var(--ink);gap:26px;padding:14px 22px}
+.lfill .ucaKey .lg{width:14px;height:14px}
+.lfill .ucaKey span:last-child{font:400 12.5px/1 var(--bd);color:var(--ink3)}
+.lfill .cmpBar{font-size:13px}
+
+/* the flow fills its section: the svg stretches, the diagram's own 1000x430
+   viewBox keeps its proportions inside it */
+#ls3 .lflow{border:1px solid var(--line2);background:var(--bg);margin:0;position:relative;
+  overflow:hidden;display:block}
+#ls3 .lflow>svg{position:absolute;inset:0;width:100%;height:100%}
+
+
+/* ══════════ 05 · THE DATASET, TWO COLUMNS ══════════
+   80/20. The bars are the subject; the dictionary is the answer to the question the
+   bars provoke, which is what a row of this actually contains. */
+/* 80/20, with a floor under the narrow column: at `1fr` the dictionary got 240px on a
+   1300px window and every one of its four lines wrapped three times. `minmax(0,4fr)` on
+   the wide one is the pair to it — without the 0 a grid track refuses to shrink below
+   its content and the bars would push the dictionary off the edge instead. */
+.dsGrid{flex:1;min-height:0;display:grid;
+  grid-template-columns:minmax(0,4fr) minmax(300px,1fr);gap:1px;
+  background:var(--line2);border:1px solid var(--line2)}
+/* the two sub-headings have to sit on the same line as each other, so the chart column
+   starts at the TOP and the bars take the slack in their own wrapper. Under
+   `justify-content:center` the whole stack floated and the two headings missed each
+   other by however tall the bars happened to be. */
+.dsChart{background:var(--paper);padding:18px 24px;display:flex;flex-direction:column;
+  justify-content:flex-start;min-height:0}
+.dsRows{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+/* ONE SUB-HEADING STYLE, USED TWICE — once per column, so the pair reads as the two
+   dimensions of one table rather than as a chart title and a list title. The label is
+   the bold half and the figure follows it in ordinary weight, because "Rows:" is the
+   word being matched across the gap and the number is the answer. */
+.dsHd{font:400 21px/1.3 var(--bd);color:var(--ink2);padding-bottom:15px;margin-bottom:14px;
+  border-bottom:1px solid var(--line)}
+.dsHd b{font-weight:600;color:var(--ink)}
+/* the key moved BELOW the bars when the totals moved above them: it explains the two
+   segment colours, and a key sits nearest the thing it explains */
+.dsKey{display:flex;align-items:center;gap:30px;font:500 17px/1 var(--bd);color:var(--ink);
+  padding-top:16px;margin-top:12px;border-top:1px solid var(--line)}
+/* the swatch needs a flex context: `.lg` in charts.css sets width and height, which
+   do nothing at all to an inline element — it renders as a zero-size nothing and the
+   key reads as two bare words. Every other key on the page happens to have
+   `span{display:flex}` on it, which is why this only showed up here. */
+.dsKey span{display:flex;align-items:center;gap:8px}
+.dsKey .lg{width:19px;height:19px;flex:none}
+/* no per-bar figures. Six bars each carrying "1,067 / 785" is twelve numbers nobody
+   compares; the bar lengths do the comparing and the column total is above them. */
+.dsRow{display:grid;grid-template-columns:250px 1fr;gap:20px;align-items:center;padding:14px 0}
+.dsNm{font:500 16px/1.25 var(--bd);color:var(--ink)}
+.dsBarWrap{display:flex;align-items:center;gap:14px;min-width:0}
+/* one bar, two segments, and the bar's LENGTH is the total against the biggest total —
+   so a short bar means fewer decisions and the split inside it means how they went */
+.dsBar{display:flex;height:34px;min-width:2px}
+.dsPos{background:var(--yes)}
+.dsNeg{background:var(--no)}
+.dsDict{background:var(--paper2);padding:18px 22px;overflow:auto;display:flex;
+  flex-direction:column}
+/* an icon column and a text column: the icons line up down the left edge, which is the
+   only arrangement in which four marks of different shapes read as a set. */
+.dsDictGrp{display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:start;
+  padding:13px 0;border-bottom:1px solid var(--line)}
+.dsDictGrp:last-child{border-bottom:none}
+.dsDictIc{color:var(--brand);display:flex;align-items:center;height:1.5em}
+.dsDictIc svg.ic{width:25px;height:25px}
+/* ONE LINE PER GROUP, COMMA-SEPARATED. The stack of one-word rows put seven lines of
+   type against seven words; a sentence is read at a glance and can be set bigger in
+   the same space. */
+.dsDictTx{display:block;font:400 19px/1.45 var(--bd);color:var(--ink2)}
+.dsDictTx b{font-weight:600;color:var(--ink)}
+
+/* ══════════ 06 · HOW IT WORKS, AS A SIDE-SCROLL ══════════
+   Four panels on one horizontal track, snapped, so a trackpad swipe lands on a slide
+   rather than between two. `overflow-x:auto` and not a carousel with buttons: the
+   gesture is already universal and a control that duplicates it is a control to
+   maintain. */
+.howWrap{flex:1;min-height:0;border:1px solid var(--line2);background:var(--paper);
+  overflow:hidden;position:relative}
+/* still a snapped horizontal scroller: the arrows are a SECOND way to do what a
+   trackpad swipe already does, not a replacement for it. `scrollbar-width:none`
+   because a scrollbar under a one-panel-wide track is 12px of the diagram's height
+   spent telling the reader there is more of something they can see all of. */
+/* `flex:1`, NOT `height:100%`. The wrapper is itself a flex item (`.lfill`), and a
+   percentage height against a parent whose own height came out of flex layout is not
+   reliably definite — Chrome resolved it as auto, so the track sized to its content and
+   the slide filled a third of the frame with 470px of paper under it. As a flex item of
+   the same column the track simply takes what is left. */
+.howTrack{flex:1;min-height:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;scrollbar-width:none}
+.howTrack::-webkit-scrollbar{display:none}
+/* ONE SLIDE, THE WHOLE FRAME. `0 0 100%` and not `min(420px,80%)`: four panels side by
+   side meant four small diagrams and a reader choosing where to look. The side padding
+   clears the two arrows, which are pinned over the frame's own edges. */
+.hwSlide{flex:0 0 100%;scroll-snap-align:start;background:var(--paper);
+  padding:22px 68px 20px;display:flex;flex-direction:column;min-height:0}
+.hwHd{display:flex;align-items:baseline;gap:14px;margin-bottom:16px}
+.hwN{font:600 14px/1 var(--mn);color:var(--brand);letter-spacing:.14em;flex:none}
+/* SANS, against the serif everywhere else on the page. These four are step LABELS, and
+   the serif gave them the same voice as the section headline above them — two headings
+   of equal weight, one inside the other. `--bd` demotes the inner one without shrinking
+   it, which is the whole trick. */
+.hwSlide h3{font:600 clamp(24px,3.1vw,36px)/1.15 var(--bd);letter-spacing:-.02em;margin:0}
+/* the diagram takes every remaining pixel — it is the reason the slide exists.
+   THE SVG IS ABSOLUTE, for the reason written out at `.cfStage` below: an <svg> with a
+   viewBox is a replaced element, and as a flex item stretched to the container's width
+   it contributes a height back — which made this section 1,043px tall in a 960px window
+   and put the next button under the fold. Out of flow, it fits whatever it is given. */
+.hwDia{border:1px solid var(--line2);background:var(--paper2);margin-bottom:16px;
+  flex:1;min-height:90px;position:relative;overflow:hidden}
+.hwDia svg{position:absolute;inset:20px;width:calc(100% - 40px);height:calc(100% - 40px)}
+/* THE TOOLS TAKE THE FULL WIDTH, one equal column each. As inline chips they clustered
+   at the left of a 1,500px row with two thirds of it empty, and a 20px logo in a chip
+   that size is a detail nobody can identify — which defeats the point of having
+   licensed marks at all. `auto-fit` with a `minmax(0,1fr)` floor: three tools give
+   three columns, four give four, and the 0 is what lets a long name shrink its column
+   instead of overflowing the grid. */
+.hwTools{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:14px;
+  padding-top:18px;border-top:1px solid var(--line);flex:none}
+.hwTool{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  gap:12px;border:1px solid var(--line2);background:var(--paper2);padding:16px 12px;
+  font:500 15px/1.25 var(--bd);color:var(--ink2);text-align:center}
+.hwTool img{width:60px;height:60px;object-fit:contain;display:block}
+/* the two arrows and the dots, over the frame rather than in a row beneath it, so the
+   nav costs the slide no height at all */
+.hwArw{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:44px;height:64px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line2);background:hsla(75,20%,98%,.92);color:var(--ink2)}
+.hwArw.prev{left:8px}
+.hwArw.next{right:8px}
+.hwArw:hover:not(:disabled){border-color:var(--brand);color:var(--brand)}
+.hwArw:disabled{opacity:.26;cursor:default}
+/* one chevron drawing, turned round for the left one — two hand-drawn chevrons that
+   are meant to be each other's mirror never quite are */
+.hwArw.prev svg{transform:rotate(180deg)}
+.hwArw svg.ic{width:22px;height:22px}
+.hwDots{position:absolute;bottom:9px;left:0;right:0;z-index:4;display:flex;gap:7px;
+  justify-content:center;pointer-events:none}
+.hwDots i{width:7px;height:7px;border:1px solid var(--line3);background:transparent}
+.hwDots i.on{background:var(--brand);border-color:var(--brand)}
+
+/* ══════════ 09 · THANK YOU ══════════
+   The hero's layout with a summary wedged between the headline and the team, which is
+   three blocks in a space built for two — so everything here is sized in vh as well as
+   px. The team cards were being cut off at the bottom on a 790px window before. */
+.tyIn{display:flex;flex-direction:column;align-items:center;gap:0}
+/* THE SAME MARK AT THE SAME SIZE as slide 01 — the deck closes where it opened, and a
+   shrunken logo reads as "appendix" rather than "the end". Deliberately the SAME
+   expression as `.lff`, and deliberately nothing else: the two height media queries at
+   the foot of this file re-size `.lff` on short windows and they have equal specificity
+   and come later, so they win here too. One ladder, both slides, no chance of the two
+   drifting to different sizes at some viewport neither was checked at. */
+.tyMark{width:min(340px,58vw);margin-bottom:min(14px,1.6vh)}
+#ls9 .lhero h1{font-size:clamp(26px,min(4.4vw,6vh),50px);margin-bottom:min(20px,2.4vh)}
+/* UNNUMBERED. The numbers were there so a bullet whose "05" no longer matched section
+   05 would be visible — but they also made eight summary lines read as an eight-step
+   process, and one of the eight (feature engineering) has no slide to point at. Four
+   rows, two columns, and the section name is the bold half of each line. */
+/* MORE ROOM, because the two team cards used to sit under this and no longer do — the
+   summary is the middle of the slide now, not something squeezed above the portraits.
+   Its width comes from `--clear` rather than a round number. `max()` puts a floor under
+   it, because on a very tall narrow window the clear middle goes NEGATIVE and `min()`
+   alone would resolve the list to zero width — a collapsed summary is worse than one
+   that grazes a shoulder. */
+.tyList{list-style:none;text-align:left;width:100%;
+  max-width:max(430px, min(1000px, var(--clear)));
+  margin:min(10px,1.2vh) 0 min(30px,3.4vh);
+  display:grid;grid-template-columns:1fr 1fr;gap:0 44px}
+/* the mark gets its own column so eight of them line up down each side; `align-items:
+   start` rather than baseline, because a point that wraps to two lines would otherwise
+   drag its icon down to the middle of the block */
+.tyList li{display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:start;
+  padding:min(12px,1.35vh) 0;font-size:16.5px;color:var(--ink2);line-height:1.45;
+  border-bottom:1px solid var(--line)}
+.tyIc{display:flex;align-items:center;height:1.45em;color:var(--brand)}
+.tyIc svg.ic{width:21px;height:21px}
+.tyList li:nth-last-child(-n+2){border-bottom:none}
+/* INLINE, not a block heading: "Business goal: read fewer papers" is one statement, and
+   one statement per row is what lets eight of them be read as a summary rather than as
+   eight little sections. The room the second line used to take pays for the bigger type. */
+.tyList li b{font-weight:600;color:var(--ink)}
+/* ── THE TWO OF THEM AS THE BACKGROUND ──────────────────────────────────────
+   Full height of the section, half of each one off its own edge. `translateX(-50%)` is
+   a percentage of the ELEMENT, which is exactly what "50% overflow" means — a viewport
+   percentage would drift with the window. `width:auto` against `height:100%` keeps each
+   photograph's own proportions, so nobody is stretched to fit a section.
+
+   This replaces the radar wash AND the two team cards. The cards said "these two
+   people" in 130px of vertical space; this says it in none, which is what paid for the
+   summary's bigger type and the repository block under it.
+
+   `pointer-events:none` so a 30%-transparent shoulder never swallows a click meant for
+   the mark behind it. */
+/* ONE NUMBER GOVERNS BOTH HALVES OF THIS. `--folk` is the share of each portrait hidden
+   off its own edge, and it drives the transform AND the width the summary is allowed —
+   because each visible half is `(1 - folk)` of the section's height (the photographs are
+   square), so the clear middle is `100vw - 2*(1-folk)*100vh`. Written as two independent
+   values they drifted the moment either changed, and the failure mode is the summary
+   quietly running onto a dark shoulder where it cannot be read. */
+#ls9{--folk:.50;
+  /* THE CLEAR MIDDLE, as one token. Everything on this slide that must not stray onto a
+     dark shoulder reads it — the summary and the repository block both — so there is one
+     place to change and no way for the two to disagree. 48px is the breathing room either
+     side of the type. */
+  --clear:calc(100vw - 2 * (1 - var(--folk)) * 100vh - 48px)}
+.tyFolk{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+/* THE SAME DUOTONE AS SLIDE 01, WHICH HERE TAKES TWO LAYERS. `.lpimg` gets it for free:
+   a green box with an OPAQUE photograph over it in `luminosity`, so the photo supplies
+   the light and the box supplies the hue. A cutout cannot do that — a green box behind it
+   would show as a green rectangle everywhere the photograph is transparent.
+
+   So the green is MASKED to the cutout's own alpha (`::before`, same file as the image)
+   and the photograph blends over that. `isolation:isolate` is the part that matters: it
+   confines the blend to this wrapper, so `luminosity` sees the masked green as its
+   backdrop and not the page, the summary, or the other portrait.
+
+   `aspect-ratio:1` because a mask box needs a width and these photographs are square;
+   without it the box is `width:auto` and the mask has nothing to fit itself to. */
+/* THE FILTER WAS ALREADY IDENTICAL — the tonal weight was not. Both slides compute to
+   `mix-blend-mode:luminosity` + `contrast(1.04) brightness(1.22)` over rgb(36,81,55);
+   verified, not assumed. What differs is what each one is showing: slide 01 crops to the
+   faces with `object-fit:cover`, so its average luminance is mid, while a full-height
+   cutout is mostly dark shirt and reads as a heavy green mass. Same filter, opposite
+   impression.
+
+   So the correction is an opacity, not another filter. At .72 the pale page shows through
+   the darks, the pair sits at the tonal weight of slide 01's cards, and the faces and
+   owls stay readable — which .6 gave up. It also makes them behave like the radar wash
+   they replaced: background, at the page's own value. */
+.fk{position:absolute;top:0;height:100%;aspect-ratio:1;display:block;isolation:isolate;
+  opacity:.72}
+.fk::before{content:'';position:absolute;inset:0;background:var(--brand);
+  -webkit-mask:var(--src) no-repeat center/contain;mask:var(--src) no-repeat center/contain}
+.fk img{position:absolute;inset:0;width:100%;height:100%;display:block;
+  mix-blend-mode:luminosity;filter:contrast(1.04) brightness(1.22)}
+.fkL{left:0;transform:translateX(calc(var(--folk) * -100%))}
+.fkR{right:0;transform:translateX(calc(var(--folk) * 100%))}
+/* the confetti's surface: over the portraits, under the type. A burst then reads as
+   happening in the room rather than on top of the summary.
+
+   `width:100%;height:100%` AND NOT JUST `inset:0`. A <canvas> is a REPLACED element with
+   an intrinsic 300x150, and for an absolutely positioned replaced element the spec
+   resolves `width:auto` from the intrinsic size and IGNORES the over-constrained `right`
+   — so `inset:0` left it 300x150 in the corner. Worse, the burst reads the box to size
+   its backing store, so every click multiplied the last measurement by the device pixel
+   ratio and the canvas grew 300 -> 600 -> 1200. Same family of trap as an <svg> in a
+   flex column, three sections up. */
+.tyConfetti{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+/* THE MARK IS A BUTTON THAT DOES NOT LOOK LIKE ONE. The cursor and the `title` are the
+   only affordances, deliberately — finding it is the whole of the reward. */
+.tyMark{cursor:pointer}
+
+/* THE REPOSITORY, AND IT IS STILL THE ONE THING ASKING TO BE CLICKED — filled in the
+   brand, not outlined in a hairline. The QR keeps a white ground of its own inside the
+   dark block, because a QR code needs its quiet zone to scan and inverting one is a
+   coin-flip on whether a given phone reads it. */
+.tyFoot{margin-top:min(24px,2.8vh);display:flex;justify-content:center}
+.tyRepo{display:inline-flex;align-items:stretch;
+  max-width:max(430px, min(1000px, var(--clear)));
+  border:1px solid var(--brand);background:var(--brand);color:hsl(75,25%,96%)}
+.tyRepo:hover{background:var(--brand-hi);border-color:var(--brand-hi)}
+/* THE QR IS THE POINT OF THIS BLOCK, so it takes the height the slide has going spare —
+   92px was a decoration nobody in a room raises a phone at. Sized in vh as well as px so
+   it gives way before the section does. */
+.tyQR{width:min(170px,20vh);height:auto;align-self:center;margin:10px 0 10px 10px;
+  background:#fff;padding:7px;display:block}
+/* the mark ABOVE the address rather than beside it: one thin line of type next to a
+   170px square reads as a caption on a picture, and two stacked rows fill the height the
+   QR now sets. */
+.tyRepoTx{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+  gap:15px;padding:0 30px 0 24px}
+.ghMark{width:38px;height:38px;flex:none;color:hsl(75,25%,96%)}
+/* `anywhere` and NOT `break-all`: the address already carries its own line break at the
+   last path separator (see landing.js), so this is only the net for a window narrow
+   enough that even `TIRI---The-Data-science-project` will not fit. `break-all` breaks
+   eagerly and was splitting the name mid-word when it did not have to. */
+.tyRepoTx b{display:block;font:500 18px/1.4 var(--mn);overflow-wrap:anywhere}
+
+
+/* ══════════ SHORT VIEWPORTS ══════════
+   The two sections that are NOT `.lsec.full` — the hero and the business goal —
+   size themselves from their content, so on a 700px-tall window they overflowed
+   and took their next button with them. A 13-inch MacBook at "More Space" is
+   1680x~960 and at default 1440x~790; a browser with a bookmarks bar and a
+   downloads shelf on a smaller display lands nearer 700, which is where this bites.
+
+   Height-relative caps rather than a fixed breakpoint ladder, so there is no size
+   at which the page is between two rules and correct at neither. `min()` against
+   both a px ceiling and a vh share means the element takes whichever is smaller,
+   which is the whole of the logic. */
+@media (max-height:820px){
+  .lsec{padding:62px 30px 44px}
+  .lsec.full{padding:52px 24px 20px}
+  .lff{width:min(300px,54vw,34vh);margin-bottom:22px}
+  .lhero h1{font-size:clamp(30px,min(6.4vw,8.4vh),74px);margin-bottom:26px}
+  .lpimg{width:min(168px,20vh);height:min(168px,20vh)}
+  .lp{padding:4px 18px 4px 4px;gap:13px}
+  .lp b{font-size:23px}
+  .lp span{font-size:16px}
+  .lteam{gap:16px}
+  .lofi{height:min(190px,23vh)}
+  .lcol li{padding:9px 0;font-size:15px}
+  .lcol h3{font-size:19px;margin-bottom:11px}
+  .lhead{margin-bottom:20px}
+  .lnext{margin-top:24px}
+  /* 05 is the one full-bleed section whose content has a real minimum height — six bar
+     rows and four dictionary groups, all of them type. A grid row cannot shrink below
+     its content, so `flex:1;min-height:0` on the frame does nothing here and the
+     section ran 39px past a 700px window. The rows give the padding back. */
+  /* the closing slide, one rung down: it is the only section carrying a mark, a summary,
+     two photographs AND a footer, so it runs out of height before any other. The bigger
+     QR pushed it 61px over at 1440x790 and put its own left edge 88px inside Sylvain's
+     shoulder, so BOTH give a little: the pair slides further off its edges (which widens
+     `--clear` for the summary and the block at once) and the code takes 14vh rather
+     than 20. */
+  #ls9{--folk:.56}
+  .tyQR{width:min(170px,14vh)}
+  .tyList li{padding:6px 0;font-size:16px}
+  .tyRepoTx b{font-size:16.5px}
+  .tyRepoTx{padding:0 22px 0 17px}
+  .dsHd{font-size:15.5px;padding-bottom:11px;margin-bottom:11px}
+  .dsRow{padding:9px 0}
+  .dsBar{height:28px}
+  .dsNm{font-size:15px}
+  .dsDictGrp{padding:10px 0}
+  .dsDictTx{font-size:17.5px}
+  .dsHd{font-size:19px}
+  .dsKey{font-size:16px}
+  .dsKey{padding-top:12px;margin-top:8px}
+}
+@media (max-height:700px){
+  .lsec{padding:54px 26px 36px}
+  .lhero h1{font-size:clamp(26px,min(5.6vw,7.4vh),74px);margin-bottom:20px}
+  .lff{width:min(250px,48vw,28vh);margin-bottom:16px}
+  .lofi{height:min(160px,20vh)}
+  .lcol li{padding:7px 0;font-size:14px}
+  /* the closing slide gained an icon column and a filled footer and came out 9px past a
+     700px window. Type and padding step down together; the mark follows the type. */
+  .tyList li{padding:4px 0;font-size:15.5px;gap:10px;grid-template-columns:24px 1fr}
+  .tyIc svg.ic{width:19px;height:19px}
+  /* AT 1180x700 the clear middle was 432px, which put every summary point on three
+     lines and the section 63px past the window. Widening the type's allowance is the
+     lever, not shrinking it: two columns of 194px cannot hold a 61-character sentence at
+     any size worth reading. So the pair slides further off its own edges — 62% rather
+     than 50% — and the allowance follows from the same number. On the sizes this deck is
+     actually presented at (960 and 790 tall) nothing moves. */
+  #ls9{--folk:.62}
+  .tyQR{width:min(170px,13vh);margin:8px 0 8px 8px}
+  .tyRepoTx{gap:11px;padding:0 22px 0 18px}
+  .ghMark{width:30px;height:30px}
+  .tyRepoTx b{font-size:15px}
+  .dsRow{padding:6px 0}
+  .dsBar{height:25px}
+  .dsDictGrp{padding:8px 0}
+  .dsDictTx{font-size:16px}
+  .dsKey{font-size:15px}
+}
+
+/* ── responsive: narrow first, so these come last ── */
+@media (max-width:860px){ .lgoal{grid-template-columns:1fr} }

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TIRI · The app</title>
+<!--
+  ══════════════════════════════════════════════════════════════════════════
+  TIRI · THE APP DEMO                                       v9   2026-08-19
+  design/guided_funnel/prototype/tiri/app.html
+
+  The loop itself: define a use case, search, sort, train, read less. This is
+  the surface `converged.html` was, minus the landing page — see SPLIT.md in
+  this folder for what moved where and why.
+
+  It shares base.css, charts.css and all of shared/*.js with landing.html. The
+  landing page draws the SAME charts from the SAME fixture, which is the whole
+  reason for the split: a marketing page with its own copy of the scatter plot
+  is a page that will disagree with the product within a fortnight.
+
+  KEYS  J relevant · K not for me · F focus · U undo · Y/N on a suggestion
+
+  Everything below the split — the invariants, the fixture's declared
+  concession, the conflict ladder — is documented in SPLIT.md and in the
+  shared modules themselves.
+  ══════════════════════════════════════════════════════════════════════════
+-->
+<!-- The webfonts were an @import at the top of converged.html's <style>. The split
+     sorted it into app.css by its selector, where it is still valid — but landing.html
+     does not load app.css, so the landing page silently fell back to Georgia. A <link>
+     cannot be mis-ordered by a stylesheet split, and it preloads earlier. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23245137' stroke-width='1.9' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 12l6.4-4.2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="shared/base.css">
+<link rel="stylesheet" href="shared/charts.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="bar" id="appbar">
+  <span class="mark" title="Technology Intelligence Radar for industry">TIRI</span>
+  <nav class="crumbs" id="crumbs"></nav>
+  <span class="sp"></span>
+  <span class="ctx" id="ctx"></span>
+  <button class="iconbtn" onclick="toggleKeys()" title="keyboard shortcuts">?</button>
+</div>
+
+<!-- ══════════ HOME ══════════ -->
+<section class="screen mid on" id="home">
+ <div class="wrapW">
+  <div class="wHead">
+    <div><h1>Use cases</h1></div>
+    <div class="acts"><button class="btn ghost sm" onclick="openWelcome()">How it works</button>
+      <button class="btn ghost sm" onclick="openUca()">Use case analysis</button>
+      <button class="btn ghost sm" onclick="alert('Import a use case exported elsewhere (JSON), or an ML export back in as a new use case.')">Import</button>
+      <button class="btn ghost sm" onclick="openTpl()">Start from an example</button>
+      <button class="btn sm" onclick="newUc()">New use case</button></div>
+  </div>
+  <p class="wSub" id="wSub"></p>
+  <div class="wBar">
+    <button id="tabActive" class="on" onclick="setArch(false)">Active</button>
+    <button id="tabArch" onclick="setArch(true)">Archived</button>
+    <span class="sp"></span>
+    <span id="wCount"></span>
+  </div>
+  <div id="ucWrap"></div>
+ </div>
+</section>
+
+<!-- ══════════ DESCRIBE ══════════ -->
+<section class="screen mid" id="describe">
+ <div class="wrapI">
+  <div class="iHead">
+    <button class="backlink" onclick="go('home')">← Use cases</button>
+    <h1>What are you looking for?</h1>
+    <p id="iLede"></p>
+    <div class="iProg" id="iProg"></div>
+  </div>
+  <div class="qs" id="qs"></div>
+ </div>
+ <!-- the dock: pinned, expandable, and it is what gates the next screen -->
+ <div class="dock" id="dock">
+   <div class="dockBar">
+     <span class="lbl">Your description</span>
+     <span class="meter"><span class="sbars" id="dockBars"></span><span class="mtxt" id="dockTxt"></span></span>
+     <button class="expand" onclick="document.getElementById('dock').classList.toggle('open')">
+       <span class="tri">▲</span><span>See it</span></button>
+     <button class="btn" id="goFind" onclick="openPreview()" disabled>Find the papers</button>
+   </div>
+   <div class="dockBody"><div class="dockIn">
+     <div><div class="pt">What we will match every paper against</div>
+       <div class="txt" id="compiled"></div>
+       <div class="extract"><div class="pt">The words we pulled out</div>
+         <div class="sub">From your answers — you never typed a keyword list. Click any to drop it.</div>
+         <div class="chips" id="dTerms"></div></div></div>
+     <div><div class="pt">Six things that make it work</div>
+       <div class="slist" id="dockList"></div></div>
+   </div></div>
+ </div>
+</section>
+
+<!-- ══════════ FIND ══════════ -->
+<section class="screen mid" id="find">
+ <div class="wrapF">
+  <h1 id="findH">Looking in seven places…</h1>
+  <div id="hvRows"></div><div id="hvStages"></div><div id="hvTotal"></div>
+ </div>
+</section>
+
+<!-- ══════════ SORT ══════════ -->
+<section id="sort">
+  <aside class="rail">
+    <div class="grp">
+      <div class="gt"><span id="ucsHd"></span><button class="q2 linkbtn" onclick="openFlow()">expand</button></div>
+      <button class="ucStatsBtn" onclick="openFlow()" title="see where every paper went">
+        <div class="ucStats" id="ucStats"></div></button>
+    </div>
+    <div class="grp">
+      <div class="gt"><span>Labelling progress</span></div>
+      <div class="barrow pos">
+        <div class="top"><span class="l">Relevant</span><span class="v" id="pv">0</span></div>
+        <div class="tr" id="ptr"><div class="fl" id="pf" style="width:0"></div></div>
+        <div class="scale"></div>
+      </div>
+      <div class="barrow neg">
+        <div class="top"><span class="l">Not relevant</span><span class="v" id="nv">0</span></div>
+        <div class="tr" id="ntr"><div class="fl" id="nf" style="width:0"></div></div>
+        <div class="scale"></div>
+      </div>
+      <div class="railnote" id="railnote"></div>
+    </div>
+    <div class="grp">
+      <div class="gt"><span>Model milestones</span><span class="q2" id="unlq"></span></div>
+      <div class="unlocks" id="unlocks"></div>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <div class="cw">
+      <div class="deckhead"><span id="dh1"></span><span id="dh2"></span></div>
+      <div id="slot"></div>
+      <div class="acts" id="acts">
+        <button class="act keep" onclick="label('pos')"><kbd>J</kbd> Relevant</button>
+        <button class="act" onclick="label('neg')"><kbd>K</kbd> Not for me</button>
+        <span class="sp"></span>
+        <span class="legend" id="legend"><kbd>U</kbd> undo <kbd>F</kbd> focus <kbd>?</kbd> more</span>
+      </div>
+    </div>
+  </main>
+
+  <aside class="side">
+    <div class="grp">
+      <div class="gt"><span>Model development</span><button class="q2 linkbtn" onclick="toggleMap()" id="mapToggle">expand</button></div>
+      <div class="build" id="build"></div>
+    </div>
+    <div class="grp" id="cqGrp">
+      <div class="gt"><span class="cqHd" id="cqHead"></span>
+        <button class="q2 linkbtn" onclick="openConf()">open</button></div>
+      <div id="cqBody"></div>
+    </div>
+    <div class="grp">
+      <div class="gt"><span>Set aside</span></div>
+      <div id="setaside"></div>
+    </div>
+  </aside>
+</section>
+
+<!-- ══════════ EMAIL PREVIEW ══════════ -->
+<section class="screen mid" id="emailprev">
+ <div class="wrapE">
+   <div class="epBar">
+     <button class="backlink" onclick="go('use')">← Model</button>
+     <span class="sp" style="flex:1"></span>
+     <span id="epCtl"></span>
+   </div>
+   <div id="epBody"></div>
+ </div>
+</section>
+
+<!-- ══════════ USE ══════════ -->
+<section class="screen mid" id="use">
+ <div class="wrapU"><button class="backlink" onclick="go('home')">← Use cases</button><div id="useBody"></div></div>
+</section>
+
+<div id="scrim" onclick="closeDrawer()"></div>
+<aside id="drawer">
+  <div class="dwHead"><span class="n" id="dwN"></span><span class="sp"></span>
+    <button onclick="dwStep(-1)">↑ prev</button><button onclick="dwStep(1)">↓ next</button>
+    <button onclick="closeDrawer()">Close ✕</button></div>
+  <div class="dwBody" id="dwBody"></div>
+  <div class="dwFoot" id="dwFoot"></div>
+</aside>
+
+<!-- description preview (the success moment before searching) -->
+<div class="modal" id="prevModal">
+  <div class="mPanel" style="width:min(720px,96vw)">
+    <div id="prevBody"></div>
+    <div class="mFoot"><span class="sp"></span>
+      <button class="btn ghost" onclick="document.getElementById('prevModal').classList.remove('on')">Keep editing</button>
+      <button class="btn" onclick="document.getElementById('prevModal').classList.remove('on');startFind()">Search now →</button></div>
+  </div>
+</div>
+
+<!-- expanded model map -->
+<div class="modal" id="mapModal">
+  <div class="mPanel" style="width:min(820px,96vw)">
+    <div class="mHead"><h3>Model development</h3>
+      <span style="font-size:12px;color:var(--ink3)">what it has learned, and where it thinks the answers are</span>
+      <span class="sp"></span>
+      <button onclick="document.getElementById('mapModal').classList.remove('on')">Close ✕</button></div>
+    <div id="mapBody"></div>
+  </div>
+</div>
+
+<!-- welcome (first load) · four slides -->
+<div class="modal" id="wlcModal">
+  <div class="mPanel" style="width:min(660px,96vw)">
+    <div class="wslides"><div class="wtrack" id="wtrack"></div></div>
+    <div class="mFoot">
+      <span class="wdots" id="wdots"></span>
+      <button class="linkbtn" onclick="dismissWelcome()">Skip</button>
+      <span class="sp"></span>
+      <button class="btn ghost sm" id="wback" onclick="wslide(-1)">Back</button>
+      <button class="btn sm" id="wfwd" onclick="wslide(1)">Next →</button></div>
+  </div>
+</div>
+
+<!-- use case analysis -->
+<div class="modal" id="ucaModal">
+  <div class="mPanel" style="width:min(860px,96vw)">
+    <div class="mHead"><h3>Use case analysis</h3>
+      <span style="font-size:12px;color:var(--ink3)">what you have labelled, against what exists</span>
+      <span class="sp"></span>
+      <button onclick="document.getElementById('ucaModal').classList.remove('on')">Close ✕</button></div>
+    <div class="mTabs" id="ucaTabs"></div>
+    <div id="ucaBody"></div>
+  </div>
+</div>
+
+<!-- create from template -->
+<div class="modal" id="tplModal">
+  <div class="mPanel" style="width:min(820px,96vw)">
+    <div class="mHead"><h3>Start from a worked example</h3><span style="font-size:12px;color:var(--ink3)" id="tplCount"></span><span class="sp"></span>
+      <button onclick="document.getElementById('tplModal').classList.remove('on')">Close ✕</button></div>
+    <div class="tplSearch">
+      <input id="tplQ" placeholder="Search examples…"  oninput="TPL.q=this.value;renderTpl()">
+    </div>
+    <div class="tplTags" id="tplTags"></div>
+    <div class="tplList" id="tplList"></div>
+    <div class="mFoot"><span class="warn" id="tplWarn"></span><span class="sp"></span>
+      <button class="btn ghost" onclick="document.getElementById('tplModal').classList.remove('on')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- alerts -->
+<div class="modal" id="alertModal">
+  <div class="mPanel">
+    <div class="mHead"><h3 id="alertTitle">Email me new relevant papers</h3><span class="sp"></span>
+      <button onclick="document.getElementById('alertModal').classList.remove('on')">Close ✕</button></div>
+    <div class="mCols">
+      <div class="mForm" id="alertForm"></div>
+      <div class="mPrev"><div class="pt">What arrives</div><div id="alertPrev"></div></div>
+    </div>
+    <div class="mFoot" id="alertFoot"></div>
+  </div>
+</div>
+
+
+<!-- conflicts -->
+<div class="modal" id="confModal">
+  <div class="mPanel" style="width:min(880px,96vw)">
+    <div class="mHead"><h3>Your labels, checked against each other</h3>
+      <span class="sp"></span>
+      <button onclick="document.getElementById('confModal').classList.remove('on')">Close ✕</button></div>
+    <div id="confBody"></div>
+    <div class="mFoot"><span class="warn" id="confFoot"></span><span class="sp"></span>
+      <button class="btn ghost" onclick="document.getElementById('confModal').classList.remove('on')">Back to sorting</button></div>
+  </div>
+</div>
+
+<!-- where every paper went -->
+<div class="modal" id="flowModal">
+  <div class="mPanel" style="width:min(980px,96vw)">
+    <div class="mHead"><h3>Where every paper went</h3>
+      <span style="font-size:12px;color:var(--ink3)">4,120 of them, from seven sources to a decision</span>
+      <span class="sp"></span>
+      <button onclick="document.getElementById('flowModal').classList.remove('on')">Close ✕</button></div>
+    <div id="flowBody"></div>
+  </div>
+</div>
+
+<!-- tune the model -->
+<div class="modal" id="tuneModal">
+  <div class="mPanel" style="width:min(960px,96vw)">
+    <div class="mHead"><h3>Tune your model</h3>
+      <span style="font-size:12px;color:var(--ink3)">move the line between reading less and missing less</span>
+      <span class="sp"></span>
+      <button onclick="closeTune()">Close ✕</button></div>
+    <div id="tuneBody"></div>
+  </div>
+</div>
+
+<!-- export -->
+<div class="modal" id="expModal">
+  <div class="mPanel" style="width:min(680px,96vw)">
+    <div class="mHead"><h3>Export</h3><span class="sp"></span>
+      <button onclick="document.getElementById('expModal').classList.remove('on')">Close ✕</button></div>
+    <div class="mForm" id="expForm"></div>
+    <div class="mFoot"><span class="sp"></span>
+      <button class="btn ghost" onclick="document.getElementById('expModal').classList.remove('on')">Cancel</button>
+      <button class="btn" onclick="alert('Downloads the file. The live app\'s ExportModal is the reference — web/src/screens/export/ExportModal.tsx')">Download</button></div>
+  </div>
+</div>
+
+<div id="keys" onclick="toggleKeys()">
+  <div class="panel" onclick="event.stopPropagation()">
+    <h3>Keys</h3>
+    <div class="k"><span>Relevant</span><kbd>J</kbd></div>
+    <div class="k"><span>Not for me</span><kbd>K</kbd></div>
+    <div class="k"><span>Undo</span><kbd>U</kbd></div>
+    <div class="k"><span>Focus on the key sentences</span><kbd>F</kbd></div>
+    <div class="k"><span>Yes / no on a suggestion</span><kbd>Y</kbd> <kbd>N</kbd></div>
+  </div>
+</div>
+
+<div id="demo">
+  <b>Prototype</b><span id="demoNote"></span>
+  <span class="sp"></span>
+  <button onclick="demoFill()">fill the form</button>
+  <button onclick="jump(20)">jump to the last unlock</button>
+  <button onclick="autoplay()">auto-label the batch</button>
+  <button onclick="demoConflict()">make a mistake</button>
+  <button onclick="openWelcome()">welcome slides</button>
+  <button onclick="resetDemo()">reset</button>
+</div>
+
+<script src="shared/icons.js"></script>
+<script src="shared/data.js"></script>
+<script src="shared/state.js"></script>
+<script src="shared/stats.js"></script>
+<script src="shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

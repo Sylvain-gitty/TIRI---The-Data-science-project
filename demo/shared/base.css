@@ -1,0 +1,185 @@
+/* ══════════════════════════════════════════════════════════════════════════
+  TIRI · SHARED CHROME
+  Brand tokens, the reset, type, buttons, the top bar and breadcrumb, the icon
+  sizing contract, the `ⓘ` micro-copy pattern, modal + form chrome, tabs.
+
+  Loaded FIRST by both landing.html and app.html. Nothing in here knows which
+  surface it is on — if a rule needs to, it belongs in the page's own file.
+  A colour or radius that appears in only one place still belongs to :root:
+  the two surfaces sharing one palette is the whole point of the split.
+  ══════════════════════════════════════════════════════════════════════════ */
+:root{
+  --bg:hsl(80,15%,93%); --paper:hsl(75,20%,98%); --paper2:hsl(75,14%,95%);
+  --ink:hsl(150,35%,10%); --ink2:hsl(150,15%,35%); --ink3:hsl(150,10%,55%);
+  --line:hsla(150,30%,15%,.10); --line2:hsla(150,30%,15%,.20); --line3:hsla(150,30%,15%,.34);
+  --brand:hsl(145,38%,23%); --brand-hi:hsl(145,45%,15%); --brand-soft:hsla(145,38%,23%,.09);
+  --gold:#de9815; --gold-soft:rgba(222,152,21,.22); --gold-ink:hsl(38,55%,24%);
+  --leaf:#5f9243; --rust:#a8503a;
+  /* THE LABEL PAIR. Warren asked for stronger colours than the muted brick above,
+     and they need their own names because they mean something different: --rust is
+     a WARNING (a conflict card, a broken gate), --no is a DECISION (this paper is
+     not for me). Same hue family, different job — and a warning that looks exactly
+     like a routine rejection is a warning nobody reads.
+     One pair, used everywhere a label appears: the labelling bins, the scatter's
+     false positives, the Compare frame, the Sankey's two outcomes. */
+  --yes:hsl(145,38%,23%); --no:hsl(26,72%,45%);
+  --yes-soft:hsla(145,38%,23%,.10); --no-soft:hsla(26,72%,45%,.10);
+  /* THE TWO MISTAKES NEED TWO COLOURS. A false positive and a false negative cost
+     completely different things — one wastes an afternoon, the other loses the
+     paper — and drawing both in --no said they were the same error twice. --no
+     (orange) is the one you read for nothing; --miss (red) is the one you never
+     see. Red is reserved for that and nothing else: --rust is the conflict warning
+     and is a muted brick, deliberately not this. */
+  --miss:hsl(2,66%,46%); --miss-soft:hsla(2,66%,46%,.10);
+  --hd:"Libre Bodoni",Georgia,serif;
+  --bd:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mn:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0}
+/* THE ELEMENT DEFAULTS BELONG HERE, not in either page's own file. `h1,h2,h3` is
+   the one that proves it: it assigns the serif that the whole brand rests on, and
+   while it lived in app.css the landing page's headings were silently Inter. A
+   rule with no class in its selector is by definition not about one surface. */
+html,body{height:100%}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;text-align:left}
+h1,h2,h3{font-family:var(--hd);font-weight:700;letter-spacing:-.022em;line-height:1.14}
+input,select,textarea{font:inherit;color:inherit}
+::selection{background:var(--gold-soft)}
+kbd{font:600 10px/1 var(--mn);border:1px solid var(--line3);border-bottom-width:2px;padding:4px 6px;
+    color:var(--ink2);background:var(--paper);display:inline-block;min-width:19px;text-align:center}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.6 var(--bd);-webkit-font-smoothing:antialiased;overflow:hidden}
+.mn{font-family:var(--mn);font-variant-numeric:tabular-nums}
+.tip{position:relative;cursor:help;border-bottom:1px dotted var(--line3)}
+.tip:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;z-index:95;
+  width:max-content;max-width:280px;background:var(--ink);color:hsl(75,20%,95%);padding:9px 11px;
+  font:400 11.5px/1.5 var(--bd);box-shadow:0 6px 22px rgba(0,0,0,.24);white-space:normal}
+.eyebrow{font:600 10px/1 var(--bd);letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+
+.screen{position:fixed;inset:0;overflow:auto;display:none;padding-top:44px}
+.screen.on{display:block}
+.screen.mid{display:none}
+.screen.mid.on{display:flex;justify-content:center;align-items:safe start}
+
+.bar{position:fixed;top:0;left:0;right:0;height:44px;background:var(--paper);border-bottom:1px solid var(--line2);
+  display:flex;align-items:center;padding:0 14px;z-index:60;font-size:12.5px}
+.bar .mark{font:700 15px/1 var(--hd);padding-right:13px;margin-right:11px;border-right:1px solid var(--line2)}
+.bar .mark i{font:italic 600 11px/1 var(--hd);color:var(--ink2)}
+.bar .uc{font-weight:600;color:var(--ink);padding:5px 0}
+/* breadcrumb: where you are, and every ancestor clickable */
+.crumbs{display:flex;align-items:center;gap:0;margin-left:2px}
+.crumbs button{padding:5px 9px;font-size:12.5px;color:var(--ink3);white-space:nowrap}
+.crumbs button:hover:not(.here):not(:disabled){color:var(--ink)}
+.crumbs button.here{color:var(--ink);font-weight:600}
+.crumbs button:disabled{color:var(--line3);cursor:default}
+.crumbs .sep{color:var(--line3);font-size:11px;padding:0 1px}
+/* the micro-copy pattern: an icon that holds the sentence, not the sentence */
+.im{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+  border:1px solid var(--line3);color:var(--ink3);font:600 9px/1 var(--bd);cursor:help;flex:none;position:relative}
+.im:hover{border-color:var(--ink2);color:var(--ink2)}
+.im.warn{border-color:var(--gold);color:var(--gold-ink);background:hsla(38,60%,50%,.12)}
+.im::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:-8px;z-index:96;
+  width:max-content;max-width:300px;background:var(--ink);color:hsl(75,20%,95%);padding:10px 12px;
+  font:400 11.5px/1.55 var(--bd);box-shadow:0 6px 22px rgba(0,0,0,.26);display:none;text-align:left;white-space:normal}
+.im:hover::after{display:block}
+.im.right::after{left:auto;right:-8px}
+.bar .sp{flex:1}
+.bar .ctx{color:var(--ink3);font-size:11.5px;margin-right:8px}
+.bar .ctx b{color:var(--ink2);font-weight:600}
+.iconbtn{padding:5px 9px;border:1px solid transparent;color:var(--ink3)}
+.iconbtn:hover{border-color:var(--line2);color:var(--ink)}
+.backlink{color:var(--ink3);font-size:12px;padding:5px 9px;margin-left:-9px;display:inline-block}
+.backlink:hover{color:var(--ink)}
+
+.btn{background:var(--brand);color:hsl(75,25%,96%);padding:11px 21px;font:600 14px/1 var(--bd);
+  border:1px solid var(--brand);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{background:var(--brand-hi)}
+.btn[disabled]{opacity:.35;cursor:not-allowed}
+.btn.ghost{background:none;color:var(--ink2);border-color:var(--line3)}
+.btn.ghost:hover{background:var(--paper);color:var(--ink)}
+.btn.sm{padding:8px 13px;font-size:12.5px}
+.btn.onGreen{background:hsl(75,25%,96%);color:var(--brand-hi);border-color:hsl(75,25%,96%)}
+.btn.onGreen:hover{background:#fff}
+.btn.ghostGreen{background:none;color:hsla(75,25%,96%,.85);border-color:hsla(75,25%,96%,.4)}
+.btn.ghostGreen:hover{background:hsla(75,25%,96%,.12);color:#fff}
+.btn.onGold{background:hsl(38,55%,17%);color:hsl(45,60%,94%);border-color:hsl(38,55%,17%)}
+.btn.ghostGold{background:none;color:hsl(38,55%,20%);border-color:hsla(38,55%,20%,.42)}
+.btn.ghostGold:hover{background:hsla(38,55%,20%,.1)}
+.linkbtn{color:var(--brand);font-size:12.5px;font-weight:500;border-bottom:1px solid var(--line2);padding-bottom:1px}
+.linkbtn:hover{border-bottom-color:var(--brand)}
+.tgl{display:inline-flex;align-items:center;gap:7px;font-size:12px;flex:none}
+.tgl .sw{width:28px;height:15px;background:hsla(150,30%,15%,.16);position:relative;transition:background .18s;flex:none}
+.tgl .sw i{position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--paper);transition:left .18s}
+.tgl.on .sw{background:var(--brand)}
+.tgl.on .sw i{left:15px}
+.modal{position:fixed;inset:0;background:hsla(150,35%,10%,.42);z-index:90;display:none;
+  justify-content:center;align-items:safe center;overflow:auto;padding:40px 20px}
+.modal.on{display:flex}
+.mPanel{background:var(--bg);border:1px solid var(--line3);width:min(940px,96vw);box-shadow:0 20px 60px rgba(0,0,0,.28)}
+.mHead{padding:18px 24px;border-bottom:1px solid var(--line2);background:var(--paper);display:flex;align-items:baseline;gap:12px}
+.mHead h3{font-size:21px}
+.mHead .sp{flex:1}
+.mHead button{color:var(--ink3);font-size:13px}
+.mCols{display:grid;grid-template-columns:1fr 340px;gap:0}
+.mForm{padding:20px 24px 24px;background:var(--paper)}
+.fRow{margin-bottom:17px}
+.fRow>label{display:block;font:600 12.5px/1 var(--bd);margin-bottom:7px}
+.fRow .fh{font-size:11.5px;color:var(--ink3);line-height:1.5;margin-bottom:8px}
+.fRow input[type=text],.fRow input[type=email],.fRow input[type=number],.fRow select,.fRow textarea{
+  width:100%;background:var(--paper2);border:1px solid var(--line2);padding:9px 11px;font:400 13px/1.5 var(--bd)}
+.fRow input:focus,.fRow select:focus,.fRow textarea:focus{outline:none;border-color:var(--brand);background:#fff}
+.fInline{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.fInline>*{flex:none}
+.fInline .grow{flex:1;min-width:110px}
+.fChecks{display:flex;flex-wrap:wrap;gap:6px}
+.fChk{font:500 12px/1 var(--bd);border:1px solid var(--line2);background:var(--paper2);padding:8px 10px;color:var(--ink2)}
+.fChk.on{background:var(--brand);border-color:var(--brand);color:hsl(75,25%,96%)}
+.fNote{font-size:11.5px;color:var(--ink3);line-height:1.5;margin-top:7px}
+.mPrev{padding:20px 22px;background:var(--paper2);border-left:1px solid var(--line2)}
+.mPrev .pt{font:600 10px/1 var(--bd);letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:11px}
+.mFoot{padding:15px 24px;border-top:1px solid var(--line2);background:var(--paper);display:flex;gap:10px;align-items:center}
+.mFoot .sp{flex:1}
+.mFoot .warn{font-size:11.5px;color:var(--gold-ink);line-height:1.45;max-width:44ch}
+
+#keys{position:fixed;inset:0;background:hsla(150,35%,10%,.42);z-index:80;display:none;justify-content:center;align-items:center}
+#keys.on{display:flex}
+#keys .panel{background:var(--paper);border:1px solid var(--line3);padding:26px 30px;width:min(420px,90vw)}
+#keys h3{font-size:19px;margin-bottom:15px}
+#keys .k{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+#keys .k:last-of-type{border-bottom:none}
+#demo{position:fixed;bottom:0;left:0;right:0;background:var(--ink);color:hsl(75,15%,72%);font:500 11px/1 var(--bd);
+  padding:8px 14px;display:flex;gap:14px;align-items:center;z-index:70}
+#demo b{color:hsl(75,20%,92%)}
+#demo button{color:var(--gold);font:600 11px/1 var(--bd)}
+#demo .sp{flex:1}
+
+/* icons: they scale with the type they sit beside, never on their own line */
+/* `svg.ic`, not `.ic`, and it is worth the extra token. Every chart container in
+   charts.css carries a `<container> svg{width:100%}` rule to make its chart
+   responsive, and a descendant selector outranks a plain class — so an inline
+   `ⓘ` inside a chart's own caption inherited width:100% and rendered at 500px.
+   Raising the icon's specificity once immunises all of them, instead of scoping
+   seven stretch rules and remembering to scope the eighth. */
+svg.ic{width:1em;height:1em;flex:none;vertical-align:-.13em;display:inline-block}
+svg.ic.lg{width:1.25em;height:1.25em}
+svg.ic.xl{width:20px;height:20px}
+.ic.mut{color:var(--ink3)}
+.gt .ic,.pt .ic,.wHead .ic{color:var(--ink3)}
+.btn .ic{width:15px;height:15px;vertical-align:0}
+
+.mTabs{display:flex;gap:0;border-bottom:1px solid var(--line2);background:var(--paper);padding:0 22px}
+.mTabs button{padding:12px 15px;font:600 13px/1 var(--bd);color:var(--ink3);
+  border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:7px}
+.mTabs button:hover{color:var(--ink2)}
+.mTabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.btn.onRust{background:var(--rust);color:hsl(20,55%,96%);border-color:var(--rust)}
+.btn.onRust:hover{background:hsl(12,45%,32%)}
+.btn.ghostRust{background:none;color:hsl(12,45%,28%);border-color:hsla(12,45%,38%,.45)}
+.btn.ghostRust:hover{background:hsla(12,45%,38%,.09)}
+.segs{display:flex;border:1px solid var(--line2)}
+.segs button{padding:8px 13px;font:500 12.5px/1 var(--bd);color:var(--ink2);border-right:1px solid var(--line2)}
+.segs button:last-child{border-right:none}
+.segs button.on{background:var(--brand);color:hsl(75,25%,96%)}
+
+
+/* ── responsive: narrow first, so these come last ── */
+@media (max-width:840px){ .mCols{grid-template-columns:1fr} }

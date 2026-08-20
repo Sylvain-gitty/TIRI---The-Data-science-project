@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TIRI · Technology Intelligence Radar for Industry</title>
+<!--
+  ══════════════════════════════════════════════════════════════════════════
+  TIRI · LANDING                                           v11   2026-08-20
+  design/guided_funnel/prototype/tiri/landing.html
+
+  The narrative surface: what the problem is, who it is for, and what the
+  instrument actually does. Nine sections, each one viewport, scroll-snapped.
+
+  ─────────────────────────────────────────────────────────────────────────
+  THE ONE RULE THIS PAGE IS BUILT AROUND
+  ─────────────────────────────────────────────────────────────────────────
+  Most of these sections embed the REAL interface — the same renderers, over the
+  same fixture, from shared/*.js, called with `lean:true`. Not a screenshot, not
+  a reimplementation, not a mock with rounder numbers. That is the entire reason
+  converged.html was split in two: a marketing page carrying its own copy of the
+  scatter plot is a page that disagrees with the product inside a fortnight, and
+  every number on it becomes a claim nobody can check.
+
+  So this page seeds the shared state to a FULLY LABELLED position — the
+  fixture's own gold answers, and the same worked description the app's demo
+  strip loads — and then calls the app's own functions.
+
+  TWO SECTIONS ARE DECLARED EXCEPTIONS, and both say so in their own frame:
+  · 04 Key metric draws a 720-record ILLUSTRATIVE SAMPLE, because 76 papers at
+    23 relevant move twenty-two dots across the whole five-stop scale and the
+    section exists to make that scale legible. The sweep, the five Fβ optima and
+    the 2x2 over it are computed by the app's own shared functions.
+  · 08 Performance draws SUPPLIED figures from evals/benchmark_product.py: a
+    60/20/20 split of 76 papers leaves fifteen in the test set.
+  Everything else on the page is measured live, in the browser, from the fixture.
+
+  ─────────────────────────────────────────────────────────────────────────
+  THE SECTIONS  (seven of the nine are `.lsec.full` — one chart, one screen)
+  ─────────────────────────────────────────────────────────────────────────
+  01  the name, and the two people
+  02  business goal — a radar for interesting science
+  03  stakeholders — and a toggle for what missing costs
+  04  key metric — precision to recall, and the two ways to be wrong
+  05  dataset — six labelled use cases, and what a row of one contains
+  06  how it works — the welcome slides, one at a time, with the tools each uses
+  07  EDA — six use cases converted to numbers
+  08  performance — baseline against advanced
+  09  thank you — one line per section, the two of us, and the repository
+
+  ══════════════════════════════════════════════════════════════════════════
+-->
+<!-- The webfonts were an @import at the top of converged.html's <style>. The split
+     sorted it into app.css by its selector, where it is still valid — but landing.html
+     does not load app.css, so the landing page silently fell back to Georgia. A <link>
+     cannot be mis-ordered by a stylesheet split, and it preloads earlier. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23245137' stroke-width='1.9' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 12l6.4-4.2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="shared/base.css">
+<link rel="stylesheet" href="shared/charts.css">
+<link rel="stylesheet" href="landing.css">
+</head>
+<body>
+
+<section class="screen on" id="land">
+ <div class="lbar">
+   <span class="lmark" id="lmark">TIRI<em>Technology Intelligence Radar for Industry</em></span>
+   <span class="sp"></span>
+   <span class="lsecn" id="lsecn">01 / 09</span>
+   <button class="linkbtn" onclick="launch()">Launch app →</button>
+ </div>
+ <div class="lscroll" id="lscroll">
+
+  <!-- ══════════ 01 · the name and the people ══════════ -->
+  <section class="lsec" id="ls1">
+   <div class="radarWrap" id="radarWrap"></div>
+   <div class="lin lhero">
+     <img class="lff" id="lmarkImg" alt="TIRI">
+     <h1><span>Technology Intelligence</span><span>Radar for Industry</span></h1>
+     <div class="lteam" id="lteam"></div>
+   </div>
+   <button class="lnext" onclick="lgo(2)">The business goal <i class="nx"></i></button>
+  </section>
+
+  <!-- ══════════ 02 · the business goal ══════════ -->
+  <section class="lsec alt wide" id="ls2">
+   <!-- the hero's own radar, at a fraction of the opacity: same function, so the
+        two backgrounds cannot drift into being two different diagrams -->
+   <div class="radarWrap faint" id="radarBg2"></div>
+   <div class="lin">
+     <div class="lhead">
+       <span class="eyebrow">Business goal</span>
+       <h2>A radar for interesting<sup>*</sup> science</h2>
+     </div>
+     <div class="lofi" id="lofi"></div>
+     <div class="lgoal">
+       <div class="lcol no">
+         <h3>Problem</h3>
+         <ul>
+           <li><em>01</em><span>Too much science to read</span></li>
+           <li><em>02</em><span>Complex language</span></li>
+           <li><em>03</em><span>Fragmented processes</span></li>
+         </ul>
+       </div>
+       <div class="lcol yes">
+         <h3>Solution</h3>
+         <ul>
+           <li><em>01</em><span>Define the use case</span></li>
+           <li><em>02</em><span>Label papers</span></li>
+           <li><em>03</em><span>Fine tune a model</span></li>
+         </ul>
+       </div>
+     </div>
+     <!-- The whole section turns on one word, and "interesting" is a word every reader
+          fills in for themselves. The definition is the section's footnote rather than a
+          bullet inside it, because it qualifies the HEADLINE, not the solution. -->
+     <p class="lDefn"><em>Interesting</em> = relevant to your problem</p>
+   </div>
+   <button class="lnext" onclick="lgo(3)">Who it is for <i class="nx"></i></button>
+  </section>
+
+  <!-- ══════════ 03 · the stakeholders ══════════ -->
+  <section class="lsec full" id="ls3">
+   <div class="lin">
+     <div class="lhead tight lheadRow">
+       <div>
+         <span class="eyebrow">Stakeholders</span>
+         <h2>Industrial R&amp;D teams</h2>
+       </div>
+       <span class="sp"></span>
+       <span class="segs" id="flowSegs"></span>
+     </div>
+     <div class="lfill lflow" id="lflow"></div>
+   </div>
+   <button class="lnext" onclick="lgo(4)">The key metric <i class="nx"></i></button>
+  </section>
+
+  <!-- ══════════ 04 · the operating point ══════════ -->
+  <section class="lsec alt full" id="ls4">
+   <div class="lin">
+     <div class="lhead tight">
+       <span class="eyebrow">Key metric</span>
+       <h2>Don't miss weak signals</h2>
+     </div>
+     <div class="lfill" id="wsBody"></div>
+   </div>
+   <button class="lnext" onclick="lgo(5)">The dataset <i class="nx"></i></button>
+  </section>
+
+  <!-- ══════════ 05 · the data set ══════════ -->
+  <section class="lsec full" id="ls5">
+   <div class="lin">
+     <div class="lhead tight">
+       <span class="eyebrow">Dataset</span>
+       <h2>How much data is enough?</h2>
+     </div>
+     <div class="lfill" id="dsBody"></div>
+   </div>
+   <button class="lnext" onclick="lgo(6)">How it works <i class="nx"></i></button>
+  </section>
+
+  <!-- ══════════ 06 · how it works, as a side-scroll ══════════
+       Replaces the Sankey. That diagram was an accounting of one search run and
+       answered a question nobody in the room had asked; these four slides answer
+       "what does it do", which is the one they had. Same four as the app's welcome
+       modal, from WSL in shared/data.js — one change, both surfaces. -->
+  <section class="lsec alt full" id="ls6">
+   <div class="lin">
+     <div class="lhead tight">
+       <span class="eyebrow">How it works</span>
+       <h2>Four steps, and what each one runs on</h2>
+     </div>
+     <!-- One slide fills the frame; the two arrows are pinned over its edges and the
+          dots over its foot, so the whole frame stays available to the title and the
+          diagram. The track is still a snapped scroller underneath, so a trackpad
+          swipe does the same thing the arrows do. -->
+     <div class="lfill howWrap">
+       <div class="howTrack" id="howTrack" onscroll="hwSync()"></div>
+       <button class="hwArw prev" id="hwPrev" onclick="hwGo(-1)" aria-label="Previous step"></button>
+       <button class="hwArw next" id="hwNext" onclick="hwGo(1)" aria-label="Next step"></button>
+       <div class="hwDots" id="hwDots"></div>
+     </div>
+   </div>
+   <button class="lnext" onclick="lgo(7)">Exploratory analysis <i class="nx"></i></button>
+  </section>
+
+  <!-- ══════════ 07 · six use cases in one space ══════════ -->
+  <section class="lsec full" id="ls7">
+   <div class="lin">
+     <div class="lhead tight">
+       <span class="eyebrow">EDA</span>
+       <h2>Six use cases converted to numbers</h2>
+     </div>
+     <div class="lfill" id="caBody"></div>
+   </div>
+   <button class="lnext" onclick="lgo(8)">How well it does <i class="nx"></i></button>
+  </section>
+
+  <!-- ══════════ 08 · the model ══════════ -->
+  <section class="lsec alt full" id="ls8">
+   <div class="lin">
+     <div class="lhead tight">
+       <span class="eyebrow">Performance</span>
+       <h2>Baseline against advanced</h2>
+     </div>
+     <div class="lfill" id="perfBody"></div>
+   </div>
+   <button class="lnext" onclick="lgo(9)">Thank you <i class="nx"></i></button>
+  </section>
+
+  <!-- ══════════ 09 · thank you ══════════
+       The hero again, so the deck closes where it opened, with one line per section
+       between the two. -->
+  <section class="lsec" id="ls9">
+   <!-- The two of them ARE the background here, cut out of their own photographs and
+        half off each edge at the section's full height. That replaces both the radar
+        wash and the pair of team cards: the cards said "these two people" in 130px of
+        vertical space, and this says it in none. The cutouts were recovered from
+        checkerboard-flattened exports — see the note in SPLIT.md. -->
+   <div class="tyFolk" aria-hidden="true">
+     <!-- Two elements per person, not one, and the file is named twice: the <img> carries
+          the photograph and the wrapper's ::before carries a flat brand green MASKED to
+          the same file, so the duotone is built the way slide 01 builds it — luminosity
+          over green — without a green rectangle showing wherever the cutout is
+          transparent. `--src` is the one place the path appears for the mask; the browser
+          fetches the file once and uses it twice. -->
+     <span class="fk fkL" style="--src:url(assets/sylvain-cutout.webp)">
+       <img src="assets/sylvain-cutout.webp" alt="">
+     </span>
+     <span class="fk fkR" style="--src:url(assets/warren-cutout.webp)">
+       <img src="assets/warren-cutout.webp" alt="">
+     </span>
+   </div>
+   <!-- the confetti's surface. Behind the content and in front of the portraits, so a
+        burst reads as happening in the room rather than over the type. -->
+   <canvas class="tyConfetti" id="tyConfetti" aria-hidden="true"></canvas>
+   <div class="lin lhero tyIn">
+     <img class="lff tyMark" id="tyMarkImg" alt="TIRI" onclick="confetti()" title="Go on, click it">
+     <h1><span>Thank You for Your Questions</span></h1>
+     <ul class="tyList" id="tyList"></ul>
+     <div class="tyFoot" id="tyFoot"></div>
+   </div>
+  </section>
+</div>
+</section>
+
+<script src="shared/assets.js"></script>
+<script src="shared/icons.js"></script>
+<script src="shared/data.js"></script>
+<script src="shared/state.js"></script>
+<script src="shared/stats.js"></script>
+<script src="shared/charts.js"></script>
+<script src="landing.js"></script>
+</body>
+</html>
