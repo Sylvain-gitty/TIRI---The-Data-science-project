@@ -245,6 +245,11 @@ notebooks can be run in any order once the data exists.
 
 ### Where to start reading
 
+0. Prefer one continuous narrative to a repo tour?
+   [`tiri_whitepaper.md`](tiri_whitepaper.md) is the whole project written up for a reader
+   who has not seen the code — problem, data, the finding, what ships, external validation,
+   plus the metrics in plain English and the rejected list with measurements. Renders to
+   `.docx` with `npm run whitepaper`.
 1. This file, then [`CONTEXT.md`](CONTEXT.md) for the findings that shaped the work.
 2. [`main/02_eda_quickstart.ipynb`](notebooks/main/02_eda_quickstart.ipynb) — the
    5-minute tour of the corpus.
@@ -435,8 +440,12 @@ external validation on SYNERGY.
 
 `reports/` held 57 written-up reports — the decision trail behind every number above,
 including the two architecture decision docs this README cites. They were removed to slim
-the working tree and the directory is now empty except for a `.gitkeep`, because notebooks
-`02` and `03` write their figures there.
+the working tree. What remains is an output directory: notebooks `02` and `03` write their
+figures there, and the five the whitepaper embeds are kept tracked so it renders.
+
+The one write-up that survived is [`tiri_whitepaper.md`](tiri_whitepaper.md), moved to the
+repo root — it is the narrative version of the whole project rather than part of the
+decision trail.
 
 **Nothing is lost.** Every one is in git history and recoverable individually:
 

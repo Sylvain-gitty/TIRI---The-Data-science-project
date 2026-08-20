@@ -68,6 +68,15 @@ catboost_info/
 # ---------------------------------------------------------------------------
 reports/*
 !reports/.gitkeep
+# The five figures tiri_whitepaper.md embeds. Force-added under this ignore rule on
+# purpose: they belong with the notebook that regenerates them (02_eda_quickstart), so
+# they stay in sync, but the whitepaper at the repo root would render with five broken
+# images if they were not tracked.
+!reports/eda_quickstart_1_total_by_label.png
+!reports/eda_quickstart_2_use_cases_by_label.png
+!reports/eda_quickstart_3_missingness.png
+!reports/eda_quickstart_4_skew_by_use_case.png
+!reports/eda_quickstart_5_embeddings_pca.png
 
 # Node dependencies for scripts/md2docx.js (the whitepaper -> .docx renderer). The project
 # itself is Python; this is document tooling only. `npm install` restores it from
