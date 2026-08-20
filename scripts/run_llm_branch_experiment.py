@@ -126,13 +126,13 @@ def main() -> None:
 
     print(f"CatBoost(150,4) OOF from disk (seed {SEED}) ...")
     cb = {uc: np.asarray(v, dtype=float)
-          for uc, v in json.loads(HPARAM_JSON.read_text())[CATBOOST_KEY].items()}
+          for uc, v in json.loads(HPARAM_JSON.read_text(encoding="utf-8"))[CATBOOST_KEY].items()}
 
     print("Fitting LogisticRegression OOF locally ...")
     lr = within_silo_oof(X, y, use_case, groups, SEED, logreg_fn(cols))
 
     resp = pd.read_parquet(RESPONSES)
-    chosen_2way = json.loads(WEIGHTS_JSON.read_text()) if WEIGHTS_JSON.exists() else {}
+    chosen_2way = json.loads(WEIGHTS_JSON.read_text(encoding="utf-8")) if WEIGHTS_JSON.exists() else {}
     grid = weight_simplex()
     lines: list[str] = []
 
@@ -238,7 +238,7 @@ def main() -> None:
         emit(f"**Verdict: {verdict}.**")
         emit()
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nwrote {OUT_MD}")
 
 

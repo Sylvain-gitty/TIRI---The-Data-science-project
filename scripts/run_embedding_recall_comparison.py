@@ -24,7 +24,7 @@ Its own ceiling is 0.95*(1-prevalence), reported alongside so a number is never 
 though 1.0 were reachable.
 
 Metric helpers come from scripts/fold_pipeline_utils.py rather than being redefined --
-same reason that module exists (CLAUDE.md: one implementation, so the two pipelines
+same reason that module exists (the shared-core rule - one implementation, so the two pipelines
 cannot drift apart).
 
 Usage:
@@ -283,7 +283,7 @@ def main() -> None:
     emit(to_md(piv.round(3), "variant"))
     emit()
 
-    OUT.write_text("\n".join(lines) + "\n")
+    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nWritten to {OUT.relative_to(REPO)}")
 
 

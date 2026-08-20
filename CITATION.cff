@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+title: "TIRI — Relevance screening of scientific literature against a research brief"
+message: >-
+  If you refer to this work, please cite it using the metadata below.
+type: software
+authors:
+  - family-names: Fossier
+    given-names: Sylvain
+    alias: Sylvain-gitty
+  - family-names: Fauvel
+    given-names: Warren
+    alias: warrenof
+repository-code: "https://github.com/Sylvain-gitty/TIRI---The-Data-science-project"
+abstract: >-
+  TIRI turns a labelled corpus of academic literature into a working relevance-screening
+  model, and documents what four weeks of measurement showed about the approach. Its central
+  finding is that relevance is a property of the (brief, paper) pair rather than of the paper
+  alone: a classifier trained on paper-only embedding features recovers which research
+  question a paper belongs to at 96.2% accuracy, so a model pooled across questions learns
+  question identity rather than relevance and collapses to roughly chance on an unseen
+  question. Ten brief-relative scalars beat a full 384-dimension embedding on the same test,
+  and with zero labels, ranking by plain cosine similarity to the brief beats every
+  supervised cross-question model trained here. The repository carries the resulting
+  per-question architecture, an external validation at realistic (about 2%) prevalence, and a
+  register of measured negative results.
+keywords:
+  - systematic review screening
+  - technology intelligence
+  - information retrieval
+  - text classification
+  - sentence embeddings
+  - ensemble learning
+  - reproducible research
+  - negative results
+date-released: "2026-08-19"
+version: "1.0.0"

@@ -349,7 +349,7 @@ def main() -> None:
     emit(to_md(pd.DataFrame(rows).set_index("condition")))
     emit()
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     puc.to_csv(REPORTS / "wf_llm_benchset_a_per_use_case.csv", index=False)
     print(f"\nwrote {OUT_MD}")
 

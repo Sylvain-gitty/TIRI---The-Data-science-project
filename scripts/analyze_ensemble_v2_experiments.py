@@ -82,7 +82,7 @@ def main() -> None:
             f"{HPARAM_JSON} not found — run `modal run "
             f"scripts/modal_ensemble_experiments.py::hparam_sweep --seed 0` first."
         )
-    hparam_oof = json.load(open(HPARAM_JSON))
+    hparam_oof = json.load(open(HPARAM_JSON, encoding="utf-8"))
     configs = list(hparam_oof.keys())
     print(f"Loaded CatBoost OOF for {len(configs)} configs: {configs}")
 
@@ -207,8 +207,8 @@ def main() -> None:
          f"calibrator fit on a held-out slice, not the same rows it's evaluated on.")
     emit()
 
-    existing = OUT_MD.read_text() if OUT_MD.exists() else ""
-    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n")
+    existing = OUT_MD.read_text(encoding="utf-8") if OUT_MD.exists() else ""
+    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nAppended to {OUT_MD.relative_to(REPO)}")
 
 

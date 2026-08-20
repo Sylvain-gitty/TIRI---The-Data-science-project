@@ -143,7 +143,7 @@ def load_catalogue(path: Path, anchor: str | None = None) -> dict:
     whether you are asking "is this heavy industry" or "is this decarbonisation". Switching
     lens changes only the domain axis — novelty against your existing use cases is a
     property of the geometry and does not move."""
-    catalogue = json.loads(path.read_text())
+    catalogue = json.loads(path.read_text(encoding="utf-8"))
     for required in ("anchors", "themes"):
         if required not in catalogue:
             raise ValueError(f"{path}: catalogue is missing {required!r}")
@@ -455,7 +455,7 @@ def write_report(table: pd.DataFrame, portfolio: pd.DataFrame, landmarks: dict, 
         "changes verdict between models is one whose margin was never real.",
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def plot_coverage(table: pd.DataFrame, portfolio: pd.DataFrame, landmarks: dict, path: Path) -> None:

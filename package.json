@@ -1,0 +1,12 @@
+{
+  "name": "tiri-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Document tooling for the TIRI repository. Not part of the analysis pipeline — the project itself is Python; this exists only so scripts/md2docx.js can render the whitepaper to .docx.",
+  "scripts": {
+    "whitepaper": "node scripts/md2docx.js tiri_whitepaper.md tiri_whitepaper.docx"
+  },
+  "dependencies": {
+    "docx": "9.7.1"
+  }
+}

@@ -124,7 +124,7 @@ a unit for a reason unrelated to the actual metric, so this over-counts somewhat
 is preferred over the phrase match, which under-counts almost to zero, is stated in the
 docstring of `evidence_availability` itself, and the choice is a judgement call, labelled as one.
 
-NULL != 0 (`CLAUDE.md`'s non-negotiable convention, restated because it binds this metric
+NULL != 0 (a non-negotiable convention, see `README.md`, restated because it binds this metric
 directly): `papers_benchset_v1.parquet` has 4,733 of 181,199 rows with a null abstract. Those
 rows are **excluded from both numerator and denominator**, not counted as "no evidence" — "never
 digitised" and "digitised and silent" are different facts. Likewise, when a use case's own
@@ -160,6 +160,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -178,7 +179,17 @@ TIRI_DIR = REPO / "data" / "raw"
 TIRI_KEYS = [
     "carbon_capture", "cement_binders", "ner", "soil_microbiome", "solar_leo", "tech_forecasting",
 ]
-BENCHSET_SPEC_DIR = Path("/Users/warrenfauvel/academic_agent/evals/data/benchsets")
+# The benchset specs live in the sibling `academic_agent` repo, which is not vendored here
+# (see this file's header: the n=28 stratum is read from `<key>.spec.json`, not from
+# `data/benchsets_v1/briefs.parquet`, which carries no criteria fields). Point the env var at
+# that checkout; the default assumes it sits next to this repo.
+#
+# Resolved lazily rather than globbed at import time on purpose: `Path.glob` on a directory
+# that does not exist returns empty instead of raising, which would silently produce a
+# TIRI-only 6-row audit where the whole construct-validity claim needs all 34.
+BENCHSET_SPEC_DIR = Path(
+    os.environ.get("TIRI_BENCHSET_SPEC_DIR", REPO.parent / "academic_agent" / "evals" / "data" / "benchsets")
+)
 
 PAPERS_TIRI = REPO / "data" / "processed" / "papers_combined.parquet"
 PAPERS_BENCHSET = REPO / "data" / "processed" / "papers_benchset_v1.parquet"
@@ -433,15 +444,24 @@ def evidence_availability(
 def load_tiri() -> dict[str, dict]:
     out = {}
     for key in TIRI_KEYS:
-        with open(TIRI_DIR / f"{key}.usecase.json") as f:
+        with open(TIRI_DIR / f"{key}.usecase.json", encoding="utf-8") as f:
             out[key] = json.load(f)
     return out
 
 
 def load_benchsets() -> dict[str, dict]:
+    if not BENCHSET_SPEC_DIR.is_dir():
+        raise FileNotFoundError(
+            f"benchset spec directory not found: {BENCHSET_SPEC_DIR}\n"
+            "This is the n=28 stratum, read from the sibling `academic_agent` repo, which is "
+            "not vendored in TIRI. Set TIRI_BENCHSET_SPEC_DIR to that checkout's "
+            "evals/data/benchsets directory.\n"
+            "Without it this audit can only cover TIRI's own 6 use cases, which does not "
+            "support the pooled-vs-within-stratum comparison this script exists to make."
+        )
     out = {}
     for path in sorted(BENCHSET_SPEC_DIR.glob("*.spec.json")):
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             out[path.stem.replace(".spec", "")] = json.load(f)
     return out
 
@@ -844,10 +864,10 @@ def write_report(*, df, reportable, dropped, pooled_iqr_val, jackknife_min, tiri
 
     lines.append("## 5. Findings checked for, as pre-registered\n")
     ner_targets = [
-        c["target"] for c in json.load(open(TIRI_DIR / "ner.usecase.json"))["performance_criteria"]
+        c["target"] for c in json.load(open(TIRI_DIR / "ner.usecase.json", encoding="utf-8"))["performance_criteria"]
     ]
     solar_targets = [
-        c["target"] for c in json.load(open(TIRI_DIR / "solar_leo.usecase.json"))["performance_criteria"]
+        c["target"] for c in json.load(open(TIRI_DIR / "solar_leo.usecase.json", encoding="utf-8"))["performance_criteria"]
     ]
     lines.append(
         f"- `ner` and `solar_leo` both have `performance_criteria` populated (3 and 2 entries "
@@ -858,7 +878,7 @@ def write_report(*, df, reportable, dropped, pooled_iqr_val, jackknife_min, tiri
         f"\"3 of 6 populated\" (the old field-presence count) overstates the real predicate "
         f"count — confirmed, and it is exactly why this probe counts spans instead.\n"
     )
-    tf = json.load(open(TIRI_DIR / "tech_forecasting.usecase.json"))
+    tf = json.load(open(TIRI_DIR / "tech_forecasting.usecase.json", encoding="utf-8"))
     lines.append(
         f"- `tech_forecasting.decision_criteria.must_have` = "
         f"`{tf['decision_criteria']['must_have']!r}` — a relabelled term list (two bare nouns), "
@@ -899,7 +919,7 @@ def write_report(*, df, reportable, dropped, pooled_iqr_val, jackknife_min, tiri
         "correlation, per S-UCQ Q5's own pre-registration.\n"
     )
 
-    OUT_MD.write_text("\n".join(lines))
+    OUT_MD.write_text("\n".join(lines), encoding="utf-8")
 
 
 if __name__ == "__main__":

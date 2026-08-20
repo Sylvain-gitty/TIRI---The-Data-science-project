@@ -40,7 +40,7 @@ realistic rather than leaky, and it makes a feature mean the same thing in every
 Anything label-derived (PCA, scalers, the Tier 2 learned axis) belongs in a per-fold
 Pipeline, not in here.
 
-NULL IS NOT 0 (see CLAUDE.md)
+NULL IS NOT 0 (see README.md, "Non-negotiable conventions")
 -----------------------------
 `terms_exclude` is empty for three of the six current use cases. "No exclusion terms
 were specified" and "no exclusion terms matched" are different facts, so the exclusion

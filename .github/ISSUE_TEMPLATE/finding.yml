@@ -1,0 +1,71 @@
+name: Question or challenge to a finding
+description: Disagree with a result, or think a claim is not supported by its evidence.
+title: "[finding] "
+labels: ["finding"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is a welcome issue type. The repo argues with itself throughout, and several of
+        its own conclusions were revised by later measurement.
+
+        **Two things worth checking first**, because they resolve most disagreements:
+
+        - **[`CONTEXT.md`](../blob/main/CONTEXT.md) §6 — the negative-results register.**
+          A long list of things already measured and rejected, with the evidence. If your
+          point is there, the register may already answer it.
+        - **The four evaluation surfaces** in README § Results are **not comparable to each
+          other** (pooled / leave-one-question-out / within-question / external at realistic
+          prevalence). A number that looks contradictory is often two different surfaces.
+
+  - type: textarea
+    id: claim
+    attributes:
+      label: Which claim
+      description: Quote it, and say which file and section it is in.
+    validations:
+      required: true
+
+  - type: textarea
+    id: objection
+    attributes:
+      label: Your objection
+      description: >-
+        What do you think is wrong, or unsupported by the evidence given?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of objection is this?
+      description: >-
+        Naming this helps a lot — the repo's own convention is to label which critic is
+        speaking.
+      options:
+        - "The measurement is wrong or leaky"
+        - "The measurement is fine, the conclusion drawn from it is not"
+        - "The gap is inside the noise floor and should not be called a win"
+        - "Two surfaces are being conflated"
+        - "The claim is fine but stated more strongly than the evidence supports"
+        - "Something else"
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Supporting evidence
+      description: >-
+        Optional. If you have run something, include the surface, the held-out numbers, the
+        seed spread, and the per-question win count.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Before filing
+      options:
+        - label: I checked CONTEXT.md §6 and this is not already in the negative-results register
+          required: true

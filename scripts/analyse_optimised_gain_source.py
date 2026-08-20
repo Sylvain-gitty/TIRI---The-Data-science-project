@@ -124,7 +124,7 @@ def spec_measures(per: pd.DataFrame) -> pd.DataFrame:
 
     rows = []
     for uc in ob.USE_CASES:
-        raw = json.loads((REPO / "data" / "raw" / f"{uc}.usecase.json").read_text())
+        raw = json.loads((REPO / "data" / "raw" / f"{uc}.usecase.json").read_text(encoding="utf-8"))
         reservoir = sum(len(json.dumps(raw.get(f) or "")) for f in RESERVOIR)
         rows.append({
             "use_case": uc,

@@ -1,6 +1,6 @@
 # CONTEXT.md — what a new agent needs to know before touching this repo
 
-`CLAUDE.md` says how to work here. This file says **what is true here**, and it exists
+`README.md` § "How we work" says how to work here. This file says **what is true here**, and it exists
 because several of the facts below are not derivable from the code, the data, or the git
 history — they came out of a working session and would otherwise have to be rediscovered
 (expensively, and in at least two cases wrongly).
@@ -188,7 +188,7 @@ The most valuable asset here. Measured and rejected, so nobody re-runs them:
 
 ### 6b. Spec quality — what is settled, so it is not re-litigated
 
-Full answer in [`reports/wf_spec_quality_answer.md`](reports/wf_spec_quality_answer.md); the bars were
+Full answer was in `reports/wf_spec_quality_answer.md` (removed, see README); the bars were
 pre-registered in `wf_spec_quality_plan.md`, which also carries a dated Amendment recording five
 premises corrected **before** any probe ran. Measured on **three surfaces** — benchset set A (burned),
 set B (clean, and now spent), and **TIRI's own six use cases**, spanning 1.87% to 57.6% prevalence.
@@ -218,12 +218,12 @@ set B (clean, and now spent), and **TIRI's own six use cases**, spanning 1.87% t
 - **Applied end-to-end, the advice is worth +0.014 mean cold-start ROC-AUC on TIRI's six specs, and
   nothing at all to the fitted baseline.** It clears the 0.03 floor on 2 of 6 (`carbon_capture`
   +0.045, `solar_leo` +0.032).
-  [`wf_optimised_usecase_baseline.md`](reports/wf_optimised_usecase_baseline.md).
+  `reports/wf_optimised_usecase_baseline.md` (removed, see README).
 - 🔴 **That gain lives at 50–75% read depth and there is none of it at the top of the list.** Change
   in recall at 5 / 10 / 20% depth is −0.000 / −0.003 / −0.001; at 50% it is +0.010. It is real and
   it is where nobody reads, so it is **not a screening improvement** — it would only pay where the
   whole ranking is consumed. This is also why `wss_at_95` was the one held-out metric that got
-  *worse* (0.180 → 0.172). [`wf_optimised_gain_source.md`](reports/wf_optimised_gain_source.md) §3a.
+  *worse* (0.180 → 0.172). `reports/wf_optimised_gain_source.md` §3a (removed, see README).
 - **Which specs benefit is predictable from the spec text, and NOT from their score.** Gain orders
   against `spec_linter.py` findings at rho **+0.65** (leave-one-out +0.45 to +0.79), checkability
   +0.54, term count +0.54 — and against *baseline AUC* at **−0.03**, which rules out regression to
@@ -241,7 +241,7 @@ set B (clean, and now spent), and **TIRI's own six use cases**, spanning 1.87% t
   `exemplars` (accepted paper *titles*) and `near_misses` (rejected ones). Using it writes the
   answer key into the question. **Do not re-attempt; the variance this test needs is a property of
   humans writing specs, so only new analyst-written specs can supply it.**
-  [`wf_benchset_rewrite_feasibility.md`](reports/wf_benchset_rewrite_feasibility.md).
+  `reports/wf_benchset_rewrite_feasibility.md` (removed, see README).
 - **It is not a convergence.** Spread across the six use cases is flat on jasper (sd −0.004) and
   *widens* on both Qwen encoders (+0.004, +0.008); the worst-scoring use case goes backwards on 2 of
   3 encoders. A level shift on two use cases, not the laggards catching up.

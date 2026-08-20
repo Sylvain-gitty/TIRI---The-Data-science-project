@@ -443,7 +443,7 @@ def main_combined(training_file: str = "benchset_v1_large_set_a.parquet") -> Non
 
     stem = Path(training_file).stem
     out_path = REPO / "reports" / f"sf_ensemble_{stem}_plus_papers_fe.json"
-    out_path.write_text(json.dumps(result))
+    out_path.write_text(json.dumps(result), encoding="utf-8")
     test = result["test"]
     print(f"n_total={result['n_total']:,} ({result['n_from_train_file']:,} from {training_file} + "
           f"{result['n_from_papers_fe']:,} from {PAPERS_FE_FILENAME})")

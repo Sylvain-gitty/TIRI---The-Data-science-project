@@ -724,7 +724,7 @@ class OpenRouterClient:
         self._lock = threading.Lock()
         self._cache: dict[str, dict] = {}
         if self.cache_path.exists():
-            with self.cache_path.open() as fh:
+            with self.cache_path.open(encoding="utf-8") as fh:
                 for line in fh:
                     try:
                         rec = json.loads(line)
@@ -773,7 +773,7 @@ class OpenRouterClient:
     def _write(self, rec: dict) -> None:
         with self._lock:
             self._cache[rec["key"]] = rec
-            with self.cache_path.open("a") as fh:
+            with self.cache_path.open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
     def call(self, system: str, user: str, tag: str = "") -> dict:

@@ -166,7 +166,7 @@ def main() -> None:
                     help="also run the cosine arm (embeds 8 briefs per model on Modal GPU)")
     args = ap.parse_args()
 
-    blob = json.loads(RULES.read_text())
+    blob = json.loads(RULES.read_text(encoding="utf-8"))
     fields = blob["fields"]
     base = load_set_a()
     sample = case_control_sample(base)
@@ -323,7 +323,7 @@ def main() -> None:
             emit()
         cos.to_csv(REPO / "reports" / "wf_llm_benchset_a_induced_cosine.csv", index=False)
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     lexres.to_csv(REPO / "reports" / "wf_llm_benchset_a_induced_lexical.csv")
     supres.to_csv(REPO / "reports" / "wf_llm_benchset_a_induced_lexblock.csv")
     print(f"\nwrote {OUT_MD}")

@@ -754,7 +754,7 @@ def write_report(res_j, res_q, res_lex, res_lex_overlap, idx, flagged_cos, flagg
     for s in surprises:
         a(f"- {s}\n")
 
-    (REPORTS / "wf_foreign_brief_detector.md").write_text("\n".join(lines))
+    (REPORTS / "wf_foreign_brief_detector.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,8 @@
 # TIRI — The Data Science Project
 
+[![CI](https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/actions/workflows/ci.yml/badge.svg)](https://github.com/Sylvain-gitty/TIRI---The-Data-science-project/actions/workflows/ci.yml)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+
 Turning a labelled corpus of academic literature into a working relevance-screening
 model: clean → feature-engineer → validate → model → ensemble → evaluate.
 
@@ -115,7 +118,7 @@ in labelling, at realistic prevalence (1.7–14.8% positive, vs 26–77% in our 
 measured here.
 
 The full architecture decision doc — every choice, its evidence, and its confidence
-grade — is [`reports/wf_ensemble_final_recommendations.md`](reports/wf_ensemble_final_recommendations.md).
+grade — was `reports/wf_ensemble_final_recommendations.md` (see **Removed reports** below).
 
 ### Can a prompted LLM do this instead? (`notebooks/main/11`, `reports/wf_llm_*`)
 
@@ -146,9 +149,9 @@ and 30 irrelevant papers and asking it to write the screening rule it infers is 
 (0.030). It is a **cold-start lever only**: folded into the trained ensemble it is worth
 **+0.001**, because the embedding block already encodes it.
 
-Decision doc: [`reports/wf_llm_benchset_a_findings.md`](reports/wf_llm_benchset_a_findings.md).
-Every method and metric side by side:
-[`reports/wf_llm_benchset_a_summary.md`](reports/wf_llm_benchset_a_summary.md).
+Decision doc: `reports/wf_llm_benchset_a_findings.md`. Every method and metric side by
+side: `reports/wf_llm_benchset_a_summary.md`. Both were removed — see **Removed reports**
+below.
 
 ### A note on what counts as a result here
 
@@ -166,6 +169,11 @@ source .venv/bin/activate          # .venv\Scripts\activate on Windows
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm   # only for the NER comparison script
 ```
+
+`requirements.txt` carries documented version *floors*, which is what you want for
+development. To reproduce the exact environment the main line was last verified in — pandas
+pinned, everything pinned — use [`requirements-lock.txt`](requirements-lock.txt) instead;
+its header says precisely what that set is and is not certified to reproduce.
 
 **The data you need is in the repo.** Clone and run — no API keys, no GPU, no export
 step. Notebooks assume they're run with their own folder as the working directory.
@@ -185,6 +193,13 @@ The left-hand column is **verified, not asserted**. `git clone` into an empty di
 (3s), 02 (5s), 03 (37s), 05 (124s) — and 16 of the 18 supporting notebooks pass. `01`
 reproduces the committed `papers_combined.parquet` frame-for-frame, so the cleaning step
 is checkable rather than trusted.
+
+Re-verified on **Windows, Python 3.11.3, pandas 3.0.5** (2026-08-19): 01, 02, 03 and 05 all
+run clean, and 01 still reproduces `papers_combined.parquet` frame-for-frame — 2,873 × 50,
+identical dtypes and values. Worth stating because the first pass was macOS-only, and it
+turned out that `01` did **not** run on Windows: text I/O inherited the platform's default
+encoding, so the three briefs containing an en-dash failed to read. That is fixed
+throughout, and CI now guards the class.
 
 **Install everything, not just the light half.** `fastembed` and `sentence-transformers`
 (which pulls PyTorch) are `requirements.txt`'s two heaviest entries and the easiest to
@@ -218,11 +233,11 @@ notebooks/
   experiments/      supporting evidence: feature viability checks, embedding
                     bake-offs, external validation, superseded passes. Mostly
                     negative results, kept on purpose. Never writes to data/
-  future_work/      two templates that have never been executed, by design
 
 scripts/            shared libraries (embedding, folds, lexical features, metrics) + experiment drivers
-future_work/        train_baseline_classifier.py — parked, not wired into the workflow
-reports/            the decision trail — what we tried, what we measured, what we rejected
+tests/              invariants of the shared libraries
+reports/            empty. Notebooks and scripts write their outputs here; the
+                    written-up decision trail was removed (see below)
 ```
 
 Only `main/01` and `main/04` write to `data/`. Everything else is read-only, so
@@ -230,6 +245,11 @@ notebooks can be run in any order once the data exists.
 
 ### Where to start reading
 
+0. Prefer one continuous narrative to a repo tour?
+   [`tiri_whitepaper.md`](tiri_whitepaper.md) is the whole project written up for a reader
+   who has not seen the code — problem, data, the finding, what ships, external validation,
+   plus the metrics in plain English and the rejected list with measurements. Renders to
+   `.docx` with `npm run whitepaper`.
 1. This file, then [`CONTEXT.md`](CONTEXT.md) for the findings that shaped the work.
 2. [`main/02_eda_quickstart.ipynb`](notebooks/main/02_eda_quickstart.ipynb) — the
    5-minute tour of the corpus.
@@ -334,8 +354,7 @@ that code is what every downstream report will call it.
 ## Future work
 
 **Continued experimentation with the advanced model** — the near-term list, in priority
-order (full reasoning in
-[`reports/wf_ensemble_final_recommendations.md`](reports/wf_ensemble_final_recommendations.md)):
+order (full reasoning was in `reports/wf_ensemble_final_recommendations.md`):
 
 - **Replace the ~6,000-dim embedding block with a single supervised discriminant
   direction.** Scored statistically identical (F2 0.897 vs 0.892) at a fraction of the
@@ -347,8 +366,8 @@ order (full reasoning in
   (no embedding) beat *both* production branches standalone there (ROC-AUC 0.933 vs
   0.912/0.876). It's the one question where dropping the embedding wins.
 
-**From the LLM screening work** (full list in
-[`reports/wf_llm_benchset_a_findings.md`](reports/wf_llm_benchset_a_findings.md) §10):
+**From the LLM screening work** (full list was in `reports/wf_llm_benchset_a_findings.md`
+§10):
 
 - **Run the induced brief on the collections that are too small to train on.** 12 of the
   benchmark's 28 collections are too small to split, which is exactly the cold-start
@@ -413,3 +432,45 @@ filenames carry the same prefix, so the two work streams stay legible in a share
 CatBoost → ensemble modelling line. WF: data compilation, the feature-engineering track
 (query-conditioned lexical features, embedding bake-off), the per-silo ensemble, and
 external validation on SYNERGY.
+
+
+---
+
+## Removed reports
+
+`reports/` held 57 written-up reports — the decision trail behind every number above,
+including the two architecture decision docs this README cites. They were removed to slim
+the working tree. What remains is an output directory: notebooks `02` and `03` write their
+figures there, and the five the whitepaper embeds are kept tracked so it renders.
+
+The one write-up that survived is [`tiri_whitepaper.md`](tiri_whitepaper.md), moved to the
+repo root — it is the narrative version of the whole project rather than part of the
+decision trail.
+
+**Nothing is lost.** Every one is in git history and recoverable individually:
+
+```bash
+git show 75c14de:reports/wf_ensemble_final_recommendations.md
+git checkout 75c14de -- reports/          # restore the whole folder
+```
+
+The consequence worth stating plainly: claims in this README and in `CONTEXT.md` now cite
+evidence that is not in the working tree. The measurements behind them were not revised —
+the write-ups were removed — but a reader taking this repository at face value can no
+longer check them without going to history.
+
+Citation metadata is in [`CITATION.cff`](CITATION.cff). A negative result, clearly
+measured, is a welcome contribution — see [`CONTEXT.md`](CONTEXT.md) §6, the register of
+everything already tried and rejected.
+
+## Licence
+
+**Not yet licensed.** No licence file has been chosen, which means default copyright
+applies and the code and data here are **not** yet reusable by others, whatever this
+repository's visibility. A licence needs to be added before that changes.
+
+Note also that `data/` redistributes third-party academic metadata (Crossref, OpenAlex,
+arXiv, PubMed, Europe PMC, CORE, Semantic Scholar) alongside this project's own analyst
+labels. The terms attaching to that metadata are a separate question from the licence on
+the code, and both need settling before anyone should treat this repository as
+open source.

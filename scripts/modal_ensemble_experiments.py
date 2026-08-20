@@ -246,7 +246,7 @@ def synergy_validation(
     _upload_synergy_data(filename)
 
     out_path = REPO / "reports" / out_name
-    results = json.loads(out_path.read_text()) if out_path.exists() else {}
+    results = json.loads(out_path.read_text(encoding="utf-8")) if out_path.exists() else {}
 
     calls = [(branch, seed) for branch in ("catboost", "logreg") for seed in range(seeds)]
     print(f"Running {len(calls)} SYNERGY OOF fetches (iterations={iterations}, depth={depth}, "
@@ -263,7 +263,7 @@ def synergy_validation(
             continue
         print(f"  done: {branch} seed={seed}")
         results.setdefault(branch, {})[str(seed)] = res
-        out_path.write_text(json.dumps(results))
+        out_path.write_text(json.dumps(results), encoding="utf-8")
 
     print(f"\nWritten to {out_path}")
 
@@ -288,7 +288,7 @@ def hparam_sweep(seed: int = 0) -> None:
         ("tuned (iterations=150, depth=4)", 150, 4),
     ]
     out_path = REPO / "reports" / "wf_ensemble_v2_hparam_oof.json"
-    results = json.loads(out_path.read_text()) if out_path.exists() else {}
+    results = json.loads(out_path.read_text(encoding="utf-8")) if out_path.exists() else {}
 
     print(f"Running {len(configs)} CatBoost configs on '{WINNING_VARIANT}' (seed={seed}) ...")
     for (name, it, d), res in zip(
@@ -302,6 +302,6 @@ def hparam_sweep(seed: int = 0) -> None:
             continue
         print(f"  done: {name}")
         results[name] = res
-        out_path.write_text(json.dumps(results))
+        out_path.write_text(json.dumps(results), encoding="utf-8")
 
     print(f"Written to {out_path}")

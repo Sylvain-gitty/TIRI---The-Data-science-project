@@ -2,7 +2,7 @@
 
 WHY VENDORED RATHER THAN IMPORTED. `academic_agent` is read-only from here and lives at a
 sibling path (`../academic_agent`), not a package on this repo's path. A `sys.path` hop across
-repos is exactly the kind of cross-repo coupling `CLAUDE.md`'s "Sibling repo location" note
+repos is exactly the kind of cross-repo coupling this repo's sibling-repo rule
 warns against — it would silently break the day the sibling repo moves or refactors a private
 name. Copying four small, already-frozen regex objects is cheaper than that fragility, and it is
 copying, not reimplementing: every object below is unchanged from its source, byte for byte
@@ -10,13 +10,13 @@ copying, not reimplementing: every object below is unchanged from its source, by
 
 SOURCES, verified against the sibling repo on 2026-08-14:
 
-    /Users/warrenfauvel/academic_agent/discovery.py
+    academic_agent/discovery.py
         _UNIT_RE              ~line 1484  (a number + a real unit)
         METRIC_HEADS          ~line 611   (metric head nouns, frozenset)
         _METRIC_RE            ~line 1396  (<=1 modifier word before the head noun)
         _METRIC_LEADING_STOP  ~line 1400  (words that must not start a harvested phrase)
 
-    /Users/warrenfauvel/academic_agent/spikes/review_seeding/probe_metrics.py
+    academic_agent/spikes/review_seeding/probe_metrics.py
         UNIT_RE      ~line 97   (adds k\\b, micro-second/-metre, hours? over discovery.py's)
         METRIC_RE    ~line 81   (<=3 modifiers — the EARLIER, looser version)
         METRIC_HEADS ~line 68   (same 49 head nouns as discovery.py, as a list not a frozenset)

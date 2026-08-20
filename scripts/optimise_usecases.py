@@ -319,7 +319,7 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     rows, all_prov = [], {}
     for key in USE_CASES:
-        spec = json.loads((RAW / f"{key}.usecase.json").read_text())
+        spec = json.loads((RAW / f"{key}.usecase.json").read_text(encoding="utf-8"))
         new, prov = optimise(spec, prose_only=args.prose_only)
         all_prov[key] = prov
 
@@ -334,7 +334,7 @@ def main() -> None:
             "linter_after": len(lint(_flat(new))) or "clean",
         })
         if not args.dry_run:
-            (out_dir / f"{key}.usecase.json").write_text(json.dumps(new, indent=2) + "\n")
+            (out_dir / f"{key}.usecase.json").write_text(json.dumps(new, indent=2) + "\n", encoding="utf-8")
 
     import pandas as pd
     from ensemble_eval_utils import to_md
@@ -348,7 +348,7 @@ def main() -> None:
                 print(f"  [{p['action']:14s}] {p['field']:20s} <- {p['source']}")
                 print(f"                   {p['detail']}")
 
-    still = {k: [c.id for c in lint(_flat(json.loads((out_dir / f'{k}.usecase.json').read_text())))]
+    still = {k: [c.id for c in lint(_flat(json.loads((out_dir / f'{k}.usecase.json').read_text(encoding="utf-8"))))]
              for k in USE_CASES} if not args.dry_run else {}
     if still:
         print("\nlinter on the optimised specs:",

@@ -219,7 +219,7 @@ def main() -> None:
          f"mean remaining gap to F2@t* after calibration: **{gap_left:+.4f}**.")
     emit()
 
-    OUT_MD.write_text("\n".join(lines) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nWritten to {OUT_MD.relative_to(REPO)}")
 
 

@@ -1,0 +1,92 @@
+name: Reproducibility problem
+description: A notebook or script does not run, or does not produce the numbers the repo reports.
+title: "[repro] "
+labels: ["reproducibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Reproducibility problems are the most useful bug class in
+        this repo, because the README makes explicit claims about what runs from a fresh
+        clone — if one of them is wrong, we want to know.
+
+        Before filing: the README's **Quick start** table splits notebooks into "runs from a
+        fresh clone" and "needs regenerating first". The right-hand column needs up to 600 MB
+        of untracked data, a GPU, or paid API keys, and is expected to fail without them.
+
+  - type: input
+    id: target
+    attributes:
+      label: Which notebook or script
+      placeholder: notebooks/main/03_eda_full.ipynb
+    validations:
+      required: true
+
+  - type: dropdown
+    id: column
+    attributes:
+      label: Which column of the README run table were you following?
+      options:
+        - "Runs from a fresh clone"
+        - "Needs regenerating first"
+        - "Not listed / unsure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: >-
+        If this is a numbers mismatch, quote the figure the repo reports and where you found
+        it, then the figure you got.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Paste the full traceback, or the cell output that differs.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.11.3"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 14.5 / Windows 11 / Ubuntu 24.04"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install dependencies?
+      options:
+        - "requirements.txt"
+        - "requirements-lock.txt (pinned)"
+        - "Something else"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirms
+    attributes:
+      label: Confirmations
+      options:
+        - label: >-
+            I installed all of requirements.txt, including fastembed and
+            sentence-transformers
+          required: true
+        - label: I ran the notebook with its own folder as the working directory
+          required: true

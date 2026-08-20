@@ -1,0 +1,48 @@
+# Line endings and diff behaviour.
+#
+# Every text blob currently in this repo is stored LF-only (verified, not assumed). This
+# file exists to keep it that way: the two developers work on Windows and macOS, and a
+# contributor whose `core.autocrlf` is unset would otherwise commit CRLF and produce a
+# whole-file diff on a one-line change.
+#
+# Nothing here rewrites existing files. It only governs what happens on future check-in.
+
+# Normalise all text to LF in the repository, whatever the working tree uses.
+* text=auto eol=lf
+
+# Shell scripts must be LF even in the working tree — CRLF breaks bash parsing outright.
+*.sh text eol=lf
+
+# ---------------------------------------------------------------------------
+# Binary — never diff, never line-ending-convert, never merge.
+# ---------------------------------------------------------------------------
+*.parquet  binary
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.pdf      binary
+*.docx     binary
+*.xlsx     binary
+*.pyd      binary
+*.onnx     binary
+
+# ---------------------------------------------------------------------------
+# Notebooks.
+#
+# Committed WITH outputs on purpose (see notebooks/README.md), so they are large and
+# their diffs are noisy. Marked as text so line endings stay normalised, but excluded
+# from GitHub's diff view by default — a reviewer wants the rendered notebook, not 40k
+# lines of base64 PNG.
+# ---------------------------------------------------------------------------
+*.ipynb text eol=lf linguist-documentation
+
+# ---------------------------------------------------------------------------
+# GitHub language statistics.
+#
+# Without this the repo reads as ~99% "Jupyter Notebook" because the committed outputs
+# dominate by byte count. The notebooks are genuinely the substance here, so they still
+# count — but generated artifacts and shipped data should not.
+# ---------------------------------------------------------------------------
+reports/**      linguist-documentation
+data/**         linguist-vendored
+*.md            linguist-documentation

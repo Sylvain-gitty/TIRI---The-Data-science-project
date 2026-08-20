@@ -51,8 +51,8 @@ def f2_optimal(y_true, y_score, thresholds=np.linspace(0.05, 0.95, 91)):
 
 
 def main() -> None:
-    hparam = json.load(open(HPARAM_JSON))
-    axis = json.load(open(AXIS_JSON))
+    hparam = json.load(open(HPARAM_JSON, encoding="utf-8"))
+    axis = json.load(open(AXIS_JSON, encoding="utf-8"))
 
     df = pd.read_parquet(DATA_PATH)
     y = df["y"].to_numpy().astype(int)
@@ -142,8 +142,8 @@ def main() -> None:
         emit(to_md(per_uc_detail.loc[config_name].round(4), "use_case"))
         emit()
 
-    existing = OUT_MD.read_text() if OUT_MD.exists() else ""
-    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n")
+    existing = OUT_MD.read_text(encoding="utf-8") if OUT_MD.exists() else ""
+    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nAppended to {OUT_MD.relative_to(REPO)}")
 
 

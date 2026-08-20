@@ -1,0 +1,124 @@
+name: CI
+
+# WHAT THIS DOES, AND WHAT IT DELIBERATELY DOES NOT
+#
+# This checks that the repository is *coherent*: it parses, the shared libraries import, the
+# invariants in tests/ hold, the linter's defect gate is green, and no markdown link is
+# broken.
+#
+# It does NOT execute notebooks. The four light main-line notebooks take ~170s combined, and
+# every other notebook needs up to 600 MB of untracked data, a GPU via Modal, or a paid
+# OpenRouter key. Notebook health is verified by hand and recorded in the README's run table
+# instead — see README.md. A CI job that cannot run most of the repo's substance
+# should say so rather than imply coverage it does not have.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Mondays 06:00 UTC — only the heavy `full-install` job cares, to catch dependency drift.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, parse, and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install the test-relevant subset of requirements
+        # Not the full requirements.txt: sentence-transformers pulls PyTorch (~2 GB) and
+        # neither it, fastembed, modal, nor spacy is reachable from anything under tests/.
+        # The full set is exercised by the `full-install` job below.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            "pandas>=2.2.0" "pyarrow>=16.0.0" "numpy>=2.0.0" \
+            "scikit-learn>=1.4.0" "scipy>=1.13.0" "joblib>=1.4.0" \
+            pytest ruff
+
+      - name: Lint (defect gate — see pyproject.toml for what is and is not enforced)
+        run: ruff check .
+
+      - name: Everything parses
+        run: python -m compileall -q scripts/ tests/ .github/scripts/
+
+      - name: Shared libraries import cleanly
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "scripts")
+          mods = [
+              "lexical_features",
+              "benchset_metrics",
+              "fold_pipeline_utils",
+              "ensemble_eval_utils",
+              "checkability_patterns",
+              "latent_space_utils",
+          ]
+          for m in mods:
+              __import__(m)
+              print(f"ok  {m}")
+          PY
+
+      - name: Tests
+        run: python -m pytest
+
+      - name: No broken relative markdown links
+        run: python .github/scripts/check_links.py
+
+      - name: No absolute local paths reintroduced
+        # These have been cleaned once; this stops them coming back. Notebook *outputs* are
+        # excluded because four committed benchset notebooks still carry printed Windows
+        # paths in their saved output, which is tracked separately and is not a code defect.
+        run: |
+          if git grep -nIE '(/Users/[a-z]|/home/[a-z]|[A-Z]:\\\\Users\\\\)' \
+               -- ':!*.ipynb' ':!.github/workflows/ci.yml'; then
+            echo "::error::An absolute local path was reintroduced. Use an env var with a documented default."
+            exit 1
+          fi
+          echo "No absolute local paths outside notebook outputs."
+
+  full-install:
+    name: Full requirements.txt resolves
+    runs-on: ubuntu-latest
+    # Heavy (PyTorch, catboost, spacy, modal). Not worth blocking every PR on, but dependency
+    # drift is exactly the failure that silently breaks a repo nobody has cloned for months,
+    # so it runs weekly and on demand.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install everything the README asks for
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Import the modules that need the heavy half
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "scripts")
+          for m in ("embedding_utils", "llm_pipeline_utils", "embed_benchsets"):
+              __import__(m)
+              print(f"ok  {m}")
+          PY

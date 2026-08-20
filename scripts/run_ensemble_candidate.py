@@ -210,7 +210,7 @@ def main() -> None:
     use_case = df["use_case_key"]
     groups = df["first_author"]
     # Int64 (pandas nullable) -> float64: sklearn/CatBoost expect plain float arrays, and
-    # NaN must survive the cast (never fillna - NULL is not 0, CLAUDE.md).
+    # NaN must survive the cast (never fillna - NULL is not 0 - see README.md).
     df = df.copy()
     for col in ("year", "paper_age", "citation_count"):
         df[col] = df[col].astype("float64")
@@ -282,7 +282,7 @@ def main() -> None:
              f"(mean delta {delta[name].mean():+.3f}).")
     emit()
 
-    OUT.write_text("\n".join(lines) + "\n")
+    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nWritten to {OUT.relative_to(REPO)}")
 
 

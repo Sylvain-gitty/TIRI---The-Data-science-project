@@ -82,7 +82,7 @@ def load_ensemble_oof() -> pd.DataFrame:
     headline "did we beat the ensemble" comparison uses ENSEMBLE_PUBLISHED instead.
     """
     slim = pd.read_parquet(SLIM, columns=["paper_id", "use_case_key", "y"])
-    oof = json.loads(HPARAM_JSON.read_text())[CATBOOST_KEY]
+    oof = json.loads(HPARAM_JSON.read_text(encoding="utf-8"))[CATBOOST_KEY]
     frames = []
     for uc, probs in oof.items():
         rows = slim[slim.use_case_key == uc]
@@ -297,7 +297,8 @@ def main() -> None:
         "`f2_at_t_star` is an oracle threshold on both sides. `f2_at_own` is the LLM's "
         "own verdict with no threshold fitted - the honest operating point.\n\n"
         "## Headline\n\n" + to_md(summary.reset_index(), "") +
-        "\n\n## Per use case (best cell)\n\n" + to_md(bc.round(3).reset_index(), "use_case") + "\n"
+        "\n\n## Per use case (best cell)\n\n" + to_md(bc.round(3).reset_index(), "use_case") + "\n",
+        encoding="utf-8",
     )
     cell.to_csv(REPO / "reports" / "wf_llm_pilot_per_use_case.csv", index=False)
     print(f"\nwrote {args.out}")

@@ -53,7 +53,7 @@ def main() -> None:
     ap.add_argument("--section", default="10")
     args = ap.parse_args()
 
-    raw = json.load(open(REPO / "reports" / args.oof_json))
+    raw = json.load(open(REPO / "reports" / args.oof_json, encoding="utf-8"))
     df = pd.read_parquet(REPO / "data" / "processed" / args.features)
     y = df["y"].to_numpy().astype(int)
     use_case = df["use_case_key"]
@@ -129,8 +129,8 @@ def main() -> None:
          "actually matters for production prevalence.")
     emit()
 
-    existing = OUT_MD.read_text() if OUT_MD.exists() else ""
-    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n")
+    existing = OUT_MD.read_text(encoding="utf-8") if OUT_MD.exists() else ""
+    OUT_MD.write_text(existing + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nAppended to {OUT_MD.relative_to(REPO)}")
 
 
