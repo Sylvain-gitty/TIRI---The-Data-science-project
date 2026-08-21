@@ -255,10 +255,10 @@ function renderDataset(){
    a flat stack list makes the reader map thirty names onto four steps themselves.
    ══════════════════════════════════════════════════════════════════════════ */
 const SLIDE_TOOLS=[
-  ['OpenRouter','Claude Sonnet 4.6','Versioned prompts'],
-  ['OpenAlex','Semantic Scholar','Crossref','pgvector'],
-  ['scikit-learn','MiniLM-L12-v2','Rocchio centroid','Leave-one-out'],
-  ['recall@k','WSS@95','FastAPI','React']
+  ['OpenRouter','Nemotron','GPT OSS'],
+  ['OpenAlex','Semantic Scholar','Crossref','PostGres'],
+  ['scikit-learn','MiniLM-L12-v2','Qwen3','Jasper 600m'],
+  ['Optuna','pgVec','FastAPI','React']
 ];
 function renderHow(){
   /* ONE SLIDE, FULL FRAME. Four 420px panels side by side meant four small diagrams
