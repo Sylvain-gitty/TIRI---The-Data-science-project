@@ -58,6 +58,8 @@ const ICON_FILE={
   'FastAPI':'fastapi', 'Pydantic':'pydantic', 'PostgreSQL':'postgresql', 'React':'react',
   'Mantine':'mantine', 'TanStack Query':'tanstack-query', 'pypdf':'pypdf',
   'Playwright':'playwright', 'pytest':'pytest',
+  'Nemotron':'nvidia', 'GPT OSS':'gpt-oss', 'PostGres':'postgresql', 'Qwen3':'qwen',
+  'Jasper 600m':'jasper-600m', 'Optuna':'optuna', 'pgVec':'pgvector',
   'Sources':'category-sources', 'Text into vectors':'category-text-into-vectors',
   'Ranking and learning':'category-ranking-and-learning',
   'Language models':'category-language-models', 'The application':'category-application',

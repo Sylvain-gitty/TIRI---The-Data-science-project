@@ -21,6 +21,9 @@ These use the corresponding open [Simple Icons](https://github.com/simple-icons/
 | Pytest | `icon-pytest.png` |
 | Claude Sonnet 4.6 (Anthropic) | `icon-claude-sonnet-4-6.png` |
 | ONNX Runtime (ONNX mark) | `icon-onnx-runtime.png` |
+| Nemotron (NVIDIA) | `icon-nvidia.png` |
+| Qwen3 (Alibaba/Qwen) | `icon-qwen.png` |
+| Optuna | `icon-optuna.png` |
 
 ## Generic replacements
 
@@ -47,6 +50,12 @@ The following use clean, colour-coded symbols because a square transparent mark 
 | TanStack Query | `icon-tanstack-query.png` |
 | pypdf | `icon-pypdf.png` |
 | Playwright | `icon-playwright.png` |
+| GPT OSS | `icon-gpt-oss.png` |
+| Jasper 600m | `icon-jasper-600m.png` |
+
+`PostGres` and `pgVec` (slide 06 of the landing page) reuse `icon-postgresql.png` and
+`icon-pgvector.png` above rather than getting their own files — same underlying tech,
+different mention.
 
 The five `icon-category-*.png` files are matching section markers for Sources, Text into vectors, Ranking and learning, Language models, and The application.
 

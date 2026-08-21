@@ -426,12 +426,13 @@
    square), so the clear middle is `100vw - 2*(1-folk)*100vh`. Written as two independent
    values they drifted the moment either changed, and the failure mode is the summary
    quietly running onto a dark shoulder where it cannot be read. */
-#ls9{--folk:.50;
+#ls9{--folk:.6;
   /* THE CLEAR MIDDLE, as one token. Everything on this slide that must not stray onto a
      dark shoulder reads it — the summary and the repository block both — so there is one
-     place to change and no way for the two to disagree. 48px is the breathing room either
-     side of the type. */
-  --clear:calc(100vw - 2 * (1 - var(--folk)) * 100vh - 48px)}
+     place to change and no way for the two to disagree. 148px is the breathing room either
+     side of the type — the QR block was still colliding with the portraits at laptop
+     widths (1440 and 1366) at the old .50/48px pairing. */
+  --clear:calc(100vw - 2 * (1 - var(--folk)) * 100vh - 148px)}
 .tyFolk{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 /* THE SAME DUOTONE AS SLIDE 01, WHICH HERE TAKES TWO LAYERS. `.lpimg` gets it for free:
    a green box with an OPAQUE photograph over it in `luminosity`, so the photo supplies
@@ -456,14 +457,18 @@
    the darks, the pair sits at the tonal weight of slide 01's cards, and the faces and
    owls stay readable — which .6 gave up. It also makes them behave like the radar wash
    they replaced: background, at the page's own value. */
-.fk{position:absolute;top:0;height:100%;aspect-ratio:1;display:block;isolation:isolate;
+/* SCOPED TO `.tyFolk`, not a bare `.fk` — `shared/charts.js` renders a `<span class="fk">`
+   of its own for the chart control's option label, and that span has no `position` or
+   `height` rule anywhere in charts.css to lose to. A page-wide `.fk` here wins those
+   properties by default and stretches the label to the frame's full height. */
+.tyFolk .fk{position:absolute;top:0;height:100%;aspect-ratio:1;display:block;isolation:isolate;
   opacity:.72}
-.fk::before{content:'';position:absolute;inset:0;background:var(--brand);
+.tyFolk .fk::before{content:'';position:absolute;inset:0;background:var(--brand);
   -webkit-mask:var(--src) no-repeat center/contain;mask:var(--src) no-repeat center/contain}
-.fk img{position:absolute;inset:0;width:100%;height:100%;display:block;
+.tyFolk .fk img{position:absolute;inset:0;width:100%;height:100%;display:block;
   mix-blend-mode:luminosity;filter:contrast(1.04) brightness(1.22)}
-.fkL{left:0;transform:translateX(calc(var(--folk) * -100%))}
-.fkR{right:0;transform:translateX(calc(var(--folk) * 100%))}
+.tyFolk .fkL{left:0;transform:translateX(calc(var(--folk) * -100%))}
+.tyFolk .fkR{right:0;transform:translateX(calc(var(--folk) * 100%))}
 /* the confetti's surface: over the portraits, under the type. A burst then reads as
    happening in the room rather than on top of the summary.
 
